@@ -451,10 +451,89 @@ body {
 }
 
 /* ═══════════════════════════════════════
+   ASSET ACCORDION (inner sections)
+   ═══════════════════════════════════════ */
+.asset-accordion {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 6px;
+  transition: border-color var(--transition-fast);
+}
+
+.asset-accordion:last-child {
+  margin-bottom: 0;
+}
+
+.asset-accordion.open {
+  border-color: rgba(68, 136, 255, 0.15);
+}
+
+.asset-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-input);
+  transition: background var(--transition-fast);
+}
+
+.asset-accordion-header:hover {
+  background: var(--bg-hover);
+}
+
+.asset-accordion-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.02em;
+}
+
+.asset-accordion-icon {
+  font-size: 0.75rem;
+}
+
+.asset-accordion-chevron {
+  font-size: 0.5rem;
+  color: var(--text-muted);
+  transition: transform var(--transition);
+}
+
+.asset-accordion:not(.open) .asset-accordion-chevron {
+  transform: rotate(-90deg);
+}
+
+.asset-accordion-body {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Transform sub-section inside an asset accordion */
+.asset-transform-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+
+.asset-transform-title {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+/* ═══════════════════════════════════════
    FILE UPLOADER
    ═══════════════════════════════════════ */
 .file-uploader {
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .file-uploader .upload-label {

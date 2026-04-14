@@ -9,7 +9,7 @@
 
 import { useState, useCallback } from 'react';
 
-const PANEL_IDS = ['assets', 'orbit', 'transform'];
+const PANEL_IDS = ['assets', 'orbit'];
 
 export default function RightPanelStack({ children }) {
   // null = all collapsed, string = which panel is open

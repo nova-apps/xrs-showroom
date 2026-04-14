@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
 import SceneListPanel from '@/components/panels/SceneListPanel';
 import SceneEditorPanel from '@/components/panels/SceneEditorPanel';
-import TransformPanel from '@/components/panels/TransformPanel';
+
 import OrbitPanel from '@/components/panels/OrbitPanel';
 import RightPanelStack from '@/components/panels/RightPanelStack';
 
@@ -249,6 +249,8 @@ export default function ScenePage() {
               uploadProgress={uploadProgress}
               onUpload={handleUpload}
               onRemove={handleRemove}
+              onTransformChange={handleTransformChange}
+              onApplyTransform={handleApplyTransform}
               collapsed={activePanel !== 'assets'}
               onToggle={() => toggle('assets')}
             />
@@ -259,14 +261,6 @@ export default function ScenePage() {
               onApplyOrbit={handleApplyOrbit}
               collapsed={activePanel !== 'orbit'}
               onToggle={() => toggle('orbit')}
-            />
-
-            <TransformPanel
-              scene={scene}
-              onTransformChange={handleTransformChange}
-              onApplyTransform={handleApplyTransform}
-              collapsed={activePanel !== 'transform'}
-              onToggle={() => toggle('transform')}
             />
           </>
         )}
