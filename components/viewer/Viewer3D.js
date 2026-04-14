@@ -49,6 +49,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     applyOrbit: (orbit) => {
       applyOrbitToControls(orbit);
     },
+    setPixelRatio: (ratio) => {
+      const s = stateRef.current;
+      if (s.renderer) {
+        const clamped = Math.min(Math.max(ratio, 0.5), window.devicePixelRatio || 2);
+        s.renderer.setPixelRatio(clamped);
+        console.log(`[Viewer] Pixel ratio set to ${clamped}`);
+      }
+    },
     loadGlb: (url) => loadGlbModel(url),
     loadSog: (url) => loadSogModel(url),
     loadSkyboxTexture: (url) => loadSkyboxTexture(url),
@@ -89,6 +97,12 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     }
 
     s.controls.update();
+
+    // Antialiasing (pixel ratio)
+    if (typeof orbit.pixelRatio === 'number' && s.renderer) {
+      const clamped = Math.min(Math.max(orbit.pixelRatio, 0.5), window.devicePixelRatio || 2);
+      s.renderer.setPixelRatio(clamped);
+    }
   }, []);
 
   /* ─── Transform Application ─── */

@@ -38,6 +38,7 @@ export const DEFAULT_ORBIT = {
   pitchMax: 90,
   yawMin: -180,
   yawMax: 180,
+  pixelRatio: 1,
 };
 
 /**
@@ -78,12 +79,27 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
 
   return (
     <FloatingPanel
-      title="Orbit Controls"
-      icon="🎥"
+      title="Camera"
+      icon="📷"
       position=""
       collapsed={collapsed}
       onToggle={onToggle}
     >
+      {/* ─── Antialiasing ─── */}
+      <div className="transform-section">
+        <div className="transform-section-title">🔲 Antialiasing</div>
+        <ControlRow
+          label="PR"
+          labelClass="label-s"
+          value={local.pixelRatio ?? 1}
+          min={0.5}
+          max={2}
+          step={0.25}
+          onChange={(v) => updateField('pixelRatio', v)}
+        />
+      </div>
+
+      <div className="section-divider" />
       {/* ─── Zoom ─── */}
       <div className="transform-section">
         <div className="transform-section-title">🔍 Zoom (Distancia)</div>
