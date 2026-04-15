@@ -223,12 +223,15 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       const model = gltf.scene;
       model.userData._loaded = true;
 
-      // Disable shadows (splat-optimized)
+      // Disable shadows (splat-optimized) and set render order so GLB
+      // always draws BEFORE the SOG splat (which composites on top).
+      model.renderOrder = -2;
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = false;
           child.receiveShadow = false;
           child.frustumCulled = false;
+          child.renderOrder = -2;
         }
       });
 
@@ -299,6 +302,8 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         },
       });
 
+      // Render SOG after GLB so it composites on top
+      splatMesh.renderOrder = 10;
       s.scene.add(splatMesh);
       s.splatMesh = splatMesh;
 
