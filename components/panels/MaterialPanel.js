@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import FloatingPanel from './FloatingPanel';
 
 /**
  * Color picker + hex input row.
@@ -372,11 +373,11 @@ function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyCha
 
 /**
  * Main MaterialPanel component.
+ * Supports controlled collapse via collapsed/onToggle props (for RightPanelStack).
  */
-export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, onMaterialsChange }) {
+export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, onMaterialsChange, collapsed, onToggle }) {
   const [materials, setMaterials] = useState([]);
   const [openMat, setOpenMat] = useState(null);
-  const [panelCollapsed, setPanelCollapsed] = useState(false);
   const matRefsMap = useRef(new Map());
   // Track current props for all materials (for saving)
   const currentPropsRef = useRef(new Map());
@@ -474,30 +475,34 @@ export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, 
     setOpenMat((prev) => (prev === uuid ? null : uuid));
   }, []);
 
-  if (materials.length === 0) return null;
+  // Use controlled collapse if props provided (RightPanelStack), otherwise internal
+  const isControlled = collapsed !== undefined;
+  const isCollapsed = isControlled ? collapsed : false;
+  const handleToggle = isControlled ? onToggle : undefined;
+
+  const title = `Materiales${materials.length > 0 ? ` (${materials.length})` : ''}`;
 
   return (
-    <div className={`floating-panel mat-panel ${panelCollapsed ? 'collapsed' : ''}`}>
-      <div className="panel-header" onClick={() => setPanelCollapsed(!panelCollapsed)}>
-        <h3>
-          <span className="panel-icon">🎨</span>
-          Materiales
-          <span className="mat-count-badge">{materials.length}</span>
-        </h3>
-        <div className="mat-header-actions">
+    <FloatingPanel
+      title={title}
+      icon="🎨"
+      position=""
+      collapsed={isCollapsed}
+      onToggle={handleToggle}
+    >
+      {materials.length === 0 ? (
+        <div className="empty-state">
+          <p>Cargando materiales…</p>
+        </div>
+      ) : (
+        <div className="mat-panel-body">
           <button
-            className="mat-refresh-btn"
-            onClick={(e) => { e.stopPropagation(); refreshMaterials(); }}
+            className="mat-refresh-btn-inline"
+            onClick={refreshMaterials}
             title="Actualizar lista"
           >
-            ↻
+            ↻ Actualizar
           </button>
-          <span className="panel-toggle">▼</span>
-        </div>
-      </div>
-
-      {!panelCollapsed && (
-        <div className="panel-body">
           {materials.map((mat) => (
             <MaterialAccordion
               key={mat.uuid}
@@ -510,6 +515,7 @@ export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, 
           ))}
         </div>
       )}
-    </div>
+    </FloatingPanel>
   );
 }
+

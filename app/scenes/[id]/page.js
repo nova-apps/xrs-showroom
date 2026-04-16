@@ -246,17 +246,8 @@ export default function ScenePage() {
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
-      {/* Performance Panel (bottom-left) — replaces FPS counter */}
+      {/* Performance Panel (bottom-right) */}
       <PerformancePanel scene={scene} loadMetrics={loadMetrics} />
-
-      {/* Material Panel (bottom-right) */}
-      <MaterialPanel
-        viewerRef={viewerRef}
-        viewerReady={viewerReady}
-        savedMaterials={scene?.materials || null}
-        onMaterialsChange={updateMaterials}
-      />
-
 
       {/* Left Panel — Unidades List */}
       <UnidadesListPanel unidades={unidadesData} position="panel-left" />
@@ -282,6 +273,15 @@ export default function ScenePage() {
               onApplyOrbit={handleApplyOrbit}
               collapsed={activePanel !== 'orbit'}
               onToggle={() => toggle('orbit')}
+            />
+
+            <MaterialPanel
+              viewerRef={viewerRef}
+              viewerReady={viewerReady}
+              savedMaterials={scene?.materials || null}
+              onMaterialsChange={updateMaterials}
+              collapsed={activePanel !== 'materials'}
+              onToggle={() => toggle('materials')}
             />
 
             <UnidadesPanel

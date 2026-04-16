@@ -105,7 +105,7 @@ export default function PerformancePanel({ scene, loadMetrics }) {
     <FloatingPanel
       title="Performance"
       icon="⚡"
-      position="panel-bottom-left"
+      position="panel-bottom-right"
       defaultCollapsed={true}
     >
       <div className="perf-panel">
