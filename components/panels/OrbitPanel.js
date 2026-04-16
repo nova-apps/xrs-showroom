@@ -43,6 +43,8 @@ export const DEFAULT_ORBIT = {
   pixelRatio: 1,
   pitchSnapEnabled: false,
   pitchSnapTarget: 90,
+  clickZoomEnabled: false,
+  clickZoomAmount: 30,
 };
 
 /**
@@ -102,6 +104,37 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
           onChange={(v) => updateField('pixelRatio', v)}
           help="Pixel Ratio — controla la calidad de renderizado. Mayor valor = mejor nitidez, más consumo de GPU"
         />
+      </div>
+
+      <div className="section-divider" />
+
+      {/* ─── Click Zoom ─── */}
+      <div className="transform-section">
+        <div className="transform-section-title">🔎 Click Zoom</div>
+        <div className="transform-row">
+          <span className="transform-label label-zoom">On</span>
+          <HelpTooltip text="Al mantener presionado el click, la cámara hace un zoom sutil. Al soltar, vuelve suavemente a la posición original" />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', marginLeft: 'auto' }}>
+            <input
+              type="checkbox"
+              checked={local.clickZoomEnabled ?? false}
+              onChange={(e) => updateField('clickZoomEnabled', e.target.checked)}
+            />
+            <span style={{ fontSize: 11, opacity: 0.7 }}>{local.clickZoomEnabled ? 'On' : 'Off'}</span>
+          </label>
+        </div>
+        {local.clickZoomEnabled && (
+          <ControlRow
+            label="%"
+            labelClass="label-zoom"
+            value={local.clickZoomAmount ?? 30}
+            min={10}
+            max={80}
+            step={5}
+            onChange={(v) => updateField('clickZoomAmount', v)}
+            help="Porcentaje de acercamiento — cuánto se acerca la cámara al punto de enfoque (30% = sutil, 80% = muy cercano)"
+          />
+        )}
       </div>
 
       <div className="section-divider" />

@@ -50,6 +50,8 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     pendingOrbit: null,
     // Pitch snap animation state machine
     pitchSnap: { state: 'idle', originalMinPolar: 0 },
+    // Click zoom animation state machine
+    clickZoom: { state: 'idle', originalFov: 45 },
   });
 
   // Expose methods to parent via ref
@@ -99,8 +101,11 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
 
     // Reset pitch snap state when orbit settings change
     s.pitchSnap.state = 'idle';
+    // Reset click zoom state when orbit settings change
+    s.clickZoom.state = 'idle';
     s.controls.enableRotate = true;
     s.controls.enablePan = true;
+    s.controls.enableZoom = true;
 
     // Orbit target — use GLB model center if available, otherwise scene origin
     if (s.glbCenter) {
@@ -671,6 +676,19 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       controls.target.set(0, 0, 0);
       s.controls = controls;
 
+      // ─── Click Zoom — press to zoom in, release to zoom out ───
+      const _czOnDown = () => onCanvasPointerDown(s);
+      const _czOnUp = () => onCanvasPointerUp(s);
+      renderer.domElement.addEventListener('pointerdown', _czOnDown);
+      renderer.domElement.addEventListener('pointerup', _czOnUp);
+      // Also handle pointer leaving the canvas while pressed
+      renderer.domElement.addEventListener('pointerleave', _czOnUp);
+      s._clickZoomCleanup = () => {
+        renderer.domElement.removeEventListener('pointerdown', _czOnDown);
+        renderer.domElement.removeEventListener('pointerup', _czOnUp);
+        renderer.domElement.removeEventListener('pointerleave', _czOnUp);
+      };
+
       // ─── Lighting ───
       scene.add(new THREE.AmbientLight(0xffffff, 0.4));
       scene.add(new THREE.HemisphereLight(0x8899cc, 0x443322, 0.5));
@@ -721,6 +739,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         s.animationId = requestAnimationFrame(tick);
         controls.update();
         handlePitchSnap(s);
+        handleClickZoom(s);
         renderer.render(scene, camera);
       }
       tick();
@@ -739,6 +758,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       const s = stateRef.current;
       if (s.animationId) cancelAnimationFrame(s.animationId);
       s._resizeObserver?.disconnect();
+      s._clickZoomCleanup?.();
       s.controls?.dispose();
       if (s.sparkRenderer) {
         s.sparkRenderer.dispose();
@@ -915,6 +935,81 @@ function handlePitchSnap(s) {
         snap.state = 'idle';
       }
       break;
+    }
+  }
+}
+
+/* ─── Click Zoom Animation ─── */
+/**
+ * Press-and-hold zoom: on pointerdown the camera FOV narrows (zoom in),
+ * on pointerup it smoothly returns to the original FOV.
+ * Uses FOV instead of camera distance to avoid conflicts with OrbitControls.
+ *
+ * States:
+ *   idle        → Normal; watching for pointerdown
+ *   zooming_in  → Animating FOV toward narrower value (zoom in)
+ *   held        → At zoomed FOV; waiting for pointerup
+ *   zooming_out → Animating FOV back to original value
+ */
+function onCanvasPointerDown(s) {
+  const { camera, clickZoom: cz, pendingOrbit: orbit } = s;
+  if (!camera) return;
+  if (orbit?.clickZoomEnabled !== true) return;
+
+  // Only capture original FOV when starting from idle
+  if (cz.state === 'idle') {
+    cz.originalFov = camera.fov;
+  }
+  cz.state = 'zooming_in';
+}
+
+function onCanvasPointerUp(s) {
+  const { clickZoom: cz, pendingOrbit: orbit } = s;
+  if (orbit?.clickZoomEnabled !== true) return;
+
+  if (cz.state === 'zooming_in' || cz.state === 'held') {
+    cz.state = 'zooming_out';
+  }
+}
+
+function handleClickZoom(s) {
+  const { camera, clickZoom: cz, pendingOrbit: orbit } = s;
+  if (!camera) return;
+
+  const enabled = orbit?.clickZoomEnabled === true;
+
+  // If disabled mid-animation, restore FOV cleanly
+  if (!enabled && cz.state !== 'idle') {
+    camera.fov = cz.originalFov;
+    camera.updateProjectionMatrix();
+    cz.state = 'idle';
+    return;
+  }
+  if (!enabled || cz.state === 'idle') return;
+
+  const THREE = s.THREE;
+  if (!THREE) return;
+
+  const amount = (orbit?.clickZoomAmount ?? 30) / 100; // 0→1
+  const targetFov = cz.originalFov * (1 - amount);
+
+  if (cz.state === 'zooming_in') {
+    camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.09);
+    camera.updateProjectionMatrix();
+
+    if (Math.abs(camera.fov - targetFov) < 0.05) {
+      camera.fov = targetFov;
+      camera.updateProjectionMatrix();
+      cz.state = 'held';
+    }
+  } else if (cz.state === 'zooming_out') {
+    camera.fov = THREE.MathUtils.lerp(camera.fov, cz.originalFov, 0.09);
+    camera.updateProjectionMatrix();
+
+    if (Math.abs(camera.fov - cz.originalFov) < 0.05) {
+      camera.fov = cz.originalFov;
+      camera.updateProjectionMatrix();
+      cz.state = 'idle';
     }
   }
 }
