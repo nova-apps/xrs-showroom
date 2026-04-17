@@ -34,40 +34,86 @@ export default function ViewPage() {
   }, []);
 
   // Load assets when scene data arrives
+  // On mobile: load sequentially (GLB → SOG) to avoid memory spikes
+  // On desktop: load in parallel for speed
   useEffect(() => {
     if (!viewerReady || !scene || !viewerRef.current) return;
 
     const v = viewerRef.current;
     const assets = scene.assets || {};
     const loaded = loadedAssetsRef.current;
-    let hasAnyAsset = false;
 
-    const glbUrl = assets.glb?.url || null;
-    if (glbUrl !== loaded.glb) {
-      loaded.glb = glbUrl;
-      if (glbUrl) { v.loadGlb(glbUrl); hasAnyAsset = true; }
+    // Detect mobile for sequential loading
+    const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    async function loadSequential() {
+      // 1. Skybox + Floor first (lightweight)
+      const skyUrl = assets.skybox?.url || null;
+      if (skyUrl && skyUrl !== loaded.skybox) {
+        loaded.skybox = skyUrl;
+        await v.loadSkyboxTexture(skyUrl).catch(() => {});
+      }
+
+      const floorUrl = assets.floor?.url || null;
+      if (floorUrl && floorUrl !== loaded.floor) {
+        loaded.floor = floorUrl;
+        await v.loadFloorTexture(floorUrl).catch(() => {});
+      }
+
+      // 2. GLB model (medium memory)
+      const glbUrl = assets.glb?.url || null;
+      if (glbUrl && glbUrl !== loaded.glb) {
+        loaded.glb = glbUrl;
+        await v.loadGlb(glbUrl).catch(() => {});
+      }
+
+      // 3. SOG splat last (heaviest on VRAM)
+      const sogUrl = assets.sog?.url || null;
+      if (sogUrl && sogUrl !== loaded.sog) {
+        loaded.sog = sogUrl;
+        await v.loadSog(sogUrl).catch(() => {});
+      }
+
+      setLoadingAssets(false);
     }
 
-    const sogUrl = assets.sog?.url || null;
-    if (sogUrl !== loaded.sog) {
-      loaded.sog = sogUrl;
-      if (sogUrl) { v.loadSog(sogUrl); hasAnyAsset = true; }
+    function loadParallel() {
+      let hasAnyAsset = false;
+
+      const glbUrl = assets.glb?.url || null;
+      if (glbUrl !== loaded.glb) {
+        loaded.glb = glbUrl;
+        if (glbUrl) { v.loadGlb(glbUrl); hasAnyAsset = true; }
+      }
+
+      const sogUrl = assets.sog?.url || null;
+      if (sogUrl !== loaded.sog) {
+        loaded.sog = sogUrl;
+        if (sogUrl) { v.loadSog(sogUrl); hasAnyAsset = true; }
+      }
+
+      const skyUrl = assets.skybox?.url || null;
+      if (skyUrl !== loaded.skybox) {
+        loaded.skybox = skyUrl;
+        if (skyUrl) v.loadSkyboxTexture(skyUrl);
+      }
+
+      const floorUrl = assets.floor?.url || null;
+      if (floorUrl !== loaded.floor) {
+        loaded.floor = floorUrl;
+        if (floorUrl) v.loadFloorTexture(floorUrl);
+      }
+
+      setTimeout(() => setLoadingAssets(false), 800);
     }
 
-    const skyUrl = assets.skybox?.url || null;
-    if (skyUrl !== loaded.skybox) {
-      loaded.skybox = skyUrl;
-      if (skyUrl) v.loadSkyboxTexture(skyUrl);
+    if (isMobile) {
+      console.log('[View] Mobile detected — loading assets sequentially');
+      loadSequential();
+    } else {
+      loadParallel();
     }
-
-    const floorUrl = assets.floor?.url || null;
-    if (floorUrl !== loaded.floor) {
-      loaded.floor = floorUrl;
-      if (floorUrl) v.loadFloorTexture(floorUrl);
-    }
-
-    // Hide loading after a short delay to let assets start rendering
-    setTimeout(() => setLoadingAssets(false), 800);
   }, [viewerReady, scene]);
 
   // Apply transforms

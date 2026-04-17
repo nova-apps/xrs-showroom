@@ -475,6 +475,12 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     const s = stateRef.current;
     if (!s.THREE || !url) return;
 
+    // Skip SOG on mobile — too heavy for constrained VRAM
+    if (s.qualityProfile && !s.qualityProfile.enableSplats) {
+      console.log('[Viewer] SOG skipped (mobile quality profile — enableSplats=false)');
+      return;
+    }
+
     removeSog();
 
     try {
@@ -505,13 +511,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         throw new Error('Invalid SOG file (not a ZIP container)');
       }
 
+      const useExtSplats = s.qualityProfile?.enableExtSplats !== false;
       const splatMesh = new SplatMesh({
         fileBytes: bytes.buffer,
         fileName: 'splat.sog',
         lod: true,
-        extSplats: true,
+        extSplats: useExtSplats,
         onLoad: () => {
-          console.log('[Viewer] ✓ SOG splat loaded (LoD + ExtSplats enabled)');
+          console.log(`[Viewer] ✓ SOG splat loaded (LoD=true, ExtSplats=${useExtSplats})`);
         },
       });
 
@@ -850,9 +857,31 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
 
       // ─── Camera ───
       const aspect = container.clientWidth / container.clientHeight;
-      const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 50000);
+      const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, quality.cameraFar);
       camera.position.set(3, 2, 5);
       s.camera = camera;
+
+      // ─── WebGL Context Loss Recovery ───
+      renderer.domElement.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault();
+        console.error('[Viewer] WebGL context lost! Stopping render loop.');
+        if (s.animationId) {
+          cancelAnimationFrame(s.animationId);
+          s.animationId = null;
+        }
+      });
+      renderer.domElement.addEventListener('webglcontextrestored', () => {
+        console.log('[Viewer] WebGL context restored, restarting render loop.');
+        function tick() {
+          s.animationId = requestAnimationFrame(tick);
+          s.controls?.update();
+          handlePitchSnap(s);
+          handleClickZoom(s);
+          handleFocusAnimation(s);
+          s.renderer?.render(s.scene, s.camera);
+        }
+        tick();
+      });
 
       // ─── Controls ───
       const controls = new OrbitControls(camera, renderer.domElement);
