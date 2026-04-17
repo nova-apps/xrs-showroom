@@ -12,7 +12,7 @@ export default function UnidadesListPanel({ unidades = [], position = 'panel-lef
   const items = Array.isArray(unidades) ? unidades : [];
 
   // Filter state
-  const [selectedAmb, setSelectedAmb] = useState(null); // null = all
+  const [selectedAmb, setSelectedAmb] = useState(new Set()); // empty = all
   const [metrajeRange, setMetrajeRange] = useState([0, 300]);
   const [showAmbientes, setShowAmbientes] = useState(false);
   const [showMetraje, setShowMetraje] = useState(false);
@@ -45,14 +45,18 @@ export default function UnidadesListPanel({ unidades = [], position = 'panel-lef
   // Filter items
   const filtered = useMemo(() => {
     return items.filter((u) => {
-      // Ambientes filter
-      if (selectedAmb !== null) {
+      // Ambientes filter (multi-select — match ANY selected)
+      if (selectedAmb.size > 0) {
         const amb = Number(u.ambientes) || 0;
-        if (selectedAmb === '+') {
-          if (amb < 5) return false;
-        } else {
-          if (amb !== selectedAmb) return false;
+        let matches = false;
+        for (const sel of selectedAmb) {
+          if (sel === '+') {
+            if (amb >= 5) { matches = true; break; }
+          } else {
+            if (amb === sel) { matches = true; break; }
+          }
         }
+        if (!matches) return false;
       }
       // Metraje filter
       const sup = Number(u.supTotal) || 0;
@@ -61,12 +65,24 @@ export default function UnidadesListPanel({ unidades = [], position = 'panel-lef
     });
   }, [items, selectedAmb, metrajeRange]);
 
+  const toggleAmb = useCallback((val) => {
+    setSelectedAmb((prev) => {
+      const next = new Set(prev);
+      if (next.has(val)) {
+        next.delete(val);
+      } else {
+        next.add(val);
+      }
+      return next;
+    });
+  }, []);
+
   const clearFilters = useCallback(() => {
-    setSelectedAmb(null);
+    setSelectedAmb(new Set());
     setMetrajeRange(metrajeMinMax);
   }, [metrajeMinMax]);
 
-  const hasActiveFilters = selectedAmb !== null ||
+  const hasActiveFilters = selectedAmb.size > 0 ||
     metrajeRange[0] !== metrajeMinMax[0] ||
     metrajeRange[1] !== metrajeMinMax[1];
 
@@ -96,15 +112,15 @@ export default function UnidadesListPanel({ unidades = [], position = 'panel-lef
                     {[1, 2, 3, 4].map((n) => (
                       <button
                         key={n}
-                        className={`unidad-pill ${selectedAmb === n ? 'active' : ''}`}
-                        onClick={() => setSelectedAmb(selectedAmb === n ? null : n)}
+                        className={`unidad-pill ${selectedAmb.has(n) ? 'active' : ''}`}
+                        onClick={() => toggleAmb(n)}
                       >
                         {n}
                       </button>
                     ))}
                     <button
-                      className={`unidad-pill ${selectedAmb === '+' ? 'active' : ''}`}
-                      onClick={() => setSelectedAmb(selectedAmb === '+' ? null : '+')}
+                      className={`unidad-pill ${selectedAmb.has('+') ? 'active' : ''}`}
+                      onClick={() => toggleAmb('+')}
                     >
                       +
                     </button>
