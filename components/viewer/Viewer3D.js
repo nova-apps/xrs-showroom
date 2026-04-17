@@ -338,16 +338,16 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
             // Transparent / glass mesh
             child.renderOrder = -1;
             for (const m of mats) {
-              if (m.type === 'MeshPhysicalMaterial') {
-                // Use physically-based transmission for clear glass
-                m.transmission = 1.0;
-                m.thickness = 0.1;
-                m.roughness = 0.02;
-                m.ior = 1.45;
-                m.metalness = 0;
+              if (m.type === 'MeshPhysicalMaterial' || m.type === 'MeshStandardMaterial') {
+                // Clear glass: low opacity + sharp env map reflections
+                // (transmission-based glass uses a low-res buffer that causes blur)
                 m.transparent = true;
+                m.opacity = 0.15;
+                m.roughness = 0.05;
+                m.metalness = 0.1;
+                m.envMapIntensity = 2.0;
                 m.depthWrite = false;
-                // Force near-white color for clear glass (no dark tint)
+                m.transmission = 0;  // disable transmission buffer
                 if (m.color) m.color.set(0xffffff);
               } else {
                 // Fallback: simple alpha transparency
