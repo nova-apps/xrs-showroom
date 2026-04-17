@@ -143,7 +143,7 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
 
         {/* ─── GPU / VRAM ─── */}
         <div className="perf-section">
-          <div className="perf-section-title">🖥️ GPU / VRAM</div>
+          <div className="perf-section-title">🖥️ GPU {gpuInfo?.qualityProfile ? `(${gpuInfo.qualityProfile})` : ''}</div>
           {gpuInfo ? (
             <>
               {gpuInfo.gpuName && (

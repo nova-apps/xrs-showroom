@@ -14,7 +14,7 @@
  */
 
 import { useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { detectGPU } from '@/lib/utils';
+import { detectGPU, getQualityProfile } from '@/lib/utils';
 import { Optimizer } from '@/lib/optimizer';
 
 const DEG2RAD = Math.PI / 180;
@@ -39,6 +39,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     pmremGenerator: null,
     envMap: null,
     THREE: null,
+    qualityProfile: null,
     optimizer: null,
     clock: null,
     // Store transforms so they can be applied after models load
@@ -111,6 +112,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         memory: { ...s.renderer.info.memory },
         render: { ...s.renderer.info.render },
         gpuName: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null,
+        qualityProfile: s.qualityProfile?.name || 'unknown',
       };
     },
   }));
@@ -563,8 +565,8 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         s.skyboxMesh.material.needsUpdate = true;
       }
 
-      // ─── Generate environment map for PBR reflections ───
-      if (s.pmremGenerator) {
+      // ─── Generate environment map for PBR reflections (skip on mobile) ───
+      if (s.pmremGenerator && s.qualityProfile?.enableEnvMap) {
         // Dispose previous env map if any
         if (s.envMap) {
           s.envMap.dispose();
@@ -581,6 +583,8 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         s.scene.environment = s.envMap;
         envTex.dispose();
         console.log('[Viewer] ✓ Environment map generated for PBR reflections');
+      } else if (s.qualityProfile && !s.qualityProfile.enableEnvMap) {
+        console.log('[Viewer] Environment map skipped (mobile quality profile)');
       }
 
       URL.revokeObjectURL(blobUrl);
@@ -811,8 +815,10 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
 
       const container = containerRef.current;
       const gpu = detectGPU();
+      const quality = getQualityProfile();
+      s.qualityProfile = quality;
 
-      // ─── Renderer (optimized for splats) ───
+      // ─── Renderer (optimized for splats, adaptive quality) ───
       const renderer = new THREE.WebGLRenderer({
         antialias: false,
         logarithmicDepthBuffer: false,
@@ -820,7 +826,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         alpha: false,
       });
       renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setPixelRatio(quality.pixelRatio);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.0;
@@ -828,9 +834,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       container.appendChild(renderer.domElement);
       s.renderer = renderer;
 
-      // ─── PMREM Generator (for environment map / reflections) ───
-      s.pmremGenerator = new THREE.PMREMGenerator(renderer);
-      s.pmremGenerator.compileEquirectangularShader();
+      // ─── PMREM Generator (skip on mobile to save VRAM) ───
+      if (quality.enablePMREM) {
+        s.pmremGenerator = new THREE.PMREMGenerator(renderer);
+        s.pmremGenerator.compileEquirectangularShader();
+      } else {
+        s.pmremGenerator = null;
+        console.log('[Viewer] PMREM disabled (mobile quality profile)');
+      }
 
       // ─── Scene ───
       const scene = new THREE.Scene();
@@ -876,7 +887,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       scene.add(fill);
 
       // ─── Default Skybox Sphere ───
-      const skyGeo = new THREE.SphereGeometry(400, 64, 32);
+      const skyGeo = new THREE.SphereGeometry(400, quality.skyboxSegments[0], quality.skyboxSegments[1]);
       const skyMat = new THREE.MeshBasicMaterial({
         color: 0x111122,
         side: THREE.BackSide,
