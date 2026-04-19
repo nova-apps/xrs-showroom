@@ -49,7 +49,7 @@ function formatCount(n) {
  * - Actual load time (measured)
  * - Estimated load times for Fast 4G & Slow 4G (based on total asset sizes)
  */
-export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
+export default function PerformancePanel({ scene, loadMetrics, viewerRef, collapsed, onToggle }) {
   const [fps, setFps] = useState(0);
   const [gpuInfo, setGpuInfo] = useState(null);
   const frameCountRef = useRef(0);
@@ -127,8 +127,9 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
     <FloatingPanel
       title="Performance"
       icon="⚡"
-      position="panel-bottom-right"
-      defaultCollapsed={true}
+      position=""
+      collapsed={collapsed}
+      onToggle={onToggle}
     >
       <div className="perf-panel">
         {/* ─── FPS ─── */}

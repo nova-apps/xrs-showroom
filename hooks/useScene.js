@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { subscribeScene, updateTransforms as dbUpdateTransforms, updateOrbit as dbUpdateOrbit, updateMaterials as dbUpdateMaterials, updateUnidades as dbUpdateUnidades, updateCollidersVisible as dbUpdateCollidersVisible, updateSceneAsset, removeSceneAsset } from '@/lib/scenes';
+import { subscribeScene, updateTransforms as dbUpdateTransforms, updateOrbit as dbUpdateOrbit, updateMaterials as dbUpdateMaterials, updateUnidades as dbUpdateUnidades, updateCollidersVisible as dbUpdateCollidersVisible, updateLighting as dbUpdateLighting, updateSceneAsset, removeSceneAsset } from '@/lib/scenes';
 import { uploadAsset as storageUpload, deleteAsset as storageDelete } from '@/lib/storage';
 
 export function useScene(sceneId) {
@@ -104,6 +104,24 @@ export function useScene(sceneId) {
   );
 
   /**
+   * Update lighting settings with debounce.
+   */
+  const updateLighting = useCallback(
+    (lighting) => {
+      if (!sceneId) return;
+
+      if (debounceTimers.current.lighting) {
+        clearTimeout(debounceTimers.current.lighting);
+      }
+
+      debounceTimers.current.lighting = setTimeout(() => {
+        dbUpdateLighting(sceneId, lighting).catch(console.error);
+      }, 500);
+    },
+    [sceneId]
+  );
+
+  /**
    * Update colliders visibility flag (persists to DB immediately).
    */
   const updateCollidersVisible = useCallback(
@@ -193,6 +211,7 @@ export function useScene(sceneId) {
     updateOrbit,
     updateMaterials,
     updateUnidades,
+    updateLighting,
     updateCollidersVisible,
     uploadAsset,
     removeAsset,

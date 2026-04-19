@@ -43,19 +43,39 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     optimizer: null,
     clock: null,
     // Store transforms so they can be applied after models load
-    pendingTransforms: { glb: null, colliders: null, sog: null, skybox: null, floor: null },
+    pendingTransforms: { glb: null, colliders: null, sog: null, skybox: null, floor: null, mask: null },
+    // Spherical mask for floor/splat fade
+    maskHelper: null,
+    maskUniforms: {
+      uMaskEnabled: { value: 0.0 },
+      uMaskCenter: { value: null }, // initialized as Vector3 after THREE loads
+      uMaskRadius: { value: 50.0 },
+      uMaskFalloff: { value: 10.0 },
+    },
+    // Ambient light reference
+    ambientLight: null,
     // Store material overrides so they can be applied after GLB loads
     pendingMaterialOverrides: null,
     // Store the GLB model bounding-box center for orbit target
     glbCenter: null,
     // Store last orbit settings so they can be re-applied after GLB loads
     pendingOrbit: null,
+    // Model-specific environment map (separate from skybox env)
+    modelEnvMap: null,
+    // TransformControls gizmo
+    transformControls: null,
+    gizmoTarget: null, // which asset type the gizmo is attached to
+    onGizmoChange: null, // callback for when gizmo changes a transform
+    onGizmoDragEnd: null, // callback when gizmo drag ends (for history)
+    onCameraRotation: null, // callback for syncing camera orientation to ViewCube
+    onCameraInfo: null, // callback for camera info panel (pitch, yaw, zoom)
+    _lastCameraRot: null, // cache to avoid redundant calls
     // Pitch snap animation state machine
     pitchSnap: { state: 'idle', originalMinPolar: 0 },
     // Click zoom animation state machine
     clickZoom: { state: 'idle', originalFov: 45 },
     // Camera Focus animation state (spherical coords)
-    focusTarget: { state: 'idle', targetPhi: 0, targetTheta: 0, targetRadius: 0, onComplete: null },
+    focusTarget: { state: 'idle', targetPhi: 0, targetTheta: 0, targetRadius: 0, onComplete: null, lerpOverride: null },
   });
 
   // Expose methods to parent via ref
@@ -79,11 +99,318 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     loadSog: (url) => loadSogModel(url),
     loadSkyboxTexture: (url) => loadSkyboxTexture(url),
     loadFloorTexture: (url) => loadFloorTexture(url),
+    loadModelHdri: (url) => loadModelHdri(url),
     removeGlb: () => removeGlb(),
     removeColliders: () => removeColliders(),
     removeSog: () => removeSog(),
     removeSkyboxTexture: () => removeSkyboxTex(),
     removeFloorTexture: () => removeFloorTex(),
+    removeModelHdri: () => removeModelHdri(),
+    setCameraView: (viewName) => {
+      const s = stateRef.current;
+      const THREE = s.THREE;
+      if (!THREE || !s.camera || !s.controls) return;
+
+      const target = s.glbCenter || s.controls.target.clone();
+      // Calculate distance from current camera to target
+      const dist = s.camera.position.distanceTo(target);
+
+      const positions = {
+        top:    new THREE.Vector3(target.x, target.y + dist, target.z + 0.001),
+        bottom: new THREE.Vector3(target.x, target.y - dist, target.z + 0.001),
+        front:  new THREE.Vector3(target.x, target.y, target.z + dist),
+        back:   new THREE.Vector3(target.x, target.y, target.z - dist),
+        left:   new THREE.Vector3(target.x - dist, target.y, target.z),
+        right:  new THREE.Vector3(target.x + dist, target.y, target.z),
+      };
+
+      const pos = positions[viewName];
+      if (!pos) return;
+
+      // Use focus animation for smooth transition
+      const offset = pos.clone().sub(target);
+      const sph = new THREE.Spherical().setFromVector3(offset);
+      sph.makeSafe();
+
+      s.focusTarget.targetPhi = sph.phi;
+      s.focusTarget.targetTheta = sph.theta;
+      s.focusTarget.targetRadius = sph.radius;
+      s.focusTarget.onComplete = null;
+      s.focusTarget.lerpOverride = 0.12;
+      s.focusTarget.state = 'animating';
+    },
+    setLighting: (lighting) => {
+      const s = stateRef.current;
+      if (!s.ambientLight || !s.THREE) return;
+      if (lighting.ambientIntensity !== undefined) {
+        s.ambientLight.intensity = lighting.ambientIntensity;
+      }
+      if (lighting.ambientColor !== undefined) {
+        s.ambientLight.color.set(lighting.ambientColor);
+      }
+      if (lighting.envMapIntensity !== undefined && s.scene) {
+        s.scene.environmentIntensity = lighting.envMapIntensity;
+      }
+    },
+    setGizmoMode: (mode, assetType) => {
+      const s = stateRef.current;
+      if (!s.transformControls) return;
+
+      // Find the target object
+      const targets = {
+        glb: s.glbModel,
+        colliders: s.collidersModel,
+        sog: s.splatMesh,
+      };
+      const obj = targets[assetType];
+      if (!obj) return;
+
+      s.transformControls.setMode(mode); // 'translate' | 'rotate' | 'scale'
+      s.transformControls.attach(obj);
+      s.gizmoTarget = assetType;
+    },
+    detachGizmo: () => {
+      const s = stateRef.current;
+      if (s.transformControls) {
+        s.transformControls.detach();
+        s.gizmoTarget = null;
+      }
+    },
+    setGizmoChangeCallback: (cb) => {
+      stateRef.current.onGizmoChange = cb;
+    },
+    setGizmoDragEndCallback: (cb) => {
+      stateRef.current.onGizmoDragEnd = cb;
+    },
+    setCameraRotationCallback: (cb) => {
+      stateRef.current.onCameraRotation = cb;
+    },
+    setCameraInfoCallback: (cb) => {
+      stateRef.current.onCameraInfo = cb;
+    },
+    setCameraFromRotation: (rx, ry) => {
+      const s = stateRef.current;
+      const THREE = s.THREE;
+      if (!THREE || !s.camera || !s.controls) return;
+      // Reverse the mapping: CSS rotation → spherical
+      const phi = (rx + 90) * Math.PI / 180;
+      const theta = -ry * Math.PI / 180;
+      const offset = new THREE.Vector3().subVectors(s.camera.position, s.controls.target);
+      const radius = offset.length();
+      const sph = new THREE.Spherical(radius, phi, theta);
+      sph.makeSafe();
+      offset.setFromSpherical(sph);
+      s.camera.position.copy(s.controls.target).add(offset);
+      s.camera.lookAt(s.controls.target);
+      // Sync OrbitControls internal state — disable damping so update() fully adopts the position
+      const savedDamping = s.controls.enableDamping;
+      s.controls.enableDamping = false;
+      s.controls.update();
+      s.controls.enableDamping = savedDamping;
+    },
+    getModelStats: () => {
+      const s = stateRef.current;
+      if (!s.glbModel) return null;
+      let meshCount = 0, totalVertices = 0, totalTriangles = 0;
+      let textureCount = 0, maxTexSize = 0, nonPOT = 0;
+      const textures = new Set();
+      // Compression detection from stored GLTF extensions
+      const ext = s.glbModel.userData._extensions || {};
+      const innerModel = s.glbModel.getObjectByName('__glb_pivot_wrapper__') ? s.glbModel.children[0] : s.glbModel;
+      const extensions = (innerModel?.userData?._extensions) || ext;
+      s.glbModel.traverse((child) => {
+        if (child.isMesh) {
+          meshCount++;
+          const geom = child.geometry;
+          if (geom) {
+            const pos = geom.attributes.position;
+            if (pos) totalVertices += pos.count;
+            const idx = geom.getIndex();
+            totalTriangles += idx ? idx.count / 3 : (pos ? pos.count / 3 : 0);
+          }
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          for (const mat of mats) {
+            for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap']) {
+              const tex = mat[key];
+              if (tex && !textures.has(tex.uuid)) {
+                textures.add(tex.uuid);
+                textureCount++;
+                const w = tex.image?.width || tex.image?.naturalWidth || 0;
+                const h = tex.image?.height || tex.image?.naturalHeight || 0;
+                const size = Math.max(w, h);
+                if (size > maxTexSize) maxTexSize = size;
+                if (w && h && ((w & (w - 1)) !== 0 || (h & (h - 1)) !== 0)) nonPOT++;
+              }
+            }
+          }
+        }
+      });
+      return {
+        meshCount, totalVertices: Math.round(totalVertices), totalTriangles: Math.round(totalTriangles),
+        textureCount, maxTexSize, nonPOT,
+        draco: !!extensions.draco, meshopt: !!extensions.meshopt, ktx2: !!extensions.ktx2,
+      };
+    },
+    optimizeModel: async (options, onProgress) => {
+      const s = stateRef.current;
+      if (!s.glbModel || !s.THREE) return null;
+      const { Optimizer } = await import('@/lib/optimizer');
+      const opt = new Optimizer(s.THREE);
+      const results = {};
+      const steps = [];
+      if (options.resizeTextures) steps.push('resizeTextures');
+      if (options.forcePOT) steps.push('forcePOT');
+      if (options.stripGeometry) steps.push('stripGeometry');
+      const total = steps.length;
+      for (let i = 0; i < steps.length; i++) {
+        onProgress?.((i / total) * 100);
+        // Yield to let UI update
+        await new Promise((r) => setTimeout(r, 50));
+        switch (steps[i]) {
+          case 'resizeTextures':
+            results.resized = opt.resizeTextures(s.glbModel, options.maxTextureSize || 2048);
+            break;
+          case 'forcePOT':
+            results.pot = opt.forcePOT(s.glbModel);
+            break;
+          case 'stripGeometry':
+            results.stripped = opt.stripGeometry(s.glbModel);
+            break;
+        }
+      }
+      onProgress?.(100);
+      return results;
+    },
+    analyzeGlbFile: async (file) => {
+      const s = stateRef.current;
+      const THREE = s.THREE;
+      if (!THREE) return null;
+      const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { DRACOLoader } = await import('three/examples/jsm/loaders/DRACOLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+      const gltfLoader = new GLTFLoader();
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+      dracoLoader.setDecoderConfig({ type: 'wasm' });
+      gltfLoader.setDRACOLoader(dracoLoader);
+      gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+      if (s.renderer) {
+        const { KTX2Loader } = await import('three/examples/jsm/loaders/KTX2Loader.js');
+        const ktx2 = new KTX2Loader();
+        ktx2.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/basis/');
+        ktx2.detectSupport(s.renderer);
+        gltfLoader.setKTX2Loader(ktx2);
+      }
+      const buffer = await file.arrayBuffer();
+      const gltf = await new Promise((resolve, reject) => {
+        gltfLoader.parse(buffer, '', resolve, reject);
+      });
+      const model = gltf.scene;
+      const extUsed = gltf.parser?.json?.extensionsUsed || [];
+      let meshCount = 0, totalVertices = 0, totalTriangles = 0;
+      let textureCount = 0, maxTexSize = 0, nonPOT = 0;
+      const textures = new Set();
+      model.traverse((child) => {
+        if (child.isMesh) {
+          meshCount++;
+          const geom = child.geometry;
+          if (geom) {
+            const pos = geom.attributes.position;
+            if (pos) totalVertices += pos.count;
+            const idx = geom.getIndex();
+            totalTriangles += idx ? idx.count / 3 : (pos ? pos.count / 3 : 0);
+          }
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          for (const mat of mats) {
+            for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap']) {
+              const tex = mat[key];
+              if (tex && !textures.has(tex.uuid)) {
+                textures.add(tex.uuid);
+                textureCount++;
+                const w = tex.image?.width || tex.image?.naturalWidth || 0;
+                const h = tex.image?.height || tex.image?.naturalHeight || 0;
+                if (Math.max(w, h) > maxTexSize) maxTexSize = Math.max(w, h);
+                if (w && h && ((w & (w - 1)) !== 0 || (h & (h - 1)) !== 0)) nonPOT++;
+              }
+            }
+          }
+        }
+      });
+      dracoLoader.dispose();
+      // Dispose parsed model (we only needed stats)
+      model.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((m) => m.dispose());
+        }
+      });
+      return {
+        meshCount, totalVertices: Math.round(totalVertices), totalTriangles: Math.round(totalTriangles),
+        textureCount, maxTexSize, nonPOT,
+        draco: extUsed.includes('KHR_draco_mesh_compression'),
+        meshopt: extUsed.includes('EXT_meshopt_compression'),
+        ktx2: extUsed.includes('KHR_texture_basisu'),
+      };
+    },
+    optimizeAndExportGlb: async (file, options, onProgress) => {
+      const s = stateRef.current;
+      const THREE = s.THREE;
+      if (!THREE) return null;
+      onProgress?.(5);
+      const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { DRACOLoader } = await import('three/examples/jsm/loaders/DRACOLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+      const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter.js');
+      const gltfLoader = new GLTFLoader();
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+      dracoLoader.setDecoderConfig({ type: 'wasm' });
+      gltfLoader.setDRACOLoader(dracoLoader);
+      gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+      if (s.renderer) {
+        const { KTX2Loader } = await import('three/examples/jsm/loaders/KTX2Loader.js');
+        const ktx2 = new KTX2Loader();
+        ktx2.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/basis/');
+        ktx2.detectSupport(s.renderer);
+        gltfLoader.setKTX2Loader(ktx2);
+      }
+      onProgress?.(15);
+      const buffer = await file.arrayBuffer();
+      const gltf = await new Promise((resolve, reject) => {
+        gltfLoader.parse(buffer, '', resolve, reject);
+      });
+      onProgress?.(40);
+      const model = gltf.scene;
+      const { Optimizer } = await import('@/lib/optimizer');
+      const opt = new Optimizer(THREE);
+      if (options.resizeTextures) {
+        opt.resizeTextures(model, options.maxTextureSize || 2048);
+      }
+      onProgress?.(60);
+      if (options.forcePOT) {
+        opt.forcePOT(model);
+      }
+      if (options.stripGeometry) {
+        opt.stripGeometry(model);
+      }
+      onProgress?.(75);
+      // Export to GLB
+      const exporter = new GLTFExporter();
+      const glbBuffer = await exporter.parseAsync(model, { binary: true });
+      onProgress?.(95);
+      dracoLoader.dispose();
+      model.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((m) => m.dispose());
+        }
+      });
+      const optimizedFile = new File([glbBuffer], file.name, { type: 'model/gltf-binary' });
+      onProgress?.(100);
+      return optimizedFile;
+    },
     getGlbModel: () => stateRef.current.glbModel,
     getCollidersModel: () => stateRef.current.collidersModel,
     focusOnCollider: (name, onComplete) => focusCameraOnCollider(name, onComplete),
@@ -91,6 +418,41 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       const s = stateRef.current;
       if (s.collidersModel) {
         s.collidersModel.visible = visible;
+      }
+    },
+    setAssetVisible: (assetType, visible) => {
+      const s = stateRef.current;
+      const THREE = s.THREE;
+      switch (assetType) {
+        case 'glb':
+          if (s.glbModel) s.glbModel.visible = visible;
+          break;
+        case 'colliders':
+          if (s.collidersModel) s.collidersModel.visible = visible;
+          break;
+        case 'sog':
+          if (s.splatMesh) s.splatMesh.visible = visible;
+          break;
+        case 'skybox':
+          if (s.skyboxMesh) s.skyboxMesh.visible = visible;
+          // Also toggle scene.background for HDR
+          if (s.scene && THREE) {
+            if (visible) {
+              // Restore HDR background if we have a raw texture with equirect mapping
+              if (s.skyboxRawTexture?.mapping === THREE.EquirectangularReflectionMapping) {
+                s.scene.background = s.skyboxRawTexture;
+              }
+            } else {
+              s.scene.background = new THREE.Color(0x08080e);
+            }
+          }
+          break;
+        case 'floor':
+          if (s.floorMesh) s.floorMesh.visible = visible;
+          break;
+        case 'mask':
+          if (s.maskHelper) s.maskHelper.visible = visible;
+          break;
       }
     },
     applyMaterialOverrides: (overrides) => {
@@ -171,6 +533,56 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     }
   }, []);
 
+  /* ─── Spherical Mask Shader Injection ─── */
+  const _patchMaterialWithMask = useCallback((s, material) => {
+    if (material.userData._maskPatched) return;
+    const uniforms = s.maskUniforms;
+
+    material.transparent = true;
+    material.depthWrite = true;
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uMaskEnabled = uniforms.uMaskEnabled;
+      shader.uniforms.uMaskCenter = uniforms.uMaskCenter;
+      shader.uniforms.uMaskRadius = uniforms.uMaskRadius;
+      shader.uniforms.uMaskFalloff = uniforms.uMaskFalloff;
+
+      // Inject varying into vertex shader
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `#include <common>
+varying vec3 vMaskWorldPos;`
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <worldpos_vertex>',
+        `#include <worldpos_vertex>
+vMaskWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;`
+      );
+
+      // Inject alpha fade into fragment shader
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        `#include <common>
+uniform float uMaskEnabled;
+uniform vec3 uMaskCenter;
+uniform float uMaskRadius;
+uniform float uMaskFalloff;
+varying vec3 vMaskWorldPos;`
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <dithering_fragment>',
+        `#include <dithering_fragment>
+if (uMaskEnabled > 0.5) {
+  float maskDist = distance(vMaskWorldPos, uMaskCenter);
+  float maskAlpha = 1.0 - smoothstep(uMaskRadius - uMaskFalloff, uMaskRadius, maskDist);
+  gl_FragColor.a *= maskAlpha;
+  if (gl_FragColor.a < 0.001) discard;
+}`
+      );
+    };
+    material.userData._maskPatched = true;
+    material.needsUpdate = true;
+  }, []);
+
   /* ─── Transform Application ─── */
   const applyTransformToObject = useCallback(async (type, transforms) => {
     const s = stateRef.current;
@@ -179,12 +591,19 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     // Always store the latest transforms
     s.pendingTransforms[type] = transforms;
 
+    // Helper to apply scale — supports both uniform (number) and per-axis (object)
+    const applyScale = (obj, scale) => {
+      if (typeof scale === 'object' && scale !== null) {
+        obj.scale.set(scale.x ?? 1, scale.y ?? 1, scale.z ?? 1);
+      } else if (typeof scale === 'number') {
+        obj.scale.setScalar(scale);
+      }
+    };
+
     if (type === 'glb' && s.glbModel) {
       const pos = transforms.position || {};
       s.glbModel.position.set(pos.x ?? 0, pos.y ?? 0, pos.z ?? 0);
-      if (typeof transforms.scale === 'number') {
-        s.glbModel.scale.setScalar(transforms.scale);
-      }
+      applyScale(s.glbModel, transforms.scale);
       const rot = transforms.rotation || {};
       s.glbModel.rotation.set(
         (rot.x ?? 0) * DEG2RAD,
@@ -196,9 +615,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     if (type === 'colliders' && s.collidersModel) {
       const pos = transforms.position || {};
       s.collidersModel.position.set(pos.x ?? 0, pos.y ?? 0, pos.z ?? 0);
-      if (typeof transforms.scale === 'number') {
-        s.collidersModel.scale.setScalar(transforms.scale);
-      }
+      applyScale(s.collidersModel, transforms.scale);
       const rot = transforms.rotation || {};
       s.collidersModel.rotation.set(
         (rot.x ?? 0) * DEG2RAD,
@@ -210,9 +627,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     if (type === 'sog' && s.splatMesh) {
       const pos = transforms.position || {};
       s.splatMesh.position.set(pos.x ?? 0, pos.y ?? 0, pos.z ?? 0);
-      if (typeof transforms.scale === 'number') {
-        s.splatMesh.scale.setScalar(transforms.scale);
-      }
+      applyScale(s.splatMesh, transforms.scale);
       const rot = transforms.rotation || {};
       s.splatMesh.rotation.set(
         (rot.x ?? 0) * DEG2RAD,
@@ -223,16 +638,29 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
 
     if (type === 'skybox' && s.skyboxMesh) {
       const THREE = s.THREE;
+      const DEG = Math.PI / 180;
       const radius = transforms.radius ?? 400;
       s.skyboxMesh.scale.setScalar(radius / 400);
 
+      // Rotation
+      const rot = transforms.rotation ?? {};
+      s.skyboxMesh.rotation.set(
+        (rot.x ?? 0) * DEG,
+        (rot.y ?? 0) * DEG,
+        (rot.z ?? 0) * DEG
+      );
+
+      // Debounced blur to avoid excessive canvas redraws during slider drag
       if (typeof transforms.blur === 'number' && s.skyboxRawTexture) {
-        const { blurTexture } = await import('@/lib/utils');
-        const blurred = blurTexture(THREE, s.skyboxRawTexture, transforms.blur);
-        if (s.skyboxMesh.material.map) s.skyboxMesh.material.map.dispose();
-        s.skyboxMesh.material.color.set(0xffffff);
-        s.skyboxMesh.material.map = blurred;
-        s.skyboxMesh.material.needsUpdate = true;
+        clearTimeout(s._skyboxBlurTimer);
+        s._skyboxBlurTimer = setTimeout(async () => {
+          const { blurTexture } = await import('@/lib/utils');
+          const blurred = blurTexture(THREE, s.skyboxRawTexture, transforms.blur);
+          if (s.skyboxMesh.material.map) s.skyboxMesh.material.map.dispose();
+          s.skyboxMesh.material.color.set(0xffffff);
+          s.skyboxMesh.material.map = blurred;
+          s.skyboxMesh.material.needsUpdate = true;
+        }, 80);
       }
     }
 
@@ -249,6 +677,37 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         s.floorMesh.material.color.set(0xffffff);
         s.floorMesh.material.map = blurred;
         s.floorMesh.material.needsUpdate = true;
+      }
+    }
+
+    if (type === 'mask') {
+      const THREE = s.THREE;
+      const pos = transforms.position || {};
+      const enabled = transforms.enabled !== false;
+      const radius = transforms.radius ?? 50;
+      const falloff = transforms.falloff ?? 10;
+
+      // Update shared uniforms — these are referenced by floor shader
+      s.maskUniforms.uMaskEnabled.value = enabled ? 1.0 : 0.0;
+      s.maskUniforms.uMaskCenter.value.set(pos.x ?? 0, pos.y ?? 0, pos.z ?? 0);
+      s.maskUniforms.uMaskRadius.value = radius;
+      s.maskUniforms.uMaskFalloff.value = falloff;
+
+      // Update wireframe helper
+      if (s.maskHelper) {
+        s.maskHelper.position.set(pos.x ?? 0, pos.y ?? 0, pos.z ?? 0);
+        // Recreate sphere geometry if radius changed
+        const currentRadius = s.maskHelper.geometry.parameters?.radius;
+        if (currentRadius !== radius) {
+          s.maskHelper.geometry.dispose();
+          s.maskHelper.geometry = new THREE.SphereGeometry(radius, 32, 16);
+        }
+        s.maskHelper.visible = enabled;
+      }
+
+      // Apply shader injection to floor material if not yet patched
+      if (s.floorMesh && !s.floorMesh.material.userData._maskPatched) {
+        _patchMaterialWithMask(s, s.floorMesh.material);
       }
     }
   }, []);
@@ -302,6 +761,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       const model = gltf.scene;
       model.userData._loaded = true;
 
+      // Store GLTF extension info for compression detection
+      const extUsed = gltf.parser?.json?.extensionsUsed || [];
+      model.userData._extensions = {
+        draco: extUsed.includes('KHR_draco_mesh_compression'),
+        meshopt: extUsed.includes('EXT_meshopt_compression'),
+        ktx2: extUsed.includes('KHR_texture_basisu'),
+      };
+
       // Disable shadows (splat-optimized) and set render order so GLB
       // always draws BEFORE the SOG splat (which composites on top).
       // Transparent materials (glass, railings) need special handling:
@@ -335,32 +802,52 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
           });
 
           if (hasTransparent) {
-            // Transparent / glass mesh
+            // Transparent / glass mesh — convert to MeshPhysicalMaterial for realistic reflections
             child.renderOrder = -1;
+            const newMats = mats.map((m) => {
+              // Preserve original color tint if available
+              const origColor = m.color ? m.color.clone() : new THREE.Color(0xffffff);
+              const phys = new THREE.MeshPhysicalMaterial({
+                color: origColor,
+                transparent: true,
+                opacity: 1.0,
+                roughness: 0.02,
+                metalness: 0.0,
+                envMapIntensity: 2.5,
+                depthWrite: false,
+                transmission: 0.6,
+                thickness: 0.8,
+                ior: 1.52,
+                reflectivity: 0.9,
+                specularIntensity: 1.0,
+                specularColor: new THREE.Color(0xffffff),
+                clearcoat: 0.3,
+                clearcoatRoughness: 0.0,
+                side: m.side,
+              });
+              // Explicitly set the environment map if available
+              if (s.modelEnvMap) {
+                phys.envMap = s.modelEnvMap;
+              } else if (s.envMap) {
+                phys.envMap = s.envMap;
+              } else if (s.scene?.environment) {
+                phys.envMap = s.scene.environment;
+              }
+              phys.name = m.name;
+              m.dispose();
+              return phys;
+            });
+            child.material = newMats.length === 1 ? newMats[0] : newMats;
+            console.log(`[Viewer] Glass material applied: mesh="${child.name}", mat="${newMats.map(m => m.name).join(', ')}"`);
+          } else {
+            // Opaque mesh — keep original material, env map will provide reflections
+            child.renderOrder = -2;
             for (const m of mats) {
-              if (m.type === 'MeshPhysicalMaterial' || m.type === 'MeshStandardMaterial') {
-                // Clear glass: low opacity + sharp env map reflections
-                // (transmission-based glass uses a low-res buffer that causes blur)
-                m.transparent = true;
-                m.opacity = 0.15;
-                m.roughness = 0.05;
-                m.metalness = 0.1;
-                m.envMapIntensity = 2.0;
-                m.depthWrite = false;
-                m.transmission = 0;  // disable transmission buffer
-                if (m.color) m.color.set(0xffffff);
-              } else {
-                // Fallback: simple alpha transparency
-                m.transparent = true;
-                m.opacity = 0.3;
-                m.depthWrite = false;
+              if (m.envMapIntensity !== undefined) {
+                m.envMapIntensity = 1.5;
               }
               m.needsUpdate = true;
             }
-            console.log(`[Viewer] Glass material applied: mesh="${child.name}", mat="${mats.map(m => m.name).join(', ')}"`);
-          } else {
-            // Opaque mesh — draw before transparent
-            child.renderOrder = -2;
           }
         }
       });
@@ -388,12 +875,27 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       });
       console.groupEnd();
 
+      // ─── Recenter pivot to bottom-center of bounding box ───
+      // Wrap the model in a container so the pivot sits at floor-center.
+      // Scaling will grow from the floor plane.
+      const bbox = new THREE.Box3().setFromObject(model);
+      const center = bbox.getCenter(new THREE.Vector3());
+      const pivotOffset = new THREE.Vector3(center.x, bbox.min.y, center.z);
+
+      // Offset the inner model so origin = bottom-center
+      model.position.sub(pivotOffset);
+
+      const wrapper = new THREE.Group();
+      wrapper.name = '__glb_pivot_wrapper__';
+      wrapper.position.copy(pivotOffset);
+      wrapper.add(model);
+
       // Optimize
       if (!s.optimizer) s.optimizer = new Optimizer(THREE);
-      await s.optimizer.optimize(model);
+      await s.optimizer.optimize(wrapper);
 
-      s.scene.add(model);
-      s.glbModel = model;
+      s.scene.add(wrapper);
+      s.glbModel = wrapper;
 
       // Apply pending transforms if they exist
       if (s.pendingTransforms.glb) {
@@ -512,6 +1014,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       }
 
       const useExtSplats = s.qualityProfile?.enableExtSplats !== false;
+
       const splatMesh = new SplatMesh({
         fileBytes: bytes.buffer,
         fileName: 'splat.sog',
@@ -526,6 +1029,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       splatMesh.renderOrder = 10;
       s.scene.add(splatMesh);
       s.splatMesh = splatMesh;
+
 
       // Apply pending transforms if they exist
       if (s.pendingTransforms.sog) {
@@ -543,59 +1047,112 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     if (!THREE || !url) return;
 
     try {
-      // Fetch as blob, then load as HTMLImageElement
-      const res = await fetch(url, { mode: 'cors' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      // Detect HDR by URL extension (before query params)
+      const isHDR = /\.hdr(\?|$)/i.test(url);
 
-      const image = await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = blobUrl;
-      });
+      let tex;
+      let envSourceTex;
 
-      const tex = new THREE.Texture(image);
-      tex.needsUpdate = true;
-      tex.colorSpace = THREE.SRGBColorSpace;
-      s.skyboxRawTexture = tex;
+      if (isHDR) {
+        // ─── HDR via RGBELoader ───
+        const { RGBELoader } = await import('three/examples/jsm/loaders/RGBELoader.js');
+        const rgbeLoader = new RGBELoader();
 
-      const { blurTexture } = await import('@/lib/utils');
-      const blurred = blurTexture(THREE, tex, 3);
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const buffer = await res.arrayBuffer();
 
-      if (s.skyboxMesh) {
-        if (s.skyboxMesh.material.map) s.skyboxMesh.material.map.dispose();
-        s.skyboxMesh.material.color.set(0xffffff);
-        s.skyboxMesh.material.map = blurred;
-        s.skyboxMesh.material.needsUpdate = true;
+        tex = await new Promise((resolve, reject) => {
+          rgbeLoader.parse(buffer, '', (texture) => {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            resolve(texture);
+          }, reject);
+        });
+
+        s.skyboxRawTexture = tex;
+
+        // For HDR, use the scene background directly instead of sphere mesh
+        s.scene.background = tex;
+        // Hide the sphere mesh since we use scene.background
+        if (s.skyboxMesh) s.skyboxMesh.visible = false;
+
+        envSourceTex = tex;
+        console.log('[Viewer] ✓ HDR skybox loaded');
+      } else {
+        // ─── LDR (jpg/png/webp) via Image element ───
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const image = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = blobUrl;
+        });
+
+        tex = new THREE.Texture(image);
+        tex.needsUpdate = true;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        s.skyboxRawTexture = tex;
+
+        const { blurTexture } = await import('@/lib/utils');
+        const blurred = blurTexture(THREE, tex, 3);
+
+        // Show sphere mesh for LDR textures
+        if (s.skyboxMesh) {
+          s.skyboxMesh.visible = true;
+          if (s.skyboxMesh.material.map) s.skyboxMesh.material.map.dispose();
+          s.skyboxMesh.material.color.set(0xffffff);
+          s.skyboxMesh.material.map = blurred;
+          s.skyboxMesh.material.needsUpdate = true;
+        }
+        // Clear scene.background in case HDR was loaded before
+        s.scene.background = new THREE.Color(0x08080e);
+
+        // Create env source texture from the image
+        envSourceTex = new THREE.Texture(image);
+        envSourceTex.mapping = THREE.EquirectangularReflectionMapping;
+        envSourceTex.colorSpace = THREE.SRGBColorSpace;
+        envSourceTex.needsUpdate = true;
+
+        URL.revokeObjectURL(blobUrl);
+        console.log('[Viewer] ✓ Skybox texture loaded');
       }
 
       // ─── Generate environment map for PBR reflections (skip on mobile) ───
-      if (s.pmremGenerator && s.qualityProfile?.enableEnvMap) {
-        // Dispose previous env map if any
+      if (s.pmremGenerator && s.qualityProfile?.enableEnvMap && envSourceTex) {
         if (s.envMap) {
           s.envMap.dispose();
           s.envMap = null;
         }
-        // Create an equirectangular texture for PMREM
-        const envTex = new THREE.Texture(image);
-        envTex.mapping = THREE.EquirectangularReflectionMapping;
-        envTex.colorSpace = THREE.SRGBColorSpace;
-        envTex.needsUpdate = true;
-
-        const envRT = s.pmremGenerator.fromEquirectangular(envTex);
+        const envRT = s.pmremGenerator.fromEquirectangular(envSourceTex);
         s.envMap = envRT.texture;
-        s.scene.environment = s.envMap;
-        envTex.dispose();
+        // Only set scene.environment if no model-specific HDRI is loaded
+        if (!s.modelEnvMap) {
+          s.scene.environment = s.envMap;
+
+          // Update glass/physical materials with the skybox env map
+          if (s.glbModel) {
+            s.glbModel.traverse((child) => {
+              if (!child.isMesh) return;
+              const mats = Array.isArray(child.material) ? child.material : [child.material];
+              for (const mat of mats) {
+                if (mat.isMeshPhysicalMaterial && mat.transmission > 0) {
+                  mat.envMap = s.envMap;
+                  mat.needsUpdate = true;
+                }
+              }
+            });
+          }
+        }
+        if (!isHDR) envSourceTex.dispose();
         console.log('[Viewer] ✓ Environment map generated for PBR reflections');
       } else if (s.qualityProfile && !s.qualityProfile.enableEnvMap) {
         console.log('[Viewer] Environment map skipped (mobile quality profile)');
       }
-
-      URL.revokeObjectURL(blobUrl);
-      console.log('[Viewer] ✓ Skybox texture loaded');
     } catch (err) {
       console.error('[Viewer] Skybox texture failed:', err);
     }
@@ -676,16 +1233,23 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
 
   const removeSkyboxTex = useCallback(() => {
     const s = stateRef.current;
+    const THREE = s.THREE;
     if (s.skyboxMesh?.material?.map) {
       s.skyboxMesh.material.map.dispose();
       s.skyboxMesh.material.map = null;
       s.skyboxMesh.material.needsUpdate = true;
     }
-    // Remove environment map
+    // Restore sphere mesh visibility and default background
+    if (s.skyboxMesh) s.skyboxMesh.visible = true;
+    if (s.scene && THREE) s.scene.background = new THREE.Color(0x08080e);
+    // Remove skybox environment map
     if (s.envMap) {
       s.envMap.dispose();
       s.envMap = null;
-      s.scene.environment = null;
+      // Only clear scene.environment if no model-specific HDRI
+      if (!s.modelEnvMap) {
+        s.scene.environment = null;
+      }
     }
     s.skyboxRawTexture = null;
   }, []);
@@ -698,6 +1262,96 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       s.floorMesh.material.needsUpdate = true;
     }
     s.floorRawTexture = null;
+  }, []);
+
+  /* ─── Model HDRI (environment map only, separate from skybox) ─── */
+  const loadModelHdri = useCallback(async (url) => {
+    const s = stateRef.current;
+    const THREE = s.THREE;
+    if (!THREE || !url) return;
+
+    try {
+      const isHDR = /\.hdr(\?|$)/i.test(url);
+      let envSourceTex;
+
+      if (isHDR) {
+        const { RGBELoader } = await import('three/examples/jsm/loaders/RGBELoader.js');
+        const rgbeLoader = new RGBELoader();
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const buffer = await res.arrayBuffer();
+
+        envSourceTex = await new Promise((resolve, reject) => {
+          rgbeLoader.parse(buffer, '', (texture) => {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            resolve(texture);
+          }, reject);
+        });
+      } else {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const image = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = blobUrl;
+        });
+
+        envSourceTex = new THREE.Texture(image);
+        envSourceTex.mapping = THREE.EquirectangularReflectionMapping;
+        envSourceTex.colorSpace = THREE.SRGBColorSpace;
+        envSourceTex.needsUpdate = true;
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      // Generate PMREM env map for model reflections
+      if (s.pmremGenerator && envSourceTex) {
+        if (s.modelEnvMap) {
+          s.modelEnvMap.dispose();
+          s.modelEnvMap = null;
+        }
+        const envRT = s.pmremGenerator.fromEquirectangular(envSourceTex);
+        s.modelEnvMap = envRT.texture;
+        s.scene.environment = s.modelEnvMap;
+        if (!isHDR) envSourceTex.dispose();
+
+        // Update all glass/physical materials with the new env map
+        if (s.glbModel) {
+          s.glbModel.traverse((child) => {
+            if (!child.isMesh) return;
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            for (const mat of mats) {
+              if (mat.isMeshPhysicalMaterial && mat.transmission > 0) {
+                mat.envMap = s.modelEnvMap;
+                mat.needsUpdate = true;
+              }
+            }
+          });
+        }
+        console.log('[Viewer] ✓ Model HDRI environment map loaded');
+      }
+    } catch (err) {
+      console.error('[Viewer] Model HDRI failed:', err);
+    }
+  }, []);
+
+  const removeModelHdri = useCallback(() => {
+    const s = stateRef.current;
+    if (s.modelEnvMap) {
+      s.modelEnvMap.dispose();
+      s.modelEnvMap = null;
+    }
+    // Fall back to skybox env map if available, otherwise clear
+    if (s.envMap) {
+      s.scene.environment = s.envMap;
+    } else {
+      s.scene.environment = null;
+    }
+    console.log('[Viewer] Model HDRI removed');
   }, []);
 
   /* ─── Focus Camera on Collider ─── */
@@ -813,6 +1467,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     async function init() {
       const THREE = await import('three');
       const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+      const { TransformControls } = await import('three/examples/jsm/controls/TransformControls.js');
 
       if (!mounted || !containerRef.current) return;
 
@@ -835,8 +1490,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       renderer.setSize(container.clientWidth, container.clientHeight);
       renderer.setPixelRatio(quality.pixelRatio);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.0;
+      renderer.toneMapping = THREE.NoToneMapping;
       renderer.shadowMap.enabled = false;
       container.appendChild(renderer.domElement);
       s.renderer = renderer;
@@ -874,10 +1528,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         console.log('[Viewer] WebGL context restored, restarting render loop.');
         function tick() {
           s.animationId = requestAnimationFrame(tick);
-          s.controls?.update();
-          handlePitchSnap(s);
-          handleClickZoom(s);
-          handleFocusAnimation(s);
+          const gizmoDragging = s.transformControls?.dragging;
+          if (!gizmoDragging) {
+            s.controls?.update();
+            handlePitchSnap(s);
+            handleClickZoom(s);
+            handleFocusAnimation(s);
+          }
+          syncCameraRotation(s);
           s.renderer?.render(s.scene, s.camera);
         }
         tick();
@@ -892,6 +1550,69 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       controls.target.set(0, 0, 0);
       s.controls = controls;
 
+      // Cancel any pending camera animation when user starts orbiting
+      controls.addEventListener('start', () => {
+        if (s.focusTarget.state !== 'idle') {
+          s.focusTarget.state = 'idle';
+          s.focusTarget.lerpOverride = null;
+        }
+      });
+
+      // ─── Transform Gizmo ───
+      const tc = new TransformControls(camera, renderer.domElement);
+      tc.setSize(0.8);
+      let gizmoDragBefore = null;
+      tc.addEventListener('dragging-changed', (event) => {
+        controls.enabled = !event.value;
+        const obj = tc.object;
+        if (!obj || !s.gizmoTarget) return;
+        const RAD2DEG = 180 / Math.PI;
+        if (event.value) {
+          // Cancel any pending camera animation
+          s.focusTarget.state = 'idle';
+          s.focusTarget.lerpOverride = null;
+          // Drag started — capture "before" state
+          gizmoDragBefore = {
+            position: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
+            scale: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z },
+            rotation: { x: obj.rotation.x * RAD2DEG, y: obj.rotation.y * RAD2DEG, z: obj.rotation.z * RAD2DEG },
+          };
+        } else {
+          // Drag ended — fire callback with before/after
+          if (gizmoDragBefore && s.onGizmoDragEnd) {
+            const after = {
+              position: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
+              scale: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z },
+              rotation: { x: obj.rotation.x * RAD2DEG, y: obj.rotation.y * RAD2DEG, z: obj.rotation.z * RAD2DEG },
+            };
+            s.onGizmoDragEnd(s.gizmoTarget, gizmoDragBefore, after);
+            gizmoDragBefore = null;
+          }
+        }
+      });
+      tc.addEventListener('objectChange', () => {
+        const obj = tc.object;
+        if (!obj || !s.onGizmoChange || !s.gizmoTarget) return;
+        const RAD2DEG = 180 / Math.PI;
+
+        // Dampen scale: reduce sensitivity to 25% of default
+        if (tc.mode === 'scale' && gizmoDragBefore) {
+          const bs = gizmoDragBefore.scale;
+          const damp = 0.08;
+          obj.scale.x = Math.max(0.01, bs.x + (obj.scale.x - bs.x) * damp);
+          obj.scale.y = Math.max(0.01, bs.y + (obj.scale.y - bs.y) * damp);
+          obj.scale.z = Math.max(0.01, bs.z + (obj.scale.z - bs.z) * damp);
+        }
+
+        s.onGizmoChange(s.gizmoTarget, {
+          position: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
+          scale: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z },
+          rotation: { x: obj.rotation.x * RAD2DEG, y: obj.rotation.y * RAD2DEG, z: obj.rotation.z * RAD2DEG },
+        });
+      });
+      scene.add(tc.getHelper());
+      s.transformControls = tc;
+
       // ─── Click Zoom — press to zoom in, release to zoom out ───
       const _czOnDown = () => onCanvasPointerDown(s);
       const _czOnUp = () => onCanvasPointerUp(s);
@@ -905,15 +1626,10 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         renderer.domElement.removeEventListener('pointerleave', _czOnUp);
       };
 
-      // ─── Lighting ───
-      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-      scene.add(new THREE.HemisphereLight(0x8899cc, 0x443322, 0.5));
-      const key = new THREE.DirectionalLight(0xffffff, 1.2);
-      key.position.set(5, 8, 5);
-      scene.add(key);
-      const fill = new THREE.DirectionalLight(0x4488ff, 0.3);
-      fill.position.set(-3, 3, -4);
-      scene.add(fill);
+      // ─── Lighting (minimal — HDRI env map provides reflections) ───
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      s.ambientLight = ambientLight;
 
       // ─── Default Skybox Sphere ───
       const skyGeo = new THREE.SphereGeometry(400, quality.skyboxSegments[0], quality.skyboxSegments[1]);
@@ -940,6 +1656,25 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       scene.add(floor);
       s.floorMesh = floor;
 
+      // ─── Spherical Mask Helper (wireframe) ───
+      s.maskUniforms.uMaskCenter.value = new THREE.Vector3(0, 0, 0);
+      const maskGeo = new THREE.SphereGeometry(50, 32, 16);
+      const maskMat = new THREE.MeshBasicMaterial({
+        color: 0x00ccff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false,
+      });
+      const maskHelper = new THREE.Mesh(maskGeo, maskMat);
+      maskHelper.visible = false;
+      maskHelper.renderOrder = 100;
+      scene.add(maskHelper);
+      s.maskHelper = maskHelper;
+
+      // Patch floor material with mask shader
+      _patchMaterialWithMask(s, floorMat);
+
       // ─── Resize ───
       const resizeObserver = new ResizeObserver(() => {
         const w = container.clientWidth;
@@ -953,10 +1688,15 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       // ─── Render Loop ───
       function tick() {
         s.animationId = requestAnimationFrame(tick);
-        controls.update();
-        handlePitchSnap(s);
-        handleClickZoom(s);
-        handleFocusAnimation(s);
+        // Skip camera state machines while gizmo is being dragged
+        const gizmoDragging = s.transformControls?.dragging;
+        if (!gizmoDragging) {
+          controls.update();
+          handlePitchSnap(s);
+          handleClickZoom(s);
+          handleFocusAnimation(s);
+        }
+        syncCameraRotation(s);
         renderer.render(scene, camera);
       }
       tick();
@@ -976,6 +1716,11 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       if (s.animationId) cancelAnimationFrame(s.animationId);
       s._resizeObserver?.disconnect();
       s._clickZoomCleanup?.();
+      if (s.transformControls) {
+        s.transformControls.detach();
+        s.transformControls.dispose();
+        s.transformControls = null;
+      }
       s.controls?.dispose();
       if (s.sparkRenderer) {
         s.sparkRenderer.dispose();
@@ -1239,7 +1984,7 @@ function handleFocusAnimation(s) {
   if (focus.state === 'animating') {
     // focusSpeed: 5 (very slow) → 100 (instant), stored in orbit settings
     const speed = s.pendingOrbit?.focusSpeed ?? 25;
-    const LERP_SPEED = speed / 1000; // 5→0.005, 25→0.025, 100→0.1
+    const LERP_SPEED = focus.lerpOverride ?? (speed / 1000); // override for view transitions
 
     // Get current camera position in spherical coords relative to orbit target
     const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
@@ -1270,10 +2015,38 @@ function handleFocusAnimation(s) {
       camera.position.copy(controls.target).add(offset);
       camera.lookAt(controls.target);
       focus.state = 'idle';
+      focus.lerpOverride = null;
       if (typeof focus.onComplete === 'function') {
         focus.onComplete();
         focus.onComplete = null;
       }
+    }
+  }
+}
+
+/* ─── Sync Camera Rotation to ViewCube ─── */
+function syncCameraRotation(s) {
+  if (!s.camera || !s.controls || !s.THREE) return;
+  const offset = new s.THREE.Vector3().subVectors(s.camera.position, s.controls.target);
+  const sph = new s.THREE.Spherical().setFromVector3(offset);
+  // phi: 0=top, π/2=horizon, π=bottom → CSS rotateX: -90=top, 0=horizon, 90=bottom
+  const rx = (sph.phi * 180 / Math.PI) - 90;
+  // theta: azimuthal angle → CSS rotateY (inverted)
+  const ry = -(sph.theta * 180 / Math.PI);
+  const last = s._lastCameraRot;
+  const rotChanged = !last || Math.abs(last.x - rx) > 0.1 || Math.abs(last.y - ry) > 0.1;
+  const zoomChanged = !last || Math.abs((last.z || 0) - sph.radius) > 0.01;
+  const fovChanged = !last || Math.abs((last.fov || 0) - s.camera.fov) > 0.05;
+  const posChanged = !last || !last.pos || s.camera.position.distanceToSquared(last.pos) > 0.0001;
+  if (rotChanged || zoomChanged || fovChanged || posChanged) {
+    s._lastCameraRot = { x: rx, y: ry, z: sph.radius, fov: s.camera.fov, pos: s.camera.position.clone() };
+    if (rotChanged && s.onCameraRotation) s.onCameraRotation({ x: rx, y: ry });
+    if (s.onCameraInfo) {
+      s.onCameraInfo({
+        pitch: Math.round((90 - (sph.phi * 180 / Math.PI)) * 10) / 10,
+        yaw: Math.round(-(sph.theta * 180 / Math.PI) * 10) / 10,
+        zoom: Math.round(sph.radius * 100) / 100,
+      });
     }
   }
 }
@@ -1286,7 +2059,7 @@ function disposeObject(obj) {
       const mats = Array.isArray(child.material) ? child.material : [child.material];
       for (const mat of mats) {
         for (const key of Object.keys(mat)) {
-          if (mat[key]?.dispose) mat[key].dispose();
+          if (typeof mat[key]?.dispose === 'function') mat[key].dispose();
         }
         mat.dispose();
       }

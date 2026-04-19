@@ -9,12 +9,16 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
+import { useHistory } from '@/hooks/useHistory';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import SceneEditorPanel from '@/components/panels/SceneEditorPanel';
 
 import OrbitPanel from '@/components/panels/OrbitPanel';
 import UnidadesPanel from '@/components/panels/UnidadesPanel';
-import RightPanelStack from '@/components/panels/RightPanelStack';
+import PresetsPanel from '@/components/panels/PresetsPanel';
+import LeftPanelStack from '@/components/panels/LeftPanelStack';
+import CameraSelector from '@/components/ui/CameraSelector';
+import GizmoToolbar from '@/components/ui/GizmoToolbar';
 
 // Dynamic import for client-only 3D components (no SSR)
 const Viewer3D = dynamic(() => import('@/components/viewer/Viewer3D'), { ssr: false });
@@ -30,6 +34,12 @@ export default function ScenePage() {
   const [loadMetrics, setLoadMetrics] = useState(null);
   const [unidadesData, setUnidadesData] = useState([]);
   const [modalUnit, setModalUnit] = useState(null);
+  const [assetVisibility, setAssetVisibility] = useState({ glb: true, colliders: true, sog: true, skybox: true, floor: true });
+  const [gizmoMode, setGizmoMode] = useState('select');
+  const [gizmoAsset, setGizmoAsset] = useState('glb');
+  const [hdriFromSkybox, setHdriFromSkybox] = useState(false);
+  const [cameraInfo, setCameraInfo] = useState({ pitch: 0, yaw: 0, zoom: 0 });
+  const cameraSelectorRef = useRef(null);
 
   // Track load timing
   const loadTimingRef = useRef({ startTime: null, pending: 0, done: false });
@@ -41,6 +51,7 @@ export default function ScenePage() {
     sog: null,
     skybox: null,
     floor: null,
+    modelHdri: null,
   });
 
   const {
@@ -52,10 +63,40 @@ export default function ScenePage() {
     updateOrbit,
     updateMaterials,
     updateUnidades,
+    updateLighting,
     updateCollidersVisible,
     uploadAsset,
     removeAsset,
   } = useScene(sceneId);
+
+  // ─── Undo / Redo history ───
+  const snapshotRef = useRef({}); // tracks "before" state for in-progress edits
+
+  const history = useHistory({
+    transform: {
+      apply: (assetType, transforms) => {
+        if (viewerRef.current) viewerRef.current.applyTransform(assetType, transforms);
+      },
+      save: (assetType, transforms) => {
+        updateTransforms(assetType, transforms);
+      },
+    },
+    lighting: {
+      apply: (_key, lighting) => {
+        if (viewerRef.current) viewerRef.current.setLighting(lighting);
+      },
+      save: (_key, lighting) => {
+        updateLighting(lighting);
+      },
+    },
+    visibility: {
+      apply: (assetType, visible) => {
+        setAssetVisibility((prev) => ({ ...prev, [assetType]: visible }));
+        if (viewerRef.current) viewerRef.current.setAssetVisible(assetType, visible);
+      },
+      save: () => {}, // visibility is local-only, no Firebase persist
+    },
+  });
 
   const handleViewerReady = useCallback(() => {
     setViewerReady(true);
@@ -117,6 +158,13 @@ export default function ScenePage() {
       else v.removeFloorTexture();
     }
 
+    const modelHdriUrl = assets.modelHdri?.url || null;
+    if (modelHdriUrl !== loaded.modelHdri) {
+      loaded.modelHdri = modelHdriUrl;
+      if (modelHdriUrl) toLoad.push(() => v.loadModelHdri(modelHdriUrl));
+      else v.removeModelHdri();
+    }
+
     // If there are assets to load, measure total time
     if (toLoad.length > 0 && !timing.done) {
       timing.startTime = timing.startTime || performance.now();
@@ -153,6 +201,7 @@ export default function ScenePage() {
     if (t.sog) v.applyTransform('sog', t.sog);
     if (t.skybox) v.applyTransform('skybox', t.skybox);
     if (t.floor) v.applyTransform('floor', t.floor);
+    if (t.mask) v.applyTransform('mask', t.mask);
   }, [viewerReady, scene?.transforms]);
 
   // Apply orbit settings when they change from Firebase
@@ -170,12 +219,46 @@ export default function ScenePage() {
     viewerRef.current.applyMaterialOverrides(scene.materials);
   }, [viewerReady, scene?.materials]);
 
-  // Handle transform changes from the panel (live update + debounced save)
+  // Apply saved lighting settings when they arrive from Firebase
+  useEffect(() => {
+    if (!viewerReady || !viewerRef.current) return;
+    const lighting = scene?.lighting;
+    if (lighting) {
+      viewerRef.current.setLighting(lighting);
+    }
+  }, [viewerReady, scene?.lighting]);
+
+  // Handle transform changes from the panel (live update + debounced save + history)
+  const historyTimers = useRef({});
+
   const handleTransformChange = useCallback(
     (type, transforms) => {
+      // Capture "before" snapshot on the first change of a drag/slider interaction
+      const snapKey = `transform:${type}`;
+      if (!snapshotRef.current[snapKey]) {
+        snapshotRef.current[snapKey] = JSON.parse(JSON.stringify(
+          scene?.transforms?.[type] || {}
+        ));
+      }
+
       updateTransforms(type, transforms);
+
+      // Debounce the history push — only commit when the user stops changing
+      if (historyTimers.current[snapKey]) clearTimeout(historyTimers.current[snapKey]);
+      historyTimers.current[snapKey] = setTimeout(() => {
+        const before = snapshotRef.current[snapKey];
+        delete snapshotRef.current[snapKey];
+        if (before) {
+          history.push({
+            type: 'transform',
+            key: type,
+            before,
+            after: JSON.parse(JSON.stringify(transforms)),
+          });
+        }
+      }, 600);
     },
-    [updateTransforms]
+    [updateTransforms, scene?.transforms, history]
   );
 
   // Apply transform immediately to 3D objects (no delay)
@@ -196,6 +279,45 @@ export default function ScenePage() {
     [updateOrbit]
   );
 
+  // Handle lighting changes from the panel (debounced save + history)
+  const handleLightingChange = useCallback(
+    (lighting) => {
+      const snapKey = 'lighting';
+      if (!snapshotRef.current[snapKey]) {
+        snapshotRef.current[snapKey] = JSON.parse(JSON.stringify(
+          scene?.lighting || { ambientIntensity: 0.6, ambientColor: '#ffffff', envMapIntensity: 1.0 }
+        ));
+      }
+
+      updateLighting(lighting);
+
+      if (historyTimers.current[snapKey]) clearTimeout(historyTimers.current[snapKey]);
+      historyTimers.current[snapKey] = setTimeout(() => {
+        const before = snapshotRef.current[snapKey];
+        delete snapshotRef.current[snapKey];
+        if (before) {
+          history.push({
+            type: 'lighting',
+            key: 'lighting',
+            before,
+            after: JSON.parse(JSON.stringify(lighting)),
+          });
+        }
+      }, 600);
+    },
+    [updateLighting, scene?.lighting, history]
+  );
+
+  // Apply lighting immediately to 3D scene (no delay)
+  const handleApplyLighting = useCallback(
+    (lighting) => {
+      if (viewerRef.current) {
+        viewerRef.current.setLighting(lighting);
+      }
+    },
+    []
+  );
+
   // Apply orbit immediately to controls (no delay)
   const handleApplyOrbit = useCallback(
     (orbit) => {
@@ -206,7 +328,7 @@ export default function ScenePage() {
     []
   );
 
-  // Handle asset upload
+  // Handle asset upload — force reload the asset in the viewer
   const handleUpload = useCallback(
     async (assetType, file) => {
       try {
@@ -216,11 +338,28 @@ export default function ScenePage() {
         // Reset load timing for new measurements
         loadTimingRef.current = { startTime: null, pending: 0, done: false };
         setLoadMetrics(null);
+
+        // Force immediate reload if the viewer is ready
+        if (viewerReady && viewerRef.current && result?.url) {
+          const v = viewerRef.current;
+          const loaders = {
+            glb: () => v.loadGlb(result.url),
+            colliders: () => v.loadColliders(result.url),
+            sog: () => v.loadSog(result.url),
+            skybox: () => v.loadSkyboxTexture(result.url),
+            floor: () => v.loadFloorTexture(result.url),
+            modelHdri: () => v.loadModelHdri(result.url),
+          };
+          if (loaders[assetType]) {
+            loadedAssetsRef.current[assetType] = result.url;
+            loaders[assetType]();
+          }
+        }
       } catch (err) {
         console.error(`Upload failed [${assetType}]:`, err);
       }
     },
-    [uploadAsset]
+    [uploadAsset, viewerReady]
   );
 
   // Handle asset removal
@@ -235,6 +374,106 @@ export default function ScenePage() {
     },
     [removeAsset]
   );
+
+  // Handle asset visibility toggle (with history)
+  const handleVisibilityChange = useCallback((assetType, visible) => {
+    const prevVisible = assetVisibility[assetType] !== false;
+    history.push({
+      type: 'visibility',
+      key: assetType,
+      before: prevVisible,
+      after: visible,
+    });
+    setAssetVisibility((prev) => ({ ...prev, [assetType]: visible }));
+    if (viewerRef.current) {
+      viewerRef.current.setAssetVisible(assetType, visible);
+    }
+  }, [assetVisibility, history]);
+
+  // Handle active section change — update gizmo target
+  const handleActiveSectionChange = useCallback((section) => {
+    const gizmoTargets = ['glb', 'colliders', 'sog'];
+    if (gizmoTargets.includes(section)) {
+      setGizmoAsset(section);
+      // Re-attach gizmo to new target if a gizmo mode is active
+      if (gizmoMode !== 'select' && viewerRef.current) {
+        viewerRef.current.setGizmoMode(gizmoMode, section);
+      }
+    } else if (gizmoMode !== 'select' && viewerRef.current) {
+      // Section is not a gizmo-able asset, detach
+      viewerRef.current.detachGizmo();
+    }
+  }, [gizmoMode]);
+
+  // Handle gizmo mode change
+  const handleGizmoMode = useCallback((mode) => {
+    setGizmoMode(mode);
+    if (!viewerRef.current) return;
+    if (mode === 'select') {
+      viewerRef.current.detachGizmo();
+    } else {
+      viewerRef.current.setGizmoMode(mode, gizmoAsset);
+    }
+  }, [gizmoAsset]);
+
+  // Register gizmo callbacks when viewer is ready
+  useEffect(() => {
+    if (!viewerReady || !viewerRef.current) return;
+
+    viewerRef.current.setGizmoChangeCallback((assetType, transforms) => {
+      updateTransforms(assetType, transforms);
+    });
+
+    viewerRef.current.setGizmoDragEndCallback((assetType, before, after) => {
+      history.push({
+        type: 'transform',
+        key: assetType,
+        before,
+        after,
+      });
+    });
+
+    // Sync camera orientation to ViewCube + camera info panel
+    viewerRef.current.setCameraRotationCallback((rot) => {
+      cameraSelectorRef.current?.setCameraRotation(rot);
+    });
+    viewerRef.current.setCameraInfoCallback(setCameraInfo);
+  }, [viewerReady, updateTransforms, history]);
+
+  // Handle camera view preset
+  const handleCameraView = useCallback((viewName) => {
+    if (viewerRef.current) {
+      viewerRef.current.setCameraView(viewName);
+    }
+  }, []);
+
+  // Handle "use skybox as model HDRI" toggle
+  const handleHdriFromSkybox = useCallback((checked) => {
+    setHdriFromSkybox(checked);
+    if (!viewerRef.current) return;
+    if (checked) {
+      // Use skybox URL as model HDRI
+      const skyboxUrl = scene?.assets?.skybox?.url;
+      if (skyboxUrl) {
+        viewerRef.current.loadModelHdri(skyboxUrl);
+      }
+    } else {
+      // Revert: load dedicated model HDRI or remove
+      const modelHdriUrl = scene?.assets?.modelHdri?.url;
+      if (modelHdriUrl) {
+        viewerRef.current.loadModelHdri(modelHdriUrl);
+      } else {
+        viewerRef.current.removeModelHdri();
+      }
+    }
+  }, [scene?.assets?.skybox?.url, scene?.assets?.modelHdri?.url]);
+
+  // Handle ViewCube drag — orbit camera in real time
+  const handleCubeDragRotate = useCallback((rot) => {
+    if (viewerRef.current) {
+      viewerRef.current.setCameraFromRotation(rot.x, rot.y);
+    }
+  }, []);
 
   // Handle unit selection — trigger camera animation, open modal when done
   const handleSelectUnit = useCallback((unit) => {
@@ -277,20 +516,36 @@ export default function ScenePage() {
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
-      {/* Performance Panel (bottom-right) */}
-      <PerformancePanel scene={scene} loadMetrics={loadMetrics} viewerRef={viewerRef} />
+      {/* Top-right controls */}
+      <div className="viewer-top-right">
+        <div className="viewer-top-right-col">
+          <GizmoToolbar activeMode={gizmoMode} onModeChange={handleGizmoMode} />
+          <div id="transform-panel-slot" />
+        </div>
+        <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
+      </div>
 
-      {/* Left Panel — Unidades List */}
-      <UnidadesListPanel
-        unidades={unidadesData}
-        position="panel-left"
-        onSelectUnit={handleSelectUnit}
-        selectedUnit={modalUnit}
-        onCloseModal={() => setModalUnit(null)}
-      />
+      {/* Camera info (bottom-right) */}
+      <div className="camera-info-panel">
+        <span className="camera-info-item"><span className="camera-info-label">Zoom</span>{cameraInfo.zoom}</span>
+        <span className="camera-info-item"><span className="camera-info-label">Pitch</span>{cameraInfo.pitch}°</span>
+        <span className="camera-info-item"><span className="camera-info-label">Yaw</span>{cameraInfo.yaw}°</span>
+      </div>
 
-      {/* Right Panel Stack — Accordion: only one open at a time */}
-      <RightPanelStack>
+      {/* Single Left Sidebar */}
+      <LeftPanelStack
+        sceneName={scene.name}
+        sceneId={sceneId}
+        bottomChildren={({ activePanel, toggle }) => (
+          <PerformancePanel
+            scene={scene}
+            loadMetrics={loadMetrics}
+            viewerRef={viewerRef}
+            collapsed={activePanel !== 'performance'}
+            onToggle={() => toggle('performance')}
+          />
+        )}
+      >
         {({ activePanel, toggle }) => (
           <>
             <SceneEditorPanel
@@ -300,13 +555,28 @@ export default function ScenePage() {
               onRemove={handleRemove}
               onTransformChange={handleTransformChange}
               onApplyTransform={handleApplyTransform}
-              onCollidersVisibilityChange={(visible) => {
-                if (viewerRef.current) viewerRef.current.setCollidersVisible(visible);
-                updateCollidersVisible(visible);
-              }}
-              collidersVisible={scene?.collidersVisible}
+              onVisibilityChange={handleVisibilityChange}
+              visibility={assetVisibility}
+              onLightingChange={handleLightingChange}
+              onApplyLighting={handleApplyLighting}
+              onActiveSectionChange={handleActiveSectionChange}
+              viewerRef={viewerRef}
+              viewerReady={viewerReady}
+              hdriFromSkybox={hdriFromSkybox}
+              onHdriFromSkybox={handleHdriFromSkybox}
               collapsed={activePanel !== 'assets'}
               onToggle={() => toggle('assets')}
+              materialsContent={
+                <MaterialPanel
+                  viewerRef={viewerRef}
+                  viewerReady={viewerReady}
+                  savedMaterials={scene?.materials || null}
+                  onMaterialsChange={updateMaterials}
+                  collapsed={false}
+                  onToggle={() => {}}
+                  inline
+                />
+              }
             />
 
             <OrbitPanel
@@ -317,13 +587,9 @@ export default function ScenePage() {
               onToggle={() => toggle('orbit')}
             />
 
-            <MaterialPanel
-              viewerRef={viewerRef}
-              viewerReady={viewerReady}
-              savedMaterials={scene?.materials || null}
-              onMaterialsChange={updateMaterials}
-              collapsed={activePanel !== 'materials'}
-              onToggle={() => toggle('materials')}
+            <PresetsPanel
+              collapsed={activePanel !== 'presets'}
+              onToggle={() => toggle('presets')}
             />
 
             <UnidadesPanel
@@ -333,9 +599,18 @@ export default function ScenePage() {
               collapsed={activePanel !== 'unidades'}
               onToggle={() => toggle('unidades')}
             />
+
+            <UnidadesListPanel
+              unidades={unidadesData}
+              onSelectUnit={handleSelectUnit}
+              selectedUnit={modalUnit}
+              onCloseModal={() => setModalUnit(null)}
+              collapsed={activePanel !== 'unidadesList'}
+              onToggle={() => toggle('unidadesList')}
+            />
           </>
         )}
-      </RightPanelStack>
+      </LeftPanelStack>
     </>
   );
 }

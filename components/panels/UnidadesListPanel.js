@@ -8,7 +8,7 @@ import UnidadModal from './UnidadModal';
  * UnidadesListPanel — left-side panel with filters + unit list.
  * Filters: Ambientes (circle buttons), Metraje (range slider).
  */
-export default function UnidadesListPanel({ unidades = [], position = 'panel-left', onSelectUnit, selectedUnit, onCloseModal }) {
+export default function UnidadesListPanel({ unidades = [], position = '', onSelectUnit, selectedUnit, onCloseModal, collapsed, onToggle }) {
   const items = Array.isArray(unidades) ? unidades : [];
 
   // Filter state
@@ -88,7 +88,7 @@ export default function UnidadesListPanel({ unidades = [], position = 'panel-lef
 
   return (
     <>
-      <FloatingPanel title="Unidades" icon="🏢" position={position} defaultCollapsed={false}>
+      <FloatingPanel title="Unidades" icon="🏢" position={position} collapsed={collapsed} onToggle={onToggle}>
         {items.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📊</div>

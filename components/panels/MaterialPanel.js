@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import FloatingPanel from './FloatingPanel';
+import { usePresets } from '@/hooks/usePresets';
 
 /**
  * Color picker + hex input row.
@@ -226,8 +227,35 @@ function extractSaveableProps(props) {
 /**
  * Single material accordion with all editable parameters.
  */
-function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyChange }) {
+function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyChange, presets }) {
   const [props, setProps] = useState(initialProps);
+
+  const applyPreset = useCallback((preset) => {
+    if (!preset?.properties || !matRef) return;
+    const updates = preset.properties;
+    const newProps = { ...props };
+
+    for (const [key, value] of Object.entries(updates)) {
+      // Apply to Three.js material
+      switch (key) {
+        case 'color': matRef.color?.set?.(`#${value}`); break;
+        case 'emissive': matRef.emissive?.set?.(`#${value}`); break;
+        case 'sheenColor': matRef.sheenColor?.set?.(`#${value}`); break;
+        case 'transparent': matRef.transparent = value; break;
+        case 'depthWrite': matRef.depthWrite = value; break;
+        case 'visible': matRef.visible = value; break;
+        case 'flatShading': matRef.flatShading = value; break;
+        case 'side': matRef.side = value; break;
+        default:
+          if (matRef[key] !== undefined) matRef[key] = value;
+          break;
+      }
+      newProps[key] = value;
+    }
+    matRef.needsUpdate = true;
+    setProps(newProps);
+    onPropertyChange?.(newProps);
+  }, [matRef, props, onPropertyChange]);
 
   const update = useCallback((key, value) => {
     const mat = matRef;
@@ -309,6 +337,27 @@ function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyCha
 
       {open && (
         <div className="mat-accordion-body">
+          {/* ─── Preset Selector ─── */}
+          {presets && presets.length > 0 && (
+            <div className="mat-preset-row">
+              <span className="mat-param-label">Preset</span>
+              <select
+                className="mat-select mat-preset-select"
+                defaultValue=""
+                onChange={(e) => {
+                  const p = presets.find((pr) => pr.id === e.target.value);
+                  if (p) applyPreset(p);
+                  e.target.value = '';
+                }}
+              >
+                <option value="" disabled>Aplicar preset…</option>
+                {presets.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* ─── Appearance ─── */}
           <div className="mat-section-title">Apariencia</div>
           <ColorRow label="Color" hexValue={props.color} onChange={(v) => update('color', v)} />
@@ -375,10 +424,11 @@ function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyCha
  * Main MaterialPanel component.
  * Supports controlled collapse via collapsed/onToggle props (for RightPanelStack).
  */
-export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, onMaterialsChange, collapsed, onToggle }) {
+export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, onMaterialsChange, collapsed, onToggle, inline }) {
   const [materials, setMaterials] = useState([]);
   const [openMat, setOpenMat] = useState(null);
   const matRefsMap = useRef(new Map());
+  const { presets } = usePresets();
   // Track current props for all materials (for saving)
   const currentPropsRef = useRef(new Map());
   // Track whether saved overrides have been applied already
@@ -482,6 +532,42 @@ export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, 
 
   const title = `Materiales${materials.length > 0 ? ` (${materials.length})` : ''}`;
 
+  const content = materials.length === 0 ? (
+    <div className="empty-state">
+      <p>Cargando materiales…</p>
+    </div>
+  ) : (
+    <div className="mat-panel-body">
+      <button
+        className="mat-refresh-btn-inline"
+        onClick={refreshMaterials}
+        title="Actualizar lista"
+      >
+        ↻ Actualizar
+      </button>
+      {materials.map((mat) => (
+        <MaterialAccordion
+          key={mat.uuid}
+          matRef={matRefsMap.current.get(mat.uuid)}
+          initialProps={mat}
+          open={openMat === mat.uuid}
+          onToggle={() => toggleMat(mat.uuid)}
+          onPropertyChange={(updatedProps) => handlePropertyChange(mat.uuid, updatedProps)}
+          presets={presets}
+        />
+      ))}
+    </div>
+  );
+
+  if (inline) {
+    return (
+      <div className="asset-transform-section">
+        <div className="asset-transform-title">{title}</div>
+        {content}
+      </div>
+    );
+  }
+
   return (
     <FloatingPanel
       title={title}
@@ -490,31 +576,7 @@ export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, 
       collapsed={isCollapsed}
       onToggle={handleToggle}
     >
-      {materials.length === 0 ? (
-        <div className="empty-state">
-          <p>Cargando materiales…</p>
-        </div>
-      ) : (
-        <div className="mat-panel-body">
-          <button
-            className="mat-refresh-btn-inline"
-            onClick={refreshMaterials}
-            title="Actualizar lista"
-          >
-            ↻ Actualizar
-          </button>
-          {materials.map((mat) => (
-            <MaterialAccordion
-              key={mat.uuid}
-              matRef={matRefsMap.current.get(mat.uuid)}
-              initialProps={mat}
-              open={openMat === mat.uuid}
-              onToggle={() => toggleMat(mat.uuid)}
-              onPropertyChange={(updatedProps) => handlePropertyChange(mat.uuid, updatedProps)}
-            />
-          ))}
-        </div>
-      )}
+      {content}
     </FloatingPanel>
   );
 }
