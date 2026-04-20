@@ -16,6 +16,7 @@ export default function FloatingPanel({
   onToggle,
   children,
   className = '',
+  headerExtra,
 }) {
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
 
@@ -38,7 +39,10 @@ export default function FloatingPanel({
           {icon && <span className="panel-icon">{icon}</span>}
           {title}
         </h3>
-        <span className="panel-toggle">▼</span>
+        <span className="panel-header-right">
+          {headerExtra && <span className="panel-header-extra" onClick={(e) => e.stopPropagation()}>{headerExtra}</span>}
+          <span className="panel-toggle">▼</span>
+        </span>
       </div>
       {!collapsed && <div className="panel-body">{children}</div>}
     </div>

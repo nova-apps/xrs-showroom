@@ -10,6 +10,7 @@ import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
 import { useHistory } from '@/hooks/useHistory';
+import { updateScene } from '@/lib/scenes';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import SceneEditorPanel from '@/components/panels/SceneEditorPanel';
 
@@ -18,7 +19,6 @@ import UnidadesPanel from '@/components/panels/UnidadesPanel';
 import PresetsPanel from '@/components/panels/PresetsPanel';
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import CameraSelector from '@/components/ui/CameraSelector';
-import GizmoToolbar from '@/components/ui/GizmoToolbar';
 
 // Dynamic import for client-only 3D components (no SSR)
 const Viewer3D = dynamic(() => import('@/components/viewer/Viewer3D'), { ssr: false });
@@ -395,12 +395,11 @@ export default function ScenePage() {
     const gizmoTargets = ['glb', 'colliders', 'sog'];
     if (gizmoTargets.includes(section)) {
       setGizmoAsset(section);
-      // Re-attach gizmo to new target if a gizmo mode is active
       if (gizmoMode !== 'select' && viewerRef.current) {
         viewerRef.current.setGizmoMode(gizmoMode, section);
       }
-    } else if (gizmoMode !== 'select' && viewerRef.current) {
-      // Section is not a gizmo-able asset, detach
+    } else if (viewerRef.current) {
+      // Non-gizmo section — detach 3D gizmo but keep mode
       viewerRef.current.detachGizmo();
     }
   }, [gizmoMode]);
@@ -468,6 +467,11 @@ export default function ScenePage() {
     }
   }, [scene?.assets?.skybox?.url, scene?.assets?.modelHdri?.url]);
 
+  // Save satellite URL to scene for next time
+  const handleSaveSatelliteUrl = useCallback((satelliteUrl) => {
+    if (sceneId) updateScene(sceneId, { satelliteUrl }).catch(console.error);
+  }, [sceneId]);
+
   // Handle ViewCube drag — orbit camera in real time
   const handleCubeDragRotate = useCallback((rot) => {
     if (viewerRef.current) {
@@ -516,35 +520,32 @@ export default function ScenePage() {
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
+      {/* Orbit center crosshair */}
+      <div className="orbit-crosshair" />
+
       {/* Top-right controls */}
       <div className="viewer-top-right">
-        <div className="viewer-top-right-col">
-          <GizmoToolbar activeMode={gizmoMode} onModeChange={handleGizmoMode} />
-          <div id="transform-panel-slot" />
-        </div>
         <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
       </div>
 
-      {/* Camera info (bottom-right) */}
-      <div className="camera-info-panel">
-        <span className="camera-info-item"><span className="camera-info-label">Zoom</span>{cameraInfo.zoom}</span>
-        <span className="camera-info-item"><span className="camera-info-label">Pitch</span>{cameraInfo.pitch}°</span>
-        <span className="camera-info-item"><span className="camera-info-label">Yaw</span>{cameraInfo.yaw}°</span>
+      {/* Bottom-right: camera info + compact performance */}
+      <div className="bottom-right-bar">
+        <PerformancePanel
+          scene={scene}
+          loadMetrics={loadMetrics}
+          viewerRef={viewerRef}
+        />
+        <div className="camera-info-panel">
+          <span className="camera-info-item"><span className="camera-info-label">Zoom</span>{cameraInfo.zoom}</span>
+          <span className="camera-info-item"><span className="camera-info-label">Pitch</span>{cameraInfo.pitch}°</span>
+          <span className="camera-info-item"><span className="camera-info-label">Yaw</span>{cameraInfo.yaw}°</span>
+        </div>
       </div>
 
       {/* Single Left Sidebar */}
       <LeftPanelStack
         sceneName={scene.name}
         sceneId={sceneId}
-        bottomChildren={({ activePanel, toggle }) => (
-          <PerformancePanel
-            scene={scene}
-            loadMetrics={loadMetrics}
-            viewerRef={viewerRef}
-            collapsed={activePanel !== 'performance'}
-            onToggle={() => toggle('performance')}
-          />
-        )}
       >
         {({ activePanel, toggle }) => (
           <>
@@ -564,6 +565,9 @@ export default function ScenePage() {
               viewerReady={viewerReady}
               hdriFromSkybox={hdriFromSkybox}
               onHdriFromSkybox={handleHdriFromSkybox}
+              gizmoMode={gizmoMode}
+              onGizmoMode={handleGizmoMode}
+              onSaveSatelliteUrl={handleSaveSatelliteUrl}
               collapsed={activePanel !== 'assets'}
               onToggle={() => toggle('assets')}
               materialsContent={

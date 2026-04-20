@@ -123,9 +123,11 @@ export default function ViewPage() {
     const v = viewerRef.current;
     const t = scene.transforms;
     if (t.glb) v.applyTransform('glb', t.glb);
+    if (t.colliders) v.applyTransform('colliders', t.colliders);
     if (t.sog) v.applyTransform('sog', t.sog);
     if (t.skybox) v.applyTransform('skybox', t.skybox);
     if (t.floor) v.applyTransform('floor', t.floor);
+    if (t.mask) v.applyTransform('mask', t.mask);
   }, [viewerReady, scene?.transforms]);
 
   // Apply orbit settings when they change from Firebase
@@ -136,6 +138,15 @@ export default function ViewPage() {
       viewerRef.current.applyOrbit(orbit);
     }
   }, [viewerReady, scene?.orbit]);
+
+  // Apply lighting settings
+  useEffect(() => {
+    if (!viewerReady || !viewerRef.current) return;
+    const lighting = scene?.lighting;
+    if (lighting) {
+      viewerRef.current.setLighting(lighting);
+    }
+  }, [viewerReady, scene?.lighting]);
 
   // Apply saved material overrides when they arrive from Firebase
   useEffect(() => {

@@ -539,7 +539,10 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     const uniforms = s.maskUniforms;
 
     material.transparent = true;
-    material.depthWrite = true;
+    material.depthWrite = false;
+    material.polygonOffset = true;
+    material.polygonOffsetFactor = 1;
+    material.polygonOffsetUnits = 1;
     material.onBeforeCompile = (shader) => {
       shader.uniforms.uMaskEnabled = uniforms.uMaskEnabled;
       shader.uniforms.uMaskCenter = uniforms.uMaskCenter;
@@ -669,6 +672,8 @@ if (uMaskEnabled > 0.5) {
       const pos = transforms.position || {};
       s.floorMesh.position.set(pos.x ?? 0, pos.y ?? -0.5, pos.z ?? 0);
       s.floorMesh.scale.setScalar((transforms.scale ?? 1050) / 800);
+      const rotY = (transforms.rotation ?? 0) * (Math.PI / 180);
+      s.floorMesh.rotation.set(-Math.PI / 2, 0, rotY);
 
       if (typeof transforms.blur === 'number' && s.floorRawTexture) {
         const { blurTexture } = await import('@/lib/utils');
@@ -702,7 +707,7 @@ if (uMaskEnabled > 0.5) {
           s.maskHelper.geometry.dispose();
           s.maskHelper.geometry = new THREE.SphereGeometry(radius, 32, 16);
         }
-        s.maskHelper.visible = enabled;
+        s.maskHelper.visible = false;
       }
 
       // Apply shader injection to floor material if not yet patched
@@ -1099,7 +1104,7 @@ if (uMaskEnabled > 0.5) {
         s.skyboxRawTexture = tex;
 
         const { blurTexture } = await import('@/lib/utils');
-        const blurred = blurTexture(THREE, tex, 3);
+        const blurred = blurTexture(THREE, tex, 0);
 
         // Show sphere mesh for LDR textures
         if (s.skyboxMesh) {
@@ -1187,7 +1192,7 @@ if (uMaskEnabled > 0.5) {
       s.floorRawTexture = tex;
 
       const { blurTexture } = await import('@/lib/utils');
-      const blurred = blurTexture(THREE, tex, 3);
+      const blurred = blurTexture(THREE, tex, 0);
 
       if (s.floorMesh) {
         if (s.floorMesh.material.map) s.floorMesh.material.map.dispose();
@@ -1652,7 +1657,7 @@ if (uMaskEnabled > 0.5) {
       const floor = new THREE.Mesh(floorGeo, floorMat);
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(0, -0.5, 0);
-      floor.renderOrder = 0;
+      floor.renderOrder = -1;
       scene.add(floor);
       s.floorMesh = floor;
 

@@ -66,7 +66,7 @@ const ASSET_CONFIGS = {
     icon: '🌐',
     custom: [
       { key: 'radius', label: 'R', labelClass: 'label-r', min: 10, max: 50000, step: 10, default: 400, help: 'Radio de la esfera del skybox' },
-      { key: 'blur', label: 'B', labelClass: 'label-b', min: 0, max: 80, step: 1, default: 3, help: 'Desenfoque del skybox' },
+      { key: 'blur', label: 'B', labelClass: 'label-b', min: 0, max: 80, step: 1, default: 0, help: 'Desenfoque del skybox' },
     ],
     rotation: { min: -180, max: 180, step: 1, defaults: { x: 0, y: 0, z: 0 } },
   },
@@ -76,7 +76,7 @@ const ASSET_CONFIGS = {
     position: { min: -500, max: 500, step: 0.5, defaults: { x: 0, y: -0.5, z: 0 } },
     custom: [
       { key: 'scale', label: 'S', labelClass: 'label-s', min: 10, max: 50000, step: 10, default: 1050, help: 'Tamaño del plano' },
-      { key: 'blur', label: 'B', labelClass: 'label-b', min: 0, max: 80, step: 1, default: 3, help: 'Desenfoque de la textura' },
+      { key: 'blur', label: 'B', labelClass: 'label-b', min: 0, max: 80, step: 1, default: 0, help: 'Desenfoque de la textura' },
     ],
   },
   mask: {
@@ -96,7 +96,8 @@ const ASSET_CONFIGS = {
  */
 export default function TransformPanel({ activeSection, local, updateField }) {
   const config = ASSET_CONFIGS[activeSection];
-  if (!config || !local) return null;
+  // Floor transforms are inline in SceneEditorPanel
+  if (!config || !local || activeSection === 'floor' || activeSection === 'mask') return null;
 
   const data = local[activeSection] || {};
 

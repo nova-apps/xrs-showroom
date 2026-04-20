@@ -52,11 +52,21 @@ export const DEFAULT_ORBIT = {
  * Camera Panel — adjusts antialiasing, zoom min/max and pitch/yaw limits.
  * Rendered inside RightPanelStack with controlled collapse.
  */
+const FREE_CAMERA = {
+  zoomMin: 0.01,
+  zoomMax: Infinity,
+  pitchMin: -90,
+  pitchMax: 90,
+  yawMin: -180,
+  yawMax: 180,
+};
+
 export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collapsed, onToggle }) {
   const orbit = scene?.orbit;
 
   // Local state for responsive UI
   const [local, setLocal] = useState(null);
+  const [freeCam, setFreeCam] = useState(false);
 
   // Sync from Firebase when scene data arrives/changes
   useEffect(() => {
@@ -74,13 +84,25 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
         const next = { ...prev, [field]: value };
 
         onOrbitChange?.(next);
-        onApplyOrbit?.(next);
+        // In free cam, apply with free limits; otherwise apply saved limits
+        onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
 
         return next;
       });
     },
-    [onOrbitChange, onApplyOrbit]
+    [onOrbitChange, onApplyOrbit, freeCam]
   );
+
+  const handleFreeCam = useCallback((checked) => {
+    setFreeCam(checked);
+    if (checked) {
+      // Apply free camera to viewer only (no save)
+      onApplyOrbit?.({ ...local, ...FREE_CAMERA });
+    } else {
+      // Restore saved orbit settings
+      onApplyOrbit?.(local);
+    }
+  }, [local, onApplyOrbit]);
 
   if (!local) return null;
 
@@ -92,6 +114,20 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
       collapsed={collapsed}
       onToggle={onToggle}
     >
+      {/* ─── Free Camera ─── */}
+      <div className="transform-section">
+        <label className="hdri-checkbox-row">
+          <input
+            type="checkbox"
+            checked={freeCam}
+            onChange={(e) => handleFreeCam(e.target.checked)}
+          />
+          <span>Cámara libre (solo editor)</span>
+        </label>
+      </div>
+
+      <div className="section-divider" />
+
       {/* ─── Antialiasing ─── */}
       <div className="transform-section">
         <div className="transform-section-title">🔲 Antialiasing</div>

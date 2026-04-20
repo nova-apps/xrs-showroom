@@ -1,30 +1,19 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
-import FloatingPanel from '@/components/panels/FloatingPanel';
+import { useRef, useEffect, useState } from 'react';
 
-/**
- * Network profiles for estimated load time calculations.
- * Bandwidth in bytes/sec, latency in ms (per-request overhead).
- */
 const NETWORK_PROFILES = {
   normal: { label: 'Normal', icon: '🌐', bandwidth: null, latency: 0 },
-  fast4g: { label: 'Fast 4G', icon: '📶', bandwidth: 1.5 * 1024 * 1024, latency: 150 },   // ~12 Mbps → 1.5 MB/s
-  slow4g: { label: 'Slow 4G', icon: '📱', bandwidth: 187.5 * 1024, latency: 400 },          // ~1.5 Mbps → 187.5 KB/s
+  fast4g: { label: 'Fast 4G', icon: '📶', bandwidth: 1.5 * 1024 * 1024, latency: 150 },
+  slow4g: { label: 'Slow 4G', icon: '📱', bandwidth: 187.5 * 1024, latency: 400 },
 };
 
-/**
- * Format seconds into a readable string.
- */
 function formatTime(ms) {
   if (ms === null || ms === undefined) return '--';
   if (ms < 1000) return `${Math.round(ms)}ms`;
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-/**
- * Format bytes into human-readable size.
- */
 function formatBytes(bytes) {
   if (!bytes) return '0 B';
   if (bytes < 1024) return `${bytes} B`;
@@ -32,9 +21,6 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * Format large numbers with k/M suffixes.
- */
 function formatCount(n) {
   if (!n) return '0';
   if (n < 1000) return String(n);
@@ -43,19 +29,17 @@ function formatCount(n) {
 }
 
 /**
- * PerformancePanel — floating panel at bottom-right showing:
- * - Live FPS
- * - GPU / VRAM info (geometries, textures, draw calls, triangles)
- * - Actual load time (measured)
- * - Estimated load times for Fast 4G & Slow 4G (based on total asset sizes)
+ * PerformancePanel — compact bottom-right widget.
+ * Collapsed: shows FPS + triangles inline.
+ * Expanded: full GPU stats, asset sizes, load times.
  */
-export default function PerformancePanel({ scene, loadMetrics, viewerRef, collapsed, onToggle }) {
+export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
   const [fps, setFps] = useState(0);
   const [gpuInfo, setGpuInfo] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const frameCountRef = useRef(0);
   const lastTimeRef = useRef(0);
 
-  // FPS loop
   useEffect(() => {
     let animId;
     lastTimeRef.current = performance.now();
@@ -79,7 +63,6 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef, collap
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  // Poll renderer info every second
   useEffect(() => {
     const interval = setInterval(() => {
       if (viewerRef?.current?.getRendererInfo) {
@@ -90,7 +73,6 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef, collap
     return () => clearInterval(interval);
   }, [viewerRef]);
 
-  // Calculate total asset size from scene data
   const assets = scene?.assets || {};
   const assetEntries = [];
   let totalBytes = 0;
@@ -102,10 +84,7 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef, collap
     }
   }
 
-  // Actual measured load time
   const actualTime = loadMetrics?.totalTime ?? null;
-
-  // Estimate download times for each profile
   const assetCount = assetEntries.length || 1;
 
   const estimates = {};
@@ -113,7 +92,7 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef, collap
     if (profileKey === 'normal') {
       estimates[profileKey] = actualTime;
     } else if (totalBytes > 0) {
-      const downloadTime = (totalBytes / profile.bandwidth) * 1000; // ms
+      const downloadTime = (totalBytes / profile.bandwidth) * 1000;
       const latencyOverhead = assetCount * profile.latency;
       estimates[profileKey] = Math.round(downloadTime + latencyOverhead);
     } else {
@@ -124,89 +103,63 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef, collap
   const fpsColor = fps >= 50 ? 'var(--accent-green)' : fps >= 25 ? 'var(--accent-yellow)' : 'var(--accent-red)';
 
   return (
-    <FloatingPanel
-      title="Performance"
-      icon="⚡"
-      position=""
-      collapsed={collapsed}
-      onToggle={onToggle}
-    >
-      <div className="perf-panel">
-        {/* ─── FPS ─── */}
-        <div className="perf-fps-row">
-          <span className="perf-fps-value" style={{ color: fpsColor }}>
-            {fps || '--'}
-          </span>
-          <span className="perf-fps-label">FPS</span>
-        </div>
+    <div className={`perf-compact ${expanded ? 'perf-expanded' : ''}`}>
+      {/* Collapsed summary row — always visible */}
+      <button className="perf-compact-header" onClick={() => setExpanded(!expanded)}>
+        <span className="perf-compact-fps" style={{ color: fpsColor }}>{fps || '--'}</span>
+        <span className="perf-compact-label">FPS</span>
+        {gpuInfo && (
+          <>
+            <span className="perf-compact-sep" />
+            <span className="perf-compact-stat">{formatCount(gpuInfo.render.triangles)}</span>
+            <span className="perf-compact-label">tris</span>
+            <span className="perf-compact-sep" />
+            <span className="perf-compact-stat">{gpuInfo.render.calls}</span>
+            <span className="perf-compact-label">draws</span>
+          </>
+        )}
+        <span className={`perf-compact-chevron ${expanded ? 'open' : ''}`}>&#9660;</span>
+      </button>
 
-        <div className="section-divider" />
-
-        {/* ─── GPU / VRAM ─── */}
-        <div className="perf-section">
-          <div className="perf-section-title">🖥️ GPU {gpuInfo?.qualityProfile ? `(${gpuInfo.qualityProfile})` : ''}</div>
-          {gpuInfo ? (
-            <>
-              {gpuInfo.gpuName && (
-                <div className="perf-gpu-name">{gpuInfo.gpuName}</div>
-              )}
-              <div className="perf-gpu-grid">
-                <div className="perf-gpu-stat">
-                  <span className="perf-gpu-stat-value">{gpuInfo.memory.geometries}</span>
-                  <span className="perf-gpu-stat-label">Geometries</span>
-                </div>
-                <div className="perf-gpu-stat">
-                  <span className="perf-gpu-stat-value">{gpuInfo.memory.textures}</span>
-                  <span className="perf-gpu-stat-label">Textures</span>
-                </div>
-                <div className="perf-gpu-stat">
-                  <span className="perf-gpu-stat-value">{gpuInfo.render.calls}</span>
-                  <span className="perf-gpu-stat-label">Draw calls</span>
-                </div>
-                <div className="perf-gpu-stat">
-                  <span className="perf-gpu-stat-value">{formatCount(gpuInfo.render.triangles)}</span>
-                  <span className="perf-gpu-stat-label">Triangles</span>
-                </div>
+      {/* Expanded details */}
+      {expanded && (
+        <div className="perf-compact-body">
+          {gpuInfo && (
+            <div className="perf-section-compact">
+              <div className="perf-section-title-compact">GPU {gpuInfo.qualityProfile ? `(${gpuInfo.qualityProfile})` : ''}</div>
+              {gpuInfo.gpuName && <div className="perf-gpu-name-compact">{gpuInfo.gpuName}</div>}
+              <div className="perf-stats-row">
+                <span>{gpuInfo.memory.geometries} geo</span>
+                <span>{gpuInfo.memory.textures} tex</span>
+                <span>{gpuInfo.render.calls} calls</span>
+                <span>{formatCount(gpuInfo.render.triangles)} tris</span>
               </div>
-            </>
-          ) : (
-            <div className="perf-empty">Esperando renderer…</div>
-          )}
-        </div>
-
-        <div className="section-divider" />
-
-        {/* ─── Asset Sizes ─── */}
-        <div className="perf-section">
-          <div className="perf-section-title">📦 Assets ({formatBytes(totalBytes)})</div>
-          {assetEntries.length === 0 ? (
-            <div className="perf-empty">Sin assets cargados</div>
-          ) : (
-            assetEntries.map((a) => (
-              <div key={a.type} className="perf-asset-row">
-                <span className="perf-asset-type">{a.type.toUpperCase()}</span>
-                <span className="perf-asset-size">{formatBytes(a.size)}</span>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="section-divider" />
-
-        {/* ─── Load Times ─── */}
-        <div className="perf-section">
-          <div className="perf-section-title">⏱️ Tiempos de carga (sin caché)</div>
-          {Object.entries(NETWORK_PROFILES).map(([key, profile]) => (
-            <div key={key} className="perf-time-row">
-              <span className="perf-time-icon">{profile.icon}</span>
-              <span className="perf-time-label">{profile.label}</span>
-              <span className={`perf-time-value ${key === 'normal' && actualTime ? 'measured' : ''}`}>
-                {formatTime(estimates[key])}
-              </span>
             </div>
-          ))}
+          )}
+
+          {assetEntries.length > 0 && (
+            <div className="perf-section-compact">
+              <div className="perf-section-title-compact">Assets ({formatBytes(totalBytes)})</div>
+              {assetEntries.map((a) => (
+                <div key={a.type} className="perf-asset-row-compact">
+                  <span>{a.type.toUpperCase()}</span>
+                  <span>{formatBytes(a.size)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="perf-section-compact">
+            <div className="perf-section-title-compact">Carga</div>
+            {Object.entries(NETWORK_PROFILES).map(([key, profile]) => (
+              <div key={key} className="perf-asset-row-compact">
+                <span>{profile.icon} {profile.label}</span>
+                <span className={key === 'normal' && actualTime ? 'perf-measured' : ''}>{formatTime(estimates[key])}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </FloatingPanel>
+      )}
+    </div>
   );
 }
