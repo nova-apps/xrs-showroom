@@ -386,7 +386,12 @@ export default function SceneEditorPanel({
         const parts = path.split('.');
         let obj = next[type];
         for (let i = 0; i < parts.length - 1; i++) {
-          if (!obj[parts[i]]) obj[parts[i]] = {};
+          if (typeof obj[parts[i]] === 'number') {
+            const v = obj[parts[i]];
+            obj[parts[i]] = { x: v, y: v, z: v };
+          } else if (!obj[parts[i]]) {
+            obj[parts[i]] = {};
+          }
           obj = obj[parts[i]];
         }
         obj[parts[parts.length - 1]] = value;
