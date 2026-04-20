@@ -41,8 +41,8 @@ export default function ViewPage() {
   }, []);
 
   // Load assets when scene data arrives
-  // On mobile: load sequentially (GLB → SOG) to avoid memory spikes
-  // On desktop: load in parallel for speed
+  // Priority: GLB model + floor first (critical), then dismiss loading screen,
+  // then load remaining assets (skybox, SOG) in background
   useEffect(() => {
     if (!viewerReady || !scene || !viewerRef.current) return;
 
@@ -50,127 +50,87 @@ export default function ViewPage() {
     const assets = scene.assets || {};
     const loaded = loadedAssetsRef.current;
 
-    // Detect mobile for sequential loading
-    const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    async function loadAssets() {
+      // ── Phase 1: Critical assets (GLB + Floor) ──
+      // These define the maqueta — load them first and dismiss loading screen after
+      const criticalPromises = [];
 
-    async function loadSequential() {
-      setLoadStatus('Cargando skybox…');
+      setLoadStatus('Cargando modelo 3D…');
       setLoadProgress(0.05);
 
-      // 1. Skybox + Floor first (lightweight)
-      const skyUrl = assets.skybox?.url || null;
-      if (skyUrl && skyUrl !== loaded.skybox) {
-        loaded.skybox = skyUrl;
-        await v.loadSkyboxTexture(skyUrl).catch(() => {});
-      }
-      setLoadProgress(0.15);
-
-      const floorUrl = assets.floor?.url || null;
-      if (floorUrl && floorUrl !== loaded.floor) {
-        loaded.floor = floorUrl;
-        await v.loadFloorTexture(floorUrl).catch(() => {});
-      }
-      setLoadProgress(0.2);
-
-      // 2. GLB model — use progressive loading if proxy is available
+      // GLB model — use progressive loading if proxy is available
       const glbUrl = assets.glb?.url || null;
       const proxyUrl = assets.glb_proxy?.url || null;
 
       if (glbUrl && glbUrl !== loaded.glb) {
         loaded.glb = glbUrl;
-        setLoadStatus('Cargando modelo 3D…');
 
         if (proxyUrl) {
-          // Progressive: proxy first, then full in background
-          await v.loadGlbProgressive(proxyUrl, glbUrl, (p) => {
-            setLoadProgress(0.2 + p * 0.6);
-          }).catch(() => {});
+          criticalPromises.push(
+            v.loadGlbProgressive(proxyUrl, glbUrl, (p) => {
+              setLoadProgress(0.05 + p * 0.75);
+            }).catch(() => {})
+          );
         } else {
-          // Direct load with progress
-          await v.loadGlbWithProgress(glbUrl, (p) => {
-            setLoadProgress(0.2 + p * 0.6);
-          }).catch(() => {});
+          criticalPromises.push(
+            v.loadGlbWithProgress(glbUrl, (p) => {
+              setLoadProgress(0.05 + p * 0.75);
+            }).catch(() => {})
+          );
         }
       }
-      setLoadProgress(0.85);
 
-      // 3. SOG splat last (heaviest on VRAM)
-      const sogUrl = assets.sog?.url || null;
-      if (sogUrl && sogUrl !== loaded.sog) {
-        loaded.sog = sogUrl;
-        setLoadStatus('Cargando splat…');
-        await v.loadSog(sogUrl).catch(() => {});
+      // Floor texture
+      const floorUrl = assets.floor?.url || null;
+      if (floorUrl && floorUrl !== loaded.floor) {
+        loaded.floor = floorUrl;
+        criticalPromises.push(v.loadFloorTexture(floorUrl).catch(() => {}));
+      }
+
+      // Wait for GLB + floor to finish
+      if (criticalPromises.length > 0) {
+        await Promise.all(criticalPromises);
       }
 
       setLoadProgress(1);
       setLoadStatus('Listo');
+
+      // ── Dismiss loading screen — maqueta is visible ──
       setTimeout(() => setLoadingAssets(false), 300);
-    }
 
-    function loadParallel() {
-      let hasAnyAsset = false;
-      const promises = [];
+      // ── Phase 2: Secondary assets (skybox, SOG) — load in background ──
+      const bgPromises = [];
 
-      const glbUrl = assets.glb?.url || null;
-      const proxyUrl = assets.glb_proxy?.url || null;
-
-      if (glbUrl !== loaded.glb) {
-        loaded.glb = glbUrl;
-        if (glbUrl) {
-          hasAnyAsset = true;
-          setLoadStatus('Cargando modelo 3D…');
-
-          if (proxyUrl) {
-            promises.push(
-              v.loadGlbProgressive(proxyUrl, glbUrl, (p) => {
-                setLoadProgress(p * 0.7);
-              }).catch(() => {})
-            );
-          } else {
-            promises.push(
-              v.loadGlbWithProgress(glbUrl, (p) => {
-                setLoadProgress(p * 0.7);
-              }).catch(() => {})
-            );
-          }
-        }
+      const skyUrl = assets.skybox?.url || null;
+      if (skyUrl && skyUrl !== loaded.skybox) {
+        loaded.skybox = skyUrl;
+        bgPromises.push(v.loadSkyboxTexture(skyUrl).catch(() => {}));
       }
 
       const sogUrl = assets.sog?.url || null;
-      if (sogUrl !== loaded.sog) {
+      if (sogUrl && sogUrl !== loaded.sog) {
         loaded.sog = sogUrl;
-        if (sogUrl) {
-          promises.push(v.loadSog(sogUrl).catch(() => {}));
-          hasAnyAsset = true;
+        bgPromises.push(v.loadSog(sogUrl).catch(() => {}));
+      }
+
+      if (bgPromises.length > 0) {
+        // Detect mobile for sequential loading to avoid memory spikes
+        const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isMobile) {
+          console.log('[View] Mobile — loading secondary assets sequentially');
+          for (const p of bgPromises) {
+            await p;
+          }
+        } else {
+          await Promise.all(bgPromises);
         }
+        console.log('[View] ✓ All secondary assets loaded');
       }
-
-      const skyUrl = assets.skybox?.url || null;
-      if (skyUrl !== loaded.skybox) {
-        loaded.skybox = skyUrl;
-        if (skyUrl) promises.push(v.loadSkyboxTexture(skyUrl).catch(() => {}));
-      }
-
-      const floorUrl = assets.floor?.url || null;
-      if (floorUrl !== loaded.floor) {
-        loaded.floor = floorUrl;
-        if (floorUrl) promises.push(v.loadFloorTexture(floorUrl).catch(() => {}));
-      }
-
-      Promise.all(promises).then(() => {
-        setLoadProgress(1);
-        setLoadStatus('Listo');
-        setTimeout(() => setLoadingAssets(false), 300);
-      });
     }
 
-    if (isMobile) {
-      console.log('[View] Mobile detected — loading assets sequentially');
-      loadSequential();
-    } else {
-      loadParallel();
-    }
+    loadAssets();
   }, [viewerReady, scene]);
 
   // Apply transforms

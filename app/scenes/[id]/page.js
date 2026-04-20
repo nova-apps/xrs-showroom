@@ -32,6 +32,9 @@ export default function ScenePage() {
   const sceneId = params?.id;
   const viewerRef = useRef(null);
   const [viewerReady, setViewerReady] = useState(false);
+  const [loadingAssets, setLoadingAssets] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [loadStatus, setLoadStatus] = useState('Iniciando…');
   const [loadMetrics, setLoadMetrics] = useState(null);
   const [unidadesData, setUnidadesData] = useState([]);
   const [modalUnit, setModalUnit] = useState(null);
@@ -104,7 +107,7 @@ export default function ScenePage() {
   }, []);
 
   // Load/update assets when scene data changes and viewer is ready
-  // Also track total load time across all assets
+  // Priority: GLB + floor first (critical), dismiss loading overlay, then load rest
   useEffect(() => {
     if (!viewerReady || !scene || !viewerRef.current) return;
 
@@ -113,82 +116,107 @@ export default function ScenePage() {
     const loaded = loadedAssetsRef.current;
     const timing = loadTimingRef.current;
 
-    // Collect which assets need loading
-    const toLoad = [];
-
-    const glbUrl = assets.glb?.url || null;
-    if (glbUrl !== loaded.glb) {
-      loaded.glb = glbUrl;
-      if (glbUrl) toLoad.push(() => v.loadGlb(glbUrl));
-      else v.removeGlb();
-    }
-
-    const collidersUrl = assets.colliders?.url || null;
-    if (collidersUrl !== loaded.colliders) {
-      loaded.colliders = collidersUrl;
-      if (collidersUrl) {
-        toLoad.push(async () => {
-          await v.loadColliders(collidersUrl);
-          // Apply persisted visibility after colliders load
-          const vis = scene.collidersVisible;
-          if (vis === false) {
-            v.setCollidersVisible(false);
-          }
-        });
-      } else v.removeColliders();
-    }
-
-    const sogUrl = assets.sog?.url || null;
-    if (sogUrl !== loaded.sog) {
-      loaded.sog = sogUrl;
-      if (sogUrl) toLoad.push(() => v.loadSog(sogUrl));
-      else v.removeSog();
-    }
-
-    const skyUrl = assets.skybox?.url || null;
-    if (skyUrl !== loaded.skybox) {
-      loaded.skybox = skyUrl;
-      if (skyUrl) toLoad.push(() => v.loadSkyboxTexture(skyUrl));
-      else v.removeSkyboxTexture();
-    }
-
-    const floorUrl = assets.floor?.url || null;
-    if (floorUrl !== loaded.floor) {
-      loaded.floor = floorUrl;
-      if (floorUrl) toLoad.push(() => v.loadFloorTexture(floorUrl));
-      else v.removeFloorTexture();
-    }
-
-    const modelHdriUrl = assets.modelHdri?.url || null;
-    if (modelHdriUrl !== loaded.modelHdri) {
-      loaded.modelHdri = modelHdriUrl;
-      if (modelHdriUrl) toLoad.push(() => v.loadModelHdri(modelHdriUrl));
-      else v.removeModelHdri();
-    }
-
-    // If there are assets to load, measure total time
-    if (toLoad.length > 0 && !timing.done) {
+    async function loadAssets() {
       timing.startTime = timing.startTime || performance.now();
-      timing.pending += toLoad.length;
 
-      for (const loader of toLoad) {
-        const p = loader();
-        // loadGlb etc are async — wait for them
-        if (p && typeof p.then === 'function') {
-          p.finally(() => {
-            timing.pending--;
-            if (timing.pending <= 0 && timing.startTime) {
-              const totalTime = Math.round(performance.now() - timing.startTime);
-              timing.done = true;
-              setLoadMetrics({ totalTime });
-              console.log(`[Perf] Total load time: ${totalTime}ms`);
-            }
-          });
+      // ── Phase 1: Critical assets (GLB + Floor) ──
+      const criticalPromises = [];
+      let hasCritical = false;
+
+      setLoadStatus('Cargando modelo 3D…');
+      setLoadProgress(0.05);
+
+      const glbUrl = assets.glb?.url || null;
+      if (glbUrl !== loaded.glb) {
+        loaded.glb = glbUrl;
+        if (glbUrl) {
+          hasCritical = true;
+          criticalPromises.push(v.loadGlb(glbUrl));
         } else {
-          timing.pending--;
+          v.removeGlb();
         }
       }
+
+      const floorUrl = assets.floor?.url || null;
+      if (floorUrl !== loaded.floor) {
+        loaded.floor = floorUrl;
+        if (floorUrl) {
+          hasCritical = true;
+          criticalPromises.push(v.loadFloorTexture(floorUrl));
+        } else {
+          v.removeFloorTexture();
+        }
+      }
+
+      // Wait for GLB + floor
+      if (criticalPromises.length > 0) {
+        await Promise.all(criticalPromises).catch(() => {});
+      }
+
+      setLoadProgress(0.8);
+      setLoadStatus('Listo');
+
+      // ── Dismiss loading overlay — maqueta is visible ──
+      if (hasCritical || !loadingAssets) {
+        setLoadProgress(1);
+        setTimeout(() => setLoadingAssets(false), 300);
+      } else {
+        // No critical assets to load — dismiss immediately
+        setLoadingAssets(false);
+      }
+
+      // ── Phase 2: Secondary assets — load in background ──
+      const bgPromises = [];
+
+      const collidersUrl = assets.colliders?.url || null;
+      if (collidersUrl !== loaded.colliders) {
+        loaded.colliders = collidersUrl;
+        if (collidersUrl) {
+          bgPromises.push((async () => {
+            await v.loadColliders(collidersUrl);
+            const vis = scene.collidersVisible;
+            if (vis === false) v.setCollidersVisible(false);
+          })());
+        } else {
+          v.removeColliders();
+        }
+      }
+
+      const sogUrl = assets.sog?.url || null;
+      if (sogUrl !== loaded.sog) {
+        loaded.sog = sogUrl;
+        if (sogUrl) bgPromises.push(v.loadSog(sogUrl).catch(() => {}));
+        else v.removeSog();
+      }
+
+      const skyUrl = assets.skybox?.url || null;
+      if (skyUrl !== loaded.skybox) {
+        loaded.skybox = skyUrl;
+        if (skyUrl) bgPromises.push(v.loadSkyboxTexture(skyUrl).catch(() => {}));
+        else v.removeSkyboxTexture();
+      }
+
+      const modelHdriUrl = assets.modelHdri?.url || null;
+      if (modelHdriUrl !== loaded.modelHdri) {
+        loaded.modelHdri = modelHdriUrl;
+        if (modelHdriUrl) bgPromises.push(v.loadModelHdri(modelHdriUrl).catch(() => {}));
+        else v.removeModelHdri();
+      }
+
+      if (bgPromises.length > 0) {
+        await Promise.all(bgPromises).catch(() => {});
+      }
+
+      // Measure total load time
+      if (timing.startTime && !timing.done) {
+        const totalTime = Math.round(performance.now() - timing.startTime);
+        timing.done = true;
+        setLoadMetrics({ totalTime });
+        console.log(`[Perf] Total load time: ${totalTime}ms`);
+      }
     }
+
+    loadAssets();
   }, [viewerReady, scene]);
 
   // Apply transforms when they change from Firebase
@@ -520,6 +548,23 @@ export default function ScenePage() {
     <>
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
+
+      {/* Loading overlay while critical assets (GLB + floor) load */}
+      {loadingAssets && (
+        <div className="loading-overlay" style={{ transition: 'opacity 0.6s ease' }}>
+          <div className="loader-content">
+            <div className="loader-spinner" />
+            <div className="loader-title">{scene.name}</div>
+            <div className="loader-progress-bar">
+              <div
+                className="loader-progress-fill"
+                style={{ width: `${Math.round(loadProgress * 100)}%` }}
+              />
+            </div>
+            <div className="loader-status">{loadStatus}{loadProgress > 0 && loadProgress < 1 ? ` (${Math.round(loadProgress * 100)}%)` : ''}</div>
+          </div>
+        </div>
+      )}
 
       {/* Orbit center crosshair */}
       <div className="orbit-crosshair" />
