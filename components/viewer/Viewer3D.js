@@ -76,6 +76,24 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     clickZoom: { state: 'idle', originalFov: 45 },
     // Camera Focus animation state (spherical coords)
     focusTarget: { state: 'idle', targetPhi: 0, targetTheta: 0, targetRadius: 0, onComplete: null, lerpOverride: null },
+    // Adaptive quality auto-adjustment
+    adaptiveQuality: {
+      enabled: true,
+      frameTimes: [],        // timestamps of recent frames
+      lastCheck: 0,
+      currentLevel: -1,      // -1 = auto-detect from profile, 0=low, 1=medium, 2=high, 3=ultra
+      degradeThreshold: 22,  // FPS below this → degrade
+      upgradeThreshold: 50,  // FPS above this → upgrade
+      checkInterval: 2500,   // ms between checks
+      lastDegradeTime: 0,
+      lastUpgradeTime: 0,
+      degradeCooldown: 2000, // wait 2s before degrading again
+      upgradeCooldown: 5000, // wait 5s before upgrading (slow recovery)
+      originalPixelRatio: 1,
+      originalAnisotropy: 8,
+    },
+    // Instancing stats
+    instancingStats: null,
   });
 
   // Expose methods to parent via ref
@@ -475,7 +493,35 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         render: { ...s.renderer.info.render },
         gpuName: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null,
         qualityProfile: s.qualityProfile?.name || 'unknown',
+        adaptiveLevel: s.adaptiveQuality?.currentLevel ?? -1,
+        adaptiveLevelName: ['low', 'medium', 'high', 'ultra'][s.adaptiveQuality?.currentLevel] || 'auto',
+        adaptiveEnabled: s.adaptiveQuality?.enabled !== false,
       };
+    },
+    getInstancingStats: () => stateRef.current.instancingStats,
+    setAdaptiveQualityEnabled: (enabled) => {
+      if (stateRef.current.adaptiveQuality) {
+        stateRef.current.adaptiveQuality.enabled = enabled;
+      }
+    },
+    loadGlbWithProgress: (url, onProgress) => loadGlbModel(url, onProgress),
+    loadGlbProgressive: async (proxyUrl, fullUrl, onProgress) => {
+      // 1. Load proxy GLB immediately (tiny, ~200KB) — instant preview
+      if (proxyUrl) {
+        await loadGlbModel(proxyUrl);
+        const s = stateRef.current;
+        if (s.glbModel) {
+          s.glbModel.userData._isProxy = true;
+          console.log('[Viewer] ⚡ Proxy GLB loaded, loading full model in background...');
+        }
+      }
+      // 2. Load full model in background with progress tracking
+      await loadGlbModel(fullUrl, onProgress);
+      const s = stateRef.current;
+      if (s.glbModel) {
+        s.glbModel.userData._isProxy = false;
+        console.log('[Viewer] ✓ Full GLB loaded (proxy swapped)');
+      }
     },
   }));
 
@@ -719,7 +765,7 @@ if (uMaskEnabled > 0.5) {
   }, []);
 
   /* ─── GLB Loading ─── */
-  const loadGlbModel = useCallback(async (url) => {
+  const loadGlbModel = useCallback(async (url, onProgress) => {
     const s = stateRef.current;
     const THREE = s.THREE;
     if (!THREE || !url) return;
@@ -754,10 +800,36 @@ if (uMaskEnabled > 0.5) {
 
       console.log('[Viewer] Loading GLB:', url);
 
-      // Fetch as ArrayBuffer to bypass COEP restrictions on cross-origin URLs
+      // Fetch with progress tracking via ReadableStream
       const res = await fetch(url, { mode: 'cors' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buffer = await res.arrayBuffer();
+
+      let buffer;
+      const contentLength = parseInt(res.headers.get('content-length') || '0', 10);
+
+      if (onProgress && contentLength > 0 && res.body) {
+        // Stream-based progress tracking
+        const reader = res.body.getReader();
+        const chunks = [];
+        let received = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          onProgress(received / contentLength);
+        }
+        // Merge chunks into a single buffer
+        const merged = new Uint8Array(received);
+        let offset = 0;
+        for (const chunk of chunks) {
+          merged.set(chunk, offset);
+          offset += chunk.length;
+        }
+        buffer = merged.buffer;
+      } else {
+        buffer = await res.arrayBuffer();
+      }
 
       // Parse the buffer instead of loading from URL
       const gltf = await new Promise((resolve, reject) => {
@@ -786,7 +858,7 @@ if (uMaskEnabled > 0.5) {
         if (child.isMesh) {
           child.castShadow = false;
           child.receiveShadow = false;
-          child.frustumCulled = false;
+          child.frustumCulled = true;
 
           const mats = Array.isArray(child.material)
             ? child.material
@@ -899,6 +971,27 @@ if (uMaskEnabled > 0.5) {
       // Optimize
       if (!s.optimizer) s.optimizer = new Optimizer(THREE);
       await s.optimizer.optimize(wrapper);
+
+      // Re-compute bounding volumes after pivot wrapper applied
+      // This is critical for frustum culling to work correctly
+      wrapper.traverse((child) => {
+        if (child.isMesh && child.geometry) {
+          child.geometry.computeBoundingBox();
+          child.geometry.computeBoundingSphere();
+        }
+      });
+
+      // Apply instancing for repeated geometries
+      try {
+        const { applyInstancing } = await import('@/lib/instancing');
+        const instResult = applyInstancing(wrapper, THREE);
+        s.instancingStats = instResult;
+        if (instResult.drawCallsSaved > 0) {
+          console.log(`[Viewer] ✓ Instanced: ${instResult.meshesInstanced} meshes → ${instResult.groupsCreated} groups (saved ${instResult.drawCallsSaved} draw calls)`);
+        }
+      } catch (instErr) {
+        console.warn('[Viewer] Instancing skipped:', instErr.message);
+      }
 
       s.scene.add(wrapper);
       s.glbModel = wrapper;
@@ -1691,9 +1784,18 @@ if (uMaskEnabled > 0.5) {
       });
       resizeObserver.observe(container);
 
+      // ─── Initialize adaptive quality baseline ───
+      s.adaptiveQuality.originalPixelRatio = quality.pixelRatio;
+      s.adaptiveQuality.originalAnisotropy = quality.anisotropy;
+      // Auto-detect initial level from quality profile
+      const levelMap = { ultra: 3, high: 2, medium: 1, low: 0 };
+      s.adaptiveQuality.currentLevel = levelMap[quality.name] ?? 2;
+
       // ─── Render Loop ───
       function tick() {
         s.animationId = requestAnimationFrame(tick);
+        // Track frame time for adaptive quality
+        s.adaptiveQuality.frameTimes.push(performance.now());
         // Skip camera state machines while gizmo is being dragged
         const gizmoDragging = s.transformControls?.dragging;
         if (!gizmoDragging) {
@@ -1702,6 +1804,7 @@ if (uMaskEnabled > 0.5) {
           handleClickZoom(s);
           handleFocusAnimation(s);
         }
+        handleAdaptiveQuality(s);
         syncCameraRotation(s);
         renderer.render(scene, camera);
       }
@@ -2028,6 +2131,113 @@ function handleFocusAnimation(s) {
       }
     }
   }
+}
+
+/* ─── Adaptive Quality Auto-Adjustment ─── */
+/**
+ * Monitors FPS over a rolling window and adjusts rendering quality:
+ *   Level 3 (ultra):  full pixelRatio, anisotropy 16, envMap on
+ *   Level 2 (high):   pixelRatio 1.5, anisotropy 8, envMap on
+ *   Level 1 (medium): pixelRatio 1.0, anisotropy 4, envMap on
+ *   Level 0 (low):    pixelRatio 0.75, anisotropy 2, envMap off
+ *
+ * Degrades quickly (2s cooldown) to stop frame drops ASAP.
+ * Upgrades slowly (5s cooldown) to avoid oscillation.
+ */
+function handleAdaptiveQuality(s) {
+  const aq = s.adaptiveQuality;
+  if (!aq.enabled || !s.renderer) return;
+
+  const now = performance.now();
+
+  // Trim frame times to last 3 seconds
+  while (aq.frameTimes.length > 1 && now - aq.frameTimes[0] > 3000) {
+    aq.frameTimes.shift();
+  }
+
+  // Only check periodically
+  if (now - aq.lastCheck < aq.checkInterval) return;
+  aq.lastCheck = now;
+
+  // Calculate average FPS from frame times
+  const window = aq.frameTimes;
+  if (window.length < 10) return; // not enough data yet
+  const elapsed = window[window.length - 1] - window[0];
+  if (elapsed < 500) return;
+  const avgFps = ((window.length - 1) / elapsed) * 1000;
+
+  const level = aq.currentLevel;
+  const LEVEL_NAMES = ['low', 'medium', 'high', 'ultra'];
+
+  // Degrade: FPS too low and cooldown elapsed
+  if (avgFps < aq.degradeThreshold && level > 0 && now - aq.lastDegradeTime > aq.degradeCooldown) {
+    const newLevel = level - 1;
+    applyQualityLevel(s, newLevel);
+    aq.currentLevel = newLevel;
+    aq.lastDegradeTime = now;
+    aq.lastUpgradeTime = now; // reset upgrade timer too
+    console.log(`[AdaptiveQ] ▼ Degraded: ${LEVEL_NAMES[level]} → ${LEVEL_NAMES[newLevel]} (FPS: ${avgFps.toFixed(0)})`);
+    return;
+  }
+
+  // Upgrade: FPS consistently high and cooldown elapsed
+  if (avgFps > aq.upgradeThreshold && level < 3 && now - aq.lastUpgradeTime > aq.upgradeCooldown) {
+    const newLevel = level + 1;
+    applyQualityLevel(s, newLevel);
+    aq.currentLevel = newLevel;
+    aq.lastUpgradeTime = now;
+    console.log(`[AdaptiveQ] ▲ Upgraded: ${LEVEL_NAMES[level]} → ${LEVEL_NAMES[newLevel]} (FPS: ${avgFps.toFixed(0)})`);
+  }
+}
+
+function applyQualityLevel(s, level) {
+  const aq = s.adaptiveQuality;
+  const maxPR = aq.originalPixelRatio;
+
+  switch (level) {
+    case 3: // ultra
+      s.renderer.setPixelRatio(Math.min(maxPR, 2.0));
+      updateAnisotropy(s, 16);
+      if (s.envMap && !s.scene.environment) s.scene.environment = s.modelEnvMap || s.envMap;
+      break;
+    case 2: // high
+      s.renderer.setPixelRatio(Math.min(maxPR, 1.5));
+      updateAnisotropy(s, 8);
+      if (s.envMap && !s.scene.environment) s.scene.environment = s.modelEnvMap || s.envMap;
+      break;
+    case 1: // medium
+      s.renderer.setPixelRatio(1.0);
+      updateAnisotropy(s, 4);
+      // Keep env map on for medium
+      break;
+    case 0: // low
+      s.renderer.setPixelRatio(0.75);
+      updateAnisotropy(s, 2);
+      // Disable env map to save GPU
+      if (s.scene.environment) {
+        s.scene.environment = null;
+      }
+      break;
+  }
+}
+
+function updateAnisotropy(s, value) {
+  if (!s.glbModel) return;
+  const processed = new Set();
+  s.glbModel.traverse((child) => {
+    if (!child.isMesh || !child.material) return;
+    const mats = Array.isArray(child.material) ? child.material : [child.material];
+    for (const mat of mats) {
+      for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap']) {
+        const tex = mat[key];
+        if (tex && !processed.has(tex.uuid)) {
+          processed.add(tex.uuid);
+          tex.anisotropy = value;
+          // Don't set needsUpdate for anisotropy — it's applied on next render
+        }
+      }
+    }
+  });
 }
 
 /* ─── Sync Camera Rotation to ViewCube ─── */

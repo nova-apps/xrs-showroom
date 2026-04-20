@@ -2403,6 +2403,77 @@ body {
   font-weight: 600;
 }
 
+/* Adaptive Quality Badge */
+.perf-quality-badge {
+  font-weight: 700;
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.perf-adaptive-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.perf-adaptive-level {
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.perf-adaptive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.perf-adaptive-toggle input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  accent-color: var(--accent-blue);
+}
+
+.perf-adaptive-hint {
+  font-size: 0.5rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.perf-stat-highlight {
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+/* Loading Progress Bar */
+.loader-progress-bar {
+  width: 200px;
+  height: 3px;
+  margin: 12px auto 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loader-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple, #a855f7));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(68, 136, 255, 0.4);
+}
+
 /* ═══════════════════════════════════════
    CANVAS
    ═══════════════════════════════════════ */
