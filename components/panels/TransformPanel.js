@@ -11,9 +11,8 @@ function TransformRow({ label, labelClass, value, min, max, step, onChange, help
     e.preventDefault();
     const delta = e.deltaY < 0 ? step : -step;
     const precision = Math.max(0, -Math.floor(Math.log10(step)));
-    const next = parseFloat((value + delta).toFixed(precision));
-    onChange(min != null ? Math.max(min, next) : next);
-  }, [value, step, min, onChange]);
+    onChange(parseFloat((value + delta).toFixed(precision)));
+  }, [value, step, onChange]);
 
   return (
     <div className="transform-row">
@@ -30,12 +29,11 @@ function TransformRow({ label, labelClass, value, min, max, step, onChange, help
       />
       <input
         type="number"
-        min={min}
         step={step}
         value={Math.round(value * 100) / 100}
         onChange={(e) => {
           const v = parseFloat(e.target.value);
-          onChange(isNaN(v) ? (min ?? 0) : min != null ? Math.max(min, v) : v);
+          onChange(isNaN(v) ? 0 : v);
         }}
         onWheel={handleWheel}
       />
