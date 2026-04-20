@@ -458,6 +458,23 @@ export default function SceneEditorPanel({
           onRemove={() => onRemove('glb')}
         />
 
+        {/* ─── Proxy GLB for progressive loading ─── */}
+        <div className="asset-transform-section">
+          <div className="asset-transform-title">
+            Preview rápido
+            <HelpTooltip text="GLB reducido (~200KB) que carga en menos de 1s como preview mientras el modelo completo descarga en background." />
+          </div>
+          <FileUploader
+            label="Proxy"
+            icon=""
+            accept=".glb,.gltf"
+            currentFile={scene.assets?.glb_proxy}
+            uploadProgress={uploadProgress?.glb_proxy}
+            onUpload={(file) => onUpload('glb_proxy', file)}
+            onRemove={() => onRemove('glb_proxy')}
+          />
+        </div>
+
         {/* ─── Pre-upload optimization panel ─── */}
         {(preUpload || preWorking) && (
           <div className="pre-upload-panel">

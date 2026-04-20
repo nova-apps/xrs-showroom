@@ -8,6 +8,28 @@
     ],
     "frameworksBackend": {
       "region": "us-central1"
-    }
+    },
+    "headers": [
+      {
+        "source": "**/*.glb",
+        "headers": [{"key": "Cache-Control", "value": "public, max-age=86400, immutable"}]
+      },
+      {
+        "source": "**/*.sog",
+        "headers": [{"key": "Cache-Control", "value": "public, max-age=86400, immutable"}]
+      },
+      {
+        "source": "**/*.ktx2",
+        "headers": [{"key": "Cache-Control", "value": "public, max-age=2592000, immutable"}]
+      },
+      {
+        "source": "**/*.hdr",
+        "headers": [{"key": "Cache-Control", "value": "public, max-age=86400"}]
+      },
+      {
+        "source": "**/*.wasm",
+        "headers": [{"key": "Cache-Control", "value": "public, max-age=2592000, immutable"}]
+      }
+    ]
   }
 }

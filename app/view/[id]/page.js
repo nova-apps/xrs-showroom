@@ -3,6 +3,11 @@
 /**
  * Public View Page — fullscreen 3D viewer without any editing panels.
  * Route: /view/[id]
+ * 
+ * Supports:
+ *   - Progressive loading (proxy GLB → full GLB swap)
+ *   - Real download progress tracking via ReadableStream
+ *   - Sequential loading on mobile to avoid memory spikes
  */
 
 import { useRef, useCallback, useEffect, useState } from 'react';
@@ -19,6 +24,8 @@ export default function ViewPage() {
   const viewerRef = useRef(null);
   const [viewerReady, setViewerReady] = useState(false);
   const [loadingAssets, setLoadingAssets] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [loadStatus, setLoadStatus] = useState('Iniciando…');
 
   const loadedAssetsRef = useRef({
     glb: null,
@@ -48,64 +55,114 @@ export default function ViewPage() {
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
     async function loadSequential() {
+      setLoadStatus('Cargando skybox…');
+      setLoadProgress(0.05);
+
       // 1. Skybox + Floor first (lightweight)
       const skyUrl = assets.skybox?.url || null;
       if (skyUrl && skyUrl !== loaded.skybox) {
         loaded.skybox = skyUrl;
         await v.loadSkyboxTexture(skyUrl).catch(() => {});
       }
+      setLoadProgress(0.15);
 
       const floorUrl = assets.floor?.url || null;
       if (floorUrl && floorUrl !== loaded.floor) {
         loaded.floor = floorUrl;
         await v.loadFloorTexture(floorUrl).catch(() => {});
       }
+      setLoadProgress(0.2);
 
-      // 2. GLB model (medium memory)
+      // 2. GLB model — use progressive loading if proxy is available
       const glbUrl = assets.glb?.url || null;
+      const proxyUrl = assets.glb_proxy?.url || null;
+
       if (glbUrl && glbUrl !== loaded.glb) {
         loaded.glb = glbUrl;
-        await v.loadGlb(glbUrl).catch(() => {});
+        setLoadStatus('Cargando modelo 3D…');
+
+        if (proxyUrl) {
+          // Progressive: proxy first, then full in background
+          await v.loadGlbProgressive(proxyUrl, glbUrl, (p) => {
+            setLoadProgress(0.2 + p * 0.6);
+          }).catch(() => {});
+        } else {
+          // Direct load with progress
+          await v.loadGlbWithProgress(glbUrl, (p) => {
+            setLoadProgress(0.2 + p * 0.6);
+          }).catch(() => {});
+        }
       }
+      setLoadProgress(0.85);
 
       // 3. SOG splat last (heaviest on VRAM)
       const sogUrl = assets.sog?.url || null;
       if (sogUrl && sogUrl !== loaded.sog) {
         loaded.sog = sogUrl;
+        setLoadStatus('Cargando splat…');
         await v.loadSog(sogUrl).catch(() => {});
       }
 
-      setLoadingAssets(false);
+      setLoadProgress(1);
+      setLoadStatus('Listo');
+      setTimeout(() => setLoadingAssets(false), 300);
     }
 
     function loadParallel() {
       let hasAnyAsset = false;
+      const promises = [];
 
       const glbUrl = assets.glb?.url || null;
+      const proxyUrl = assets.glb_proxy?.url || null;
+
       if (glbUrl !== loaded.glb) {
         loaded.glb = glbUrl;
-        if (glbUrl) { v.loadGlb(glbUrl); hasAnyAsset = true; }
+        if (glbUrl) {
+          hasAnyAsset = true;
+          setLoadStatus('Cargando modelo 3D…');
+
+          if (proxyUrl) {
+            promises.push(
+              v.loadGlbProgressive(proxyUrl, glbUrl, (p) => {
+                setLoadProgress(p * 0.7);
+              }).catch(() => {})
+            );
+          } else {
+            promises.push(
+              v.loadGlbWithProgress(glbUrl, (p) => {
+                setLoadProgress(p * 0.7);
+              }).catch(() => {})
+            );
+          }
+        }
       }
 
       const sogUrl = assets.sog?.url || null;
       if (sogUrl !== loaded.sog) {
         loaded.sog = sogUrl;
-        if (sogUrl) { v.loadSog(sogUrl); hasAnyAsset = true; }
+        if (sogUrl) {
+          promises.push(v.loadSog(sogUrl).catch(() => {}));
+          hasAnyAsset = true;
+        }
       }
 
       const skyUrl = assets.skybox?.url || null;
       if (skyUrl !== loaded.skybox) {
         loaded.skybox = skyUrl;
-        if (skyUrl) v.loadSkyboxTexture(skyUrl);
+        if (skyUrl) promises.push(v.loadSkyboxTexture(skyUrl).catch(() => {}));
       }
 
       const floorUrl = assets.floor?.url || null;
       if (floorUrl !== loaded.floor) {
         loaded.floor = floorUrl;
-        if (floorUrl) v.loadFloorTexture(floorUrl);
+        if (floorUrl) promises.push(v.loadFloorTexture(floorUrl).catch(() => {}));
       }
 
-      setTimeout(() => setLoadingAssets(false), 800);
+      Promise.all(promises).then(() => {
+        setLoadProgress(1);
+        setLoadStatus('Listo');
+        setTimeout(() => setLoadingAssets(false), 300);
+      });
     }
 
     if (isMobile) {
@@ -178,6 +235,8 @@ export default function ViewPage() {
     );
   }
 
+  const progressPct = Math.round(loadProgress * 100);
+
   return (
     <>
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
@@ -188,7 +247,14 @@ export default function ViewPage() {
           <div className="loader-content">
             <div className="loader-spinner" />
             <div className="loader-title">{scene.name}</div>
-            <div className="loader-status">Cargando escena…</div>
+            {/* Progress bar */}
+            <div className="loader-progress-bar">
+              <div
+                className="loader-progress-fill"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <div className="loader-status">{loadStatus}{progressPct > 0 && progressPct < 100 ? ` (${progressPct}%)` : ''}</div>
           </div>
         </div>
       )}

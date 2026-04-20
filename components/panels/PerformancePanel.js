@@ -8,6 +8,14 @@ const NETWORK_PROFILES = {
   slow4g: { label: 'Slow 4G', icon: '📱', bandwidth: 187.5 * 1024, latency: 400 },
 };
 
+const QUALITY_COLORS = {
+  low: 'var(--accent-red)',
+  medium: 'var(--accent-yellow)',
+  high: 'var(--accent-green)',
+  ultra: 'var(--accent-blue, #60a5fa)',
+  auto: 'var(--text-tertiary)',
+};
+
 function formatTime(ms) {
   if (ms === null || ms === undefined) return '--';
   if (ms < 1000) return `${Math.round(ms)}ms`;
@@ -30,12 +38,13 @@ function formatCount(n) {
 
 /**
  * PerformancePanel — compact bottom-right widget.
- * Collapsed: shows FPS + triangles inline.
- * Expanded: full GPU stats, asset sizes, load times.
+ * Collapsed: shows FPS + triangles + adaptive quality badge inline.
+ * Expanded: full GPU stats, asset sizes, load times, adaptive quality, instancing.
  */
 export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
   const [fps, setFps] = useState(0);
   const [gpuInfo, setGpuInfo] = useState(null);
+  const [instancingStats, setInstancingStats] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const frameCountRef = useRef(0);
   const lastTimeRef = useRef(0);
@@ -68,6 +77,10 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
       if (viewerRef?.current?.getRendererInfo) {
         const info = viewerRef.current.getRendererInfo();
         if (info) setGpuInfo(info);
+      }
+      if (viewerRef?.current?.getInstancingStats) {
+        const stats = viewerRef.current.getInstancingStats();
+        if (stats) setInstancingStats(stats);
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -102,6 +115,11 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
 
   const fpsColor = fps >= 50 ? 'var(--accent-green)' : fps >= 25 ? 'var(--accent-yellow)' : 'var(--accent-red)';
 
+  // Adaptive quality info
+  const adaptiveLevel = gpuInfo?.adaptiveLevelName || 'auto';
+  const adaptiveEnabled = gpuInfo?.adaptiveEnabled !== false;
+  const qualityColor = QUALITY_COLORS[adaptiveLevel] || QUALITY_COLORS.auto;
+
   return (
     <div className={`perf-compact ${expanded ? 'perf-expanded' : ''}`}>
       {/* Collapsed summary row — always visible */}
@@ -118,6 +136,9 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
             <span className="perf-compact-label">draws</span>
           </>
         )}
+        {/* Adaptive quality badge */}
+        <span className="perf-compact-sep" />
+        <span className="perf-quality-badge" style={{ color: qualityColor }}>{adaptiveLevel.toUpperCase()}</span>
         <span className={`perf-compact-chevron ${expanded ? 'open' : ''}`}>&#9660;</span>
       </button>
 
@@ -133,6 +154,39 @@ export default function PerformancePanel({ scene, loadMetrics, viewerRef }) {
                 <span>{gpuInfo.memory.textures} tex</span>
                 <span>{gpuInfo.render.calls} calls</span>
                 <span>{formatCount(gpuInfo.render.triangles)} tris</span>
+              </div>
+            </div>
+          )}
+
+          {/* Adaptive Quality Section */}
+          <div className="perf-section-compact">
+            <div className="perf-section-title-compact">Calidad Adaptativa</div>
+            <div className="perf-adaptive-row">
+              <span className="perf-adaptive-level" style={{ color: qualityColor }}>{adaptiveLevel.toUpperCase()}</span>
+              <label className="perf-adaptive-toggle">
+                <input
+                  type="checkbox"
+                  checked={adaptiveEnabled}
+                  onChange={(e) => viewerRef?.current?.setAdaptiveQualityEnabled?.(e.target.checked)}
+                />
+                <span>Auto</span>
+              </label>
+            </div>
+            <div className="perf-adaptive-hint">
+              {adaptiveEnabled
+                ? 'Ajusta calidad automáticamente según FPS'
+                : 'Calidad fija — no se ajusta al rendimiento'}
+            </div>
+          </div>
+
+          {/* Instancing Stats */}
+          {instancingStats && instancingStats.groupsCreated > 0 && (
+            <div className="perf-section-compact">
+              <div className="perf-section-title-compact">Instancing</div>
+              <div className="perf-stats-row">
+                <span>{instancingStats.meshesInstanced} meshes</span>
+                <span>→ {instancingStats.groupsCreated} groups</span>
+                <span className="perf-stat-highlight">-{instancingStats.drawCallsSaved} draws</span>
               </div>
             </div>
           )}
