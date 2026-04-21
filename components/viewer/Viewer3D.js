@@ -480,17 +480,6 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
           break;
         case 'skybox':
           if (s.skyboxMesh) s.skyboxMesh.visible = visible;
-          // Also toggle scene.background for HDR
-          if (s.scene && THREE) {
-            if (visible) {
-              // Restore HDR background if we have a raw texture with equirect mapping
-              if (s.skyboxRawTexture?.mapping === THREE.EquirectangularReflectionMapping) {
-                s.scene.background = s.skyboxRawTexture;
-              }
-            } else {
-              s.scene.background = new THREE.Color(0x08080e);
-            }
-          }
           break;
         case 'floor':
           if (s.floorMesh) s.floorMesh.visible = visible;
@@ -717,7 +706,10 @@ if (uMaskEnabled > 0.5) {
       const THREE = s.THREE;
       const DEG = Math.PI / 180;
       const radius = transforms.radius ?? 400;
+      // Scale is handled by render loop (skybox zoom sync), but store baseline
       s.skyboxMesh.scale.setScalar(radius / 400);
+
+      // Position offset is applied in the render loop on top of orbit target
 
       // Rotation
       const rot = transforms.rotation ?? {};
@@ -1197,10 +1189,16 @@ if (uMaskEnabled > 0.5) {
 
         s.skyboxRawTexture = tex;
 
-        // For HDR, use the scene background directly instead of sphere mesh
-        s.scene.background = tex;
-        // Hide the sphere mesh since we use scene.background
-        if (s.skyboxMesh) s.skyboxMesh.visible = false;
+        // Render HDR on sphere mesh (same as LDR) for zoom parallax support
+        if (s.skyboxMesh) {
+          s.skyboxMesh.visible = true;
+          if (s.skyboxMesh.material.map) s.skyboxMesh.material.map.dispose();
+          s.skyboxMesh.material.color.set(0xffffff);
+          s.skyboxMesh.material.map = tex;
+          s.skyboxMesh.material.needsUpdate = true;
+        }
+        // Ensure scene.background is dark (sphere mesh provides the visual background)
+        s.scene.background = new THREE.Color(0x08080e);
 
         envSourceTex = tex;
         console.log('[Viewer] ✓ HDR skybox loaded');
@@ -1662,6 +1660,19 @@ if (uMaskEnabled > 0.5) {
             handleFocusAnimation(s);
           }
           syncCameraRotation(s);
+          // ─── Skybox Zoom Sync ───
+          if (s.skyboxMesh && s.controls && s.camera) {
+            const _d = Math.max(0.5, s.camera.position.distanceTo(s.controls.target));
+            const _br = s.pendingTransforms?.skybox?.radius ?? 400;
+            const _zf = Math.pow(_d / 20, 0.6);
+            s.skyboxMesh.scale.setScalar((_br / 400) * Math.max(0.15, _zf));
+            const _sp = s.pendingTransforms?.skybox?.position;
+            s.skyboxMesh.position.set(
+              s.controls.target.x + (_sp?.x ?? 0),
+              s.controls.target.y + (_sp?.y ?? 0),
+              s.controls.target.z + (_sp?.z ?? 0)
+            );
+          }
           s.renderer?.render(s.scene, s.camera);
         }
         tick();
@@ -1833,6 +1844,22 @@ if (uMaskEnabled > 0.5) {
         }
         handleAdaptiveQuality(s);
         syncCameraRotation(s);
+        // ─── Skybox Zoom Sync — scale + position tracks camera distance ───
+        if (s.skyboxMesh) {
+          const dist = Math.max(0.5, camera.position.distanceTo(controls.target));
+          const baseRadius = s.pendingTransforms?.skybox?.radius ?? 400;
+          const baseScale = baseRadius / 400;
+          // Power curve: skybox scales at ~60% of camera dolly rate → natural parallax
+          const zoomFactor = Math.pow(dist / 20, 0.6);
+          s.skyboxMesh.scale.setScalar(baseScale * Math.max(0.15, zoomFactor));
+          // Center skybox on orbit target + configured position offset
+          const skyPos = s.pendingTransforms?.skybox?.position;
+          s.skyboxMesh.position.set(
+            controls.target.x + (skyPos?.x ?? 0),
+            controls.target.y + (skyPos?.y ?? 0),
+            controls.target.z + (skyPos?.z ?? 0)
+          );
+        }
         renderer.render(scene, camera);
       }
       tick();

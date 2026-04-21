@@ -691,6 +691,10 @@ export default function SceneEditorPanel({
         />
         {local && (
           <div className="asset-transform-section">
+            <div className="asset-transform-title">Posición</div>
+            <TransformRow label="X" labelClass="label-x" value={local.skybox?.position?.x ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('skybox', 'position.x', v)} />
+            <TransformRow label="Y" labelClass="label-y" value={local.skybox?.position?.y ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('skybox', 'position.y', v)} />
+            <TransformRow label="Z" labelClass="label-z" value={local.skybox?.position?.z ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('skybox', 'position.z', v)} />
             <div className="asset-transform-title">Ajustes</div>
             <TransformRow label="R" labelClass="label-r" value={local.skybox?.radius ?? 400} min={10} max={50000} step={10} onChange={(v) => updateField('skybox', 'radius', v)} help="Radio de la esfera del skybox" />
             <TransformRow label="B" labelClass="label-b" value={local.skybox?.blur ?? 0} min={0} max={80} step={1} onChange={(v) => updateField('skybox', 'blur', v)} help="Desenfoque del skybox" />
