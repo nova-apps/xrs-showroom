@@ -1,11 +1,16 @@
 {
   "name": "xrs-showroom",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "version:patch": "node scripts/generate-changelog.js --patch",
+    "version:minor": "node scripts/generate-changelog.js --minor",
+    "version:major": "node scripts/generate-changelog.js --major",
+    "predeploy": "node scripts/generate-changelog.js --patch",
+    "deploy": "npm run predeploy && firebase deploy"
   },
   "dependencies": {
     "@sparkjsdev/spark": "^2.0.0",

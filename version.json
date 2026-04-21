@@ -1,0 +1,11 @@
+{
+  "version": "0.7.0",
+  "buildDate": "2026-04-21",
+  "commitHash": "43c8895",
+  "environment": "production",
+  "features": [
+    "Real-time triangle count tracking for 3D assets",
+    "UnidadModal React portal rendering",
+    "Unidades panel in viewer mode"
+  ]
+}
