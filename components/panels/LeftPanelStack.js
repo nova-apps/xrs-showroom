@@ -2,14 +2,23 @@
 
 /**
  * LeftPanelStack — a collapsible sidebar on the left side.
- * Now only contains the units listing panel.
+ * Starts hidden and animates in when `show` prop becomes true (e.g. after loading screen).
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
-export default function LeftPanelStack({ children, title }) {
-  const [activePanel, setActivePanel] = useState('unidadesList'); // Start expanded
-  const [visible, setVisible] = useState(true);
+export default function LeftPanelStack({ children, title, show = true }) {
+  const [activePanel, setActivePanel] = useState('unidadesList');
+  const [visible, setVisible] = useState(false);
+
+  // Animate in when `show` becomes true
+  useEffect(() => {
+    if (show) {
+      // Small delay so the loading screen fully fades before panel appears
+      const timer = setTimeout(() => setVisible(true), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [show]);
 
   const toggle = useCallback((panelId) => {
     setActivePanel((prev) => (prev === panelId ? null : panelId));
@@ -19,14 +28,14 @@ export default function LeftPanelStack({ children, title }) {
     <>
       {/* Toggle button — only shown when stack is hidden */}
       <button
-        className={`panel-stack-toggle${visible ? ' toggle-visible' : ''}`}
+        className={`panel-stack-toggle${visible ? ' toggle-visible' : ''}${!show ? ' toggle-hidden' : ''}`}
         onClick={() => setVisible(true)}
         title="Mostrar panel"
       >
         📋
       </button>
 
-      <div className={`left-panel-stack${visible ? '' : ' stack-hidden'}`}>
+      <div className={`left-panel-stack${visible ? ' stack-entered' : ' stack-hidden'}`}>
         {/* ─── Header ─── */}
         <div className="sidebar-header">
           <div className="sidebar-header-top">

@@ -35,11 +35,6 @@ export default function AmenitiesListPanel({
         ) : (
           <>
             <div className="unidades-list">
-              <div className="unidades-list-header">
-                <span className="unidades-list-count">
-                  {items.length} {items.length === 1 ? 'amenity' : 'amenities'}
-                </span>
-              </div>
               <div className="unidades-list-items">
                 {items.map((amenity, index) => (
                   <div

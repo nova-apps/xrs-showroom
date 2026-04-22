@@ -597,7 +597,7 @@ export default function ScenePage() {
       </div>
 
       {/* Left Sidebar — Units listing only */}
-      <LeftPanelStack title={scene.name}>
+      <LeftPanelStack title={scene.name} show={!loadingAssets}>
         {({ activePanel, toggle }) => (
           <>
             <UnidadesListPanel
