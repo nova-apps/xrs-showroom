@@ -3,6 +3,7 @@
 /**
  * Reusable floating panel with glassmorphism.
  * Supports both uncontrolled (internal state) and controlled (parent-driven) collapse.
+ * Uses CSS grid-row animation for smooth accordion expand/collapse.
  */
 
 import { useState } from 'react';
@@ -44,7 +45,9 @@ export default function FloatingPanel({
           <span className="panel-toggle">▼</span>
         </span>
       </div>
-      {!collapsed && <div className="panel-body">{children}</div>}
+      <div className="panel-body-wrapper">
+        <div className="panel-body">{children}</div>
+      </div>
     </div>
   );
 }
