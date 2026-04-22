@@ -229,7 +229,7 @@ export default function ViewPage() {
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
       {/* Left Sidebar — Units listing only */}
-      <LeftPanelStack>
+      <LeftPanelStack title={scene.name}>
         {({ activePanel, toggle }) => (
           <>
             <UnidadesListPanel

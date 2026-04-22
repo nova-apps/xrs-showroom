@@ -7,7 +7,7 @@
 
 import { useState, useCallback } from 'react';
 
-export default function LeftPanelStack({ children }) {
+export default function LeftPanelStack({ children, title }) {
   const [activePanel, setActivePanel] = useState('unidadesList'); // Start expanded
   const [visible, setVisible] = useState(true);
 
@@ -30,7 +30,7 @@ export default function LeftPanelStack({ children }) {
         {/* ─── Header ─── */}
         <div className="sidebar-header">
           <div className="sidebar-header-top">
-            <span className="sidebar-scene-label">Proyecto</span>
+            <span className="sidebar-scene-label">{title || 'Proyecto'}</span>
             <button
               className="sidebar-close-btn"
               onClick={() => setVisible(false)}
