@@ -21,16 +21,16 @@ export default function LeftPanelStack({ children }) {
       <button
         className={`panel-stack-toggle${visible ? ' toggle-visible' : ''}`}
         onClick={() => setVisible(true)}
-        title="Mostrar unidades"
+        title="Mostrar panel"
       >
-        🏢
+        📋
       </button>
 
       <div className={`left-panel-stack${visible ? '' : ' stack-hidden'}`}>
         {/* ─── Header ─── */}
         <div className="sidebar-header">
           <div className="sidebar-header-top">
-            <span className="sidebar-scene-label">Unidades</span>
+            <span className="sidebar-scene-label">Proyecto</span>
             <button
               className="sidebar-close-btn"
               onClick={() => setVisible(false)}

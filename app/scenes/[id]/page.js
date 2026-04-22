@@ -12,6 +12,7 @@ import { useScene } from '@/hooks/useScene';
 import { useHistory } from '@/hooks/useHistory';
 import { updateScene } from '@/lib/scenes';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
+import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
 import SceneEditorPanel from '@/components/panels/SceneEditorPanel';
 
 import OrbitPanel from '@/components/panels/OrbitPanel';
@@ -38,6 +39,7 @@ export default function ScenePage() {
   const [loadMetrics, setLoadMetrics] = useState(null);
 
   const [modalUnit, setModalUnit] = useState(null);
+  const [modalAmenity, setModalAmenity] = useState(null);
   const [assetVisibility, setAssetVisibility] = useState({ glb: true, colliders: true, sog: true, skybox: true, floor: true });
   const [gizmoMode, setGizmoMode] = useState('select');
   const [gizmoAsset, setGizmoAsset] = useState('glb');
@@ -67,6 +69,7 @@ export default function ScenePage() {
     updateOrbit,
     updateMaterials,
     updateUnidades,
+    updateAmenities,
     updateLighting,
     updateCollidersVisible,
     uploadAsset,
@@ -596,14 +599,24 @@ export default function ScenePage() {
       {/* Left Sidebar — Units listing only */}
       <LeftPanelStack>
         {({ activePanel, toggle }) => (
-          <UnidadesListPanel
-            unidades={scene?.unidades?.items || []}
-            onSelectUnit={handleSelectUnit}
-            selectedUnit={modalUnit}
-            onCloseModal={() => setModalUnit(null)}
-            collapsed={activePanel !== 'unidadesList'}
-            onToggle={() => toggle('unidadesList')}
-          />
+          <>
+            <UnidadesListPanel
+              unidades={scene?.unidades?.items || []}
+              onSelectUnit={handleSelectUnit}
+              selectedUnit={modalUnit}
+              onCloseModal={() => setModalUnit(null)}
+              collapsed={activePanel !== 'unidadesList'}
+              onToggle={() => toggle('unidadesList')}
+            />
+            <AmenitiesListPanel
+              amenities={scene?.amenities?.items || []}
+              onSelectAmenity={setModalAmenity}
+              selectedAmenity={modalAmenity}
+              onCloseModal={() => setModalAmenity(null)}
+              collapsed={activePanel !== 'amenitiesList'}
+              onToggle={() => toggle('amenitiesList')}
+            />
+          </>
         )}
       </LeftPanelStack>
 
@@ -666,6 +679,7 @@ export default function ScenePage() {
               scene={scene}
               sceneId={sceneId}
               onUnidadesChange={updateUnidades}
+              onAmenitiesChange={updateAmenities}
               collapsed={activePanel !== 'unidades'}
               onToggle={() => toggle('unidades')}
             />

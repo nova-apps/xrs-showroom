@@ -2096,6 +2096,32 @@ body {
   white-space: nowrap;
 }
 
+.ucm-action-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 5px;
+  font-size: 0.65rem;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: all var(--transition-fast);
+}
+
+.ucm-row:hover .ucm-action-btn {
+  opacity: 0.7;
+}
+
+.ucm-action-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.ucm-action-btn-delete:hover {
+  background: rgba(255, 80, 80, 0.1);
+  border-color: rgba(255, 80, 80, 0.25);
+}
+
 /* Cell input */
 .ucm-input {
   width: 100%;
@@ -2250,6 +2276,80 @@ body {
 
 .ucm-csv-status-error {
   color: var(--accent-red);
+}
+
+
+/* ═══════════════════════════════════════
+   AMENITIES MODAL
+   ═══════════════════════════════════════ */
+.amenities-modal {
+  max-width: 720px;
+}
+
+/* Plano cell — inline thumbnail + upload */
+.amenity-plano-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.amenity-plano-link {
+  flex-shrink: 0;
+}
+
+.amenity-plano-thumb-sm {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.amenity-upload-btn-sm {
+  padding: 4px 8px;
+  border: 1px solid rgba(68, 136, 255, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(68, 136, 255, 0.1);
+  color: var(--accent-blue);
+  font-size: 0.62rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.amenity-upload-btn-sm:hover {
+  background: rgba(68, 136, 255, 0.18);
+  border-color: var(--accent-blue);
+}
+
+.amenity-clear-plano {
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 80, 80, 0.25);
+  border-radius: 3px;
+  background: rgba(255, 80, 80, 0.08);
+  color: var(--accent-red);
+  font-size: 0.55rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.amenity-clear-plano:hover {
+  background: rgba(255, 80, 80, 0.18);
+  border-color: var(--accent-red);
+}
+
+/* Amenity detail modal description */
+.amenity-modal-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 8px;
 }
 
 

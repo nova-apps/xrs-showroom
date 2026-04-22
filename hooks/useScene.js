@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { subscribeScene, updateTransforms as dbUpdateTransforms, updateOrbit as dbUpdateOrbit, updateMaterials as dbUpdateMaterials, updateUnidades as dbUpdateUnidades, updateCollidersVisible as dbUpdateCollidersVisible, updateLighting as dbUpdateLighting, updateSceneAsset, removeSceneAsset } from '@/lib/scenes';
+import { subscribeScene, updateTransforms as dbUpdateTransforms, updateOrbit as dbUpdateOrbit, updateMaterials as dbUpdateMaterials, updateUnidades as dbUpdateUnidades, updateAmenities as dbUpdateAmenities, updateCollidersVisible as dbUpdateCollidersVisible, updateLighting as dbUpdateLighting, updateSceneAsset, removeSceneAsset } from '@/lib/scenes';
 import { uploadAsset as storageUpload, deleteAsset as storageDelete } from '@/lib/storage';
 
 export function useScene(sceneId) {
@@ -98,6 +98,24 @@ export function useScene(sceneId) {
 
       debounceTimers.current.unidades = setTimeout(() => {
         dbUpdateUnidades(sceneId, unidades).catch(console.error);
+      }, 500);
+    },
+    [sceneId]
+  );
+
+  /**
+   * Update amenities settings with debounce.
+   */
+  const updateAmenities = useCallback(
+    (amenities) => {
+      if (!sceneId) return;
+
+      if (debounceTimers.current.amenities) {
+        clearTimeout(debounceTimers.current.amenities);
+      }
+
+      debounceTimers.current.amenities = setTimeout(() => {
+        dbUpdateAmenities(sceneId, amenities).catch(console.error);
       }, 500);
     },
     [sceneId]
@@ -211,6 +229,7 @@ export function useScene(sceneId) {
     updateOrbit,
     updateMaterials,
     updateUnidades,
+    updateAmenities,
     updateLighting,
     updateCollidersVisible,
     uploadAsset,

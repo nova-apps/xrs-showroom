@@ -17,6 +17,7 @@ import { useScene } from '@/hooks/useScene';
 
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
+import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
 
 const Viewer3D = dynamic(() => import('@/components/viewer/Viewer3D'), { ssr: false });
 const FpsCounter = dynamic(() => import('@/components/viewer/FpsCounter'), { ssr: false });
@@ -32,6 +33,7 @@ export default function ViewPage() {
 
 
   const [modalUnit, setModalUnit] = useState(null);
+  const [modalAmenity, setModalAmenity] = useState(null);
 
   const loadedAssetsRef = useRef({
     glb: null,
@@ -229,14 +231,24 @@ export default function ViewPage() {
       {/* Left Sidebar — Units listing only */}
       <LeftPanelStack>
         {({ activePanel, toggle }) => (
-          <UnidadesListPanel
-            unidades={scene?.unidades?.items || []}
-            onSelectUnit={handleSelectUnit}
-            selectedUnit={modalUnit}
-            onCloseModal={() => setModalUnit(null)}
-            collapsed={activePanel !== 'unidadesList'}
-            onToggle={() => toggle('unidadesList')}
-          />
+          <>
+            <UnidadesListPanel
+              unidades={scene?.unidades?.items || []}
+              onSelectUnit={handleSelectUnit}
+              selectedUnit={modalUnit}
+              onCloseModal={() => setModalUnit(null)}
+              collapsed={activePanel !== 'unidadesList'}
+              onToggle={() => toggle('unidadesList')}
+            />
+            <AmenitiesListPanel
+              amenities={scene?.amenities?.items || []}
+              onSelectAmenity={setModalAmenity}
+              selectedAmenity={modalAmenity}
+              onCloseModal={() => setModalAmenity(null)}
+              collapsed={activePanel !== 'amenitiesList'}
+              onToggle={() => toggle('amenitiesList')}
+            />
+          </>
         )}
       </LeftPanelStack>
 
