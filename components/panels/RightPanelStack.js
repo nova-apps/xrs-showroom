@@ -43,25 +43,31 @@ export default function RightPanelStack({ sceneName, sceneId, children }) {
         {/* ─── Scene Header ─── */}
         <div className="sidebar-header">
           <div className="sidebar-header-top">
-            <div
-              className="sidebar-scene-name"
-              onClick={() => setShowScenePicker(!showScenePicker)}
-              title="Cambiar escena"
-            >
-              <span className="sidebar-scene-label">{sceneName || 'Sin nombre'}</span>
-              <span className="sidebar-scene-chevron">▾</span>
+            <div className="sidebar-scene-name-row">
+              <div
+                className="sidebar-scene-name"
+                onClick={() => setShowScenePicker(!showScenePicker)}
+                title="Cambiar escena"
+              >
+                <span className="sidebar-scene-label">{sceneName || 'Sin nombre'}</span>
+                <span className="sidebar-scene-chevron">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </div>
+              <button
+                className="sidebar-view-btn"
+                onClick={(e) => { e.stopPropagation(); window.open(`/view/${sceneId}`, '_blank'); }}
+                title="Ver resultado final"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </button>
             </div>
-            <button
-              className="sidebar-view-btn"
-              onClick={() => window.open(`/view/${sceneId}`, '_blank')}
-              title="Ver resultado final"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-            </button>
             <button
               className="sidebar-close-btn"
               onClick={() => setVisible(false)}

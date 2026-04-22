@@ -244,6 +244,14 @@ body {
   padding: 10px 14px;
 }
 
+.sidebar-scene-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
 .sidebar-scene-name {
   display: flex;
   align-items: center;
@@ -265,13 +273,20 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  max-width: 180px;
 }
 
 .sidebar-scene-chevron {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
   transition: transform 0.2s;
+}
+
+.sidebar-scene-chevron svg {
+  width: 16px;
+  height: 16px;
 }
 
 .sidebar-view-btn {
@@ -285,12 +300,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: background 0.15s, color 0.15s;
 }
 
 .sidebar-view-btn:hover {
   background: var(--bg-elevated);
-  color: var(--accent);
+  color: var(--accent-blue);
 }
 
 .sidebar-close-btn {
@@ -878,6 +894,91 @@ body {
   letter-spacing: 0.08em;
   color: var(--text-muted);
   margin-bottom: 6px;
+}
+
+/* Gizmo toolbar row inside transform section */
+.asset-transform-gizmo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.asset-transform-gizmo-row .asset-transform-title {
+  margin-bottom: 0;
+}
+
+.asset-transform-gizmo-row .gizmo-toolbar {
+  padding: 2px;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.asset-transform-gizmo-row .gizmo-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sub-accordion (for Materials inside an asset accordion) */
+.sub-accordion {
+  margin-top: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.sub-accordion.open {
+  border-color: rgba(68, 136, 255, 0.12);
+}
+
+.sub-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  cursor: pointer;
+  background: var(--bg-input);
+  transition: background var(--transition-fast);
+  user-select: none;
+}
+
+.sub-accordion-header:hover {
+  background: var(--bg-hover);
+}
+
+.sub-accordion-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.02em;
+}
+
+.sub-accordion-icon {
+  font-size: 0.6rem;
+}
+
+.sub-accordion-chevron {
+  font-size: 0.45rem;
+  color: var(--text-muted);
+  transition: transform var(--transition);
+}
+
+.sub-accordion:not(.open) .sub-accordion-chevron {
+  transform: rotate(-90deg);
+}
+
+.sub-accordion-body {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Asset visibility toggle */

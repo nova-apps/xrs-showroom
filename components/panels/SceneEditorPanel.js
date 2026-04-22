@@ -90,6 +90,26 @@ function AssetAccordion({ title, icon, open, onToggle, children, visible, onVisi
 }
 
 /**
+ * Inner sub-accordion for collapsible sections within an asset (e.g., Materials).
+ */
+function SubAccordion({ title, icon, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setOpen(defaultOpen); }, [defaultOpen]);
+  return (
+    <div className={`sub-accordion ${open ? 'open' : ''}`}>
+      <div className="sub-accordion-header" onClick={() => setOpen(!open)}>
+        <span className="sub-accordion-title">
+          {icon && <span className="sub-accordion-icon">{icon}</span>}
+          {title}
+        </span>
+        <span className="sub-accordion-chevron">▼</span>
+      </div>
+      {open && <div className="sub-accordion-body">{children}</div>}
+    </div>
+  );
+}
+
+/**
  * Scene editor panel — upload/manage assets + transform controls for each asset.
  * Each asset type (GLB, SOG, Skybox, Floor) is a collapsible inner accordion.
  */
@@ -458,9 +478,6 @@ export default function SceneEditorPanel({
       position=""
       collapsed={collapsed}
       onToggle={onToggle}
-      headerExtra={
-        <GizmoToolbar activeMode={gizmoMode} onModeChange={onGizmoMode} />
-      }
     >
       {/* ─── GLB Model ─── */}
       <AssetAccordion
@@ -572,12 +589,18 @@ export default function SceneEditorPanel({
           )}
         </div>
 
-        {/* ─── Materials ─── */}
-        {materialsContent}
+        {/* ─── Materials (collapsible sub-accordion) ─── */}
+        <SubAccordion title="Materiales" icon="🎨">
+          {materialsContent}
+        </SubAccordion>
 
         {/* ─── Transform ─── */}
         {local && (
           <div className="asset-transform-section">
+            <div className="asset-transform-gizmo-row">
+              <div className="asset-transform-title">Transform</div>
+              <GizmoToolbar activeMode={gizmoMode} onModeChange={onGizmoMode} />
+            </div>
             <div className="asset-transform-title">Posición</div>
             <TransformRow label="X" labelClass="label-x" value={local.glb?.position?.x ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('glb', 'position.x', v)} />
             <TransformRow label="Y" labelClass="label-y" value={local.glb?.position?.y ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('glb', 'position.y', v)} />
@@ -616,6 +639,10 @@ export default function SceneEditorPanel({
         />
         {local && (
           <div className="asset-transform-section">
+            <div className="asset-transform-gizmo-row">
+              <div className="asset-transform-title">Transform</div>
+              <GizmoToolbar activeMode={gizmoMode} onModeChange={onGizmoMode} />
+            </div>
             <div className="asset-transform-title">Posición</div>
             <TransformRow label="X" labelClass="label-x" value={local.colliders?.position?.x ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('colliders', 'position.x', v)} />
             <TransformRow label="Y" labelClass="label-y" value={local.colliders?.position?.y ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('colliders', 'position.y', v)} />
@@ -654,6 +681,10 @@ export default function SceneEditorPanel({
         />
         {local && (
           <div className="asset-transform-section">
+            <div className="asset-transform-gizmo-row">
+              <div className="asset-transform-title">Transform</div>
+              <GizmoToolbar activeMode={gizmoMode} onModeChange={onGizmoMode} />
+            </div>
             <div className="asset-transform-title">Posición</div>
             <TransformRow label="X" labelClass="label-x" value={local.sog?.position?.x ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('sog', 'position.x', v)} />
             <TransformRow label="Y" labelClass="label-y" value={local.sog?.position?.y ?? 0} min={-500} max={500} step={0.5} onChange={(v) => updateField('sog', 'position.y', v)} />
