@@ -614,6 +614,8 @@ export default function ScenePage() {
               onCloseModal={() => setModalUnit(null)}
               collapsed={activePanel !== 'unidadesList'}
               onToggle={() => toggle('unidadesList')}
+              whatsappNumber={scene?.whatsappNumber || ''}
+              projectName={scene?.name || ''}
             />
             <AmenitiesListPanel
               amenities={scene?.amenities?.items || []}

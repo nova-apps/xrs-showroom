@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import FloatingPanel from './FloatingPanel';
 import UnidadesCargaModal from './UnidadesCargaModal';
 import AmenitiesModal from './AmenitiesModal';
+import { updateScene } from '@/lib/scenes';
 
 /**
  * Configuración Panel — manages Unidades and Amenities data entry.
@@ -21,9 +22,27 @@ export default function UnidadesPanel({
 }) {
   const [showUnidadesModal, setShowUnidadesModal] = useState(false);
   const [showAmenitiesModal, setShowAmenitiesModal] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const whatsappTimer = useRef(null);
 
   const unidadItems = scene?.unidades?.items || [];
   const amenityItems = scene?.amenities?.items || [];
+
+  // Sync WhatsApp number from scene data
+  useEffect(() => {
+    if (scene?.whatsappNumber !== undefined) {
+      setWhatsappNumber(scene.whatsappNumber || '');
+    }
+  }, [scene?.whatsappNumber]);
+
+  const handleWhatsappChange = useCallback((value) => {
+    setWhatsappNumber(value);
+    if (!sceneId) return;
+    if (whatsappTimer.current) clearTimeout(whatsappTimer.current);
+    whatsappTimer.current = setTimeout(() => {
+      updateScene(sceneId, { whatsappNumber: value }).catch(console.error);
+    }, 800);
+  }, [sceneId]);
 
   const handleUnidadesSave = useCallback(async (newItems) => {
     await onUnidadesChange?.({ items: newItems });
@@ -81,6 +100,28 @@ export default function UnidadesPanel({
             >
               {amenityItems.length > 0 ? 'Editar' : '➕ Cargar'}
             </button>
+          </div>
+        </div>
+
+        {/* WhatsApp number section */}
+        <div className="transform-section">
+          <div className="transform-section-title">📱 WhatsApp</div>
+          <div className="whatsapp-config">
+            <label className="whatsapp-config-label" htmlFor="whatsapp-number">
+              Número de contacto
+            </label>
+            <div className="whatsapp-input-row">
+              <span className="whatsapp-prefix">+</span>
+              <input
+                id="whatsapp-number"
+                type="tel"
+                className="whatsapp-input"
+                placeholder="5491123456789"
+                value={whatsappNumber}
+                onChange={(e) => handleWhatsappChange(e.target.value.replace(/[^0-9]/g, ''))}
+              />
+            </div>
+            <span className="whatsapp-hint">Código de país + número, sin espacios ni guiones</span>
           </div>
         </div>
       </FloatingPanel>

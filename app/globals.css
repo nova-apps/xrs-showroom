@@ -3181,12 +3181,78 @@ body {
 }
 
 .unidad-modal-btn-whatsapp {
-  background: rgba(80, 130, 180, 0.6);
+  background: rgba(37, 211, 102, 0.5);
   color: #fff;
 }
 
-.unidad-modal-btn-whatsapp:hover {
-  background: rgba(80, 130, 180, 0.8);
+.unidad-modal-btn-whatsapp:hover:not(:disabled) {
+  background: rgba(37, 211, 102, 0.7);
+}
+
+.unidad-modal-btn-whatsapp.disabled,
+.unidad-modal-btn-whatsapp:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── WhatsApp Config Input ─── */
+.whatsapp-config {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.whatsapp-config-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.whatsapp-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  transition: border-color var(--transition-fast);
+}
+
+.whatsapp-input-row:focus-within {
+  border-color: rgba(37, 211, 102, 0.5);
+}
+
+.whatsapp-prefix {
+  padding: 8px 8px 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.whatsapp-input {
+  flex: 1;
+  padding: 8px 12px 8px 0;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  outline: none;
+  min-width: 0;
+}
+
+.whatsapp-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.whatsapp-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 /* Right: Floor plan */

@@ -12,7 +12,7 @@ import UnidadModal from './UnidadModal';
  *   id, piso, ambientes, superficie_cubierta, superficie_semicubierta,
  *   superficie_amenities, superficie_total, imagen_plano
  */
-export default function UnidadesListPanel({ unidades = [], position = '', onSelectUnit, selectedUnit, onCloseModal, collapsed, onToggle }) {
+export default function UnidadesListPanel({ unidades = [], position = '', onSelectUnit, selectedUnit, onCloseModal, collapsed, onToggle, whatsappNumber, projectName }) {
   const items = Array.isArray(unidades) ? unidades : [];
 
   // Filter state
@@ -229,7 +229,7 @@ export default function UnidadesListPanel({ unidades = [], position = '', onSele
 
       {/* Unit detail modal */}
       {selectedUnit && (
-        <UnidadModal unit={selectedUnit} onClose={onCloseModal} />
+        <UnidadModal unit={selectedUnit} onClose={onCloseModal} whatsappNumber={whatsappNumber} projectName={projectName} />
       )}
     </>
   );

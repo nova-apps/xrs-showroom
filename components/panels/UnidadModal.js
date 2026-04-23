@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
  *   id, piso, ambientes, superficie_cubierta, superficie_semicubierta,
  *   superficie_amenities, superficie_total, imagen_plano
  */
-export default function UnidadModal({ unit, onClose }) {
+export default function UnidadModal({ unit, onClose, whatsappNumber, projectName }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -19,6 +19,19 @@ export default function UnidadModal({ unit, onClose }) {
   }, []);
 
   if (!unit || !mounted) return null;
+
+  // Build WhatsApp URL with pre-filled message
+  const whatsappUrl = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        `Hola! Estoy consultando por la unidad ${unit.id || '—'}${projectName ? ` del proyecto ${projectName}` : ''}. Me gustaría recibir más información.`
+      )}`
+    : null;
+
+  const handleWhatsappClick = () => {
+    if (whatsappUrl) {
+      window.open(whatsappUrl, '_blank');
+    }
+  };
 
   return createPortal(
     <div className="unidad-modal-overlay" onClick={onClose}>
@@ -64,7 +77,12 @@ export default function UnidadModal({ unit, onClose }) {
             <button className="unidad-modal-btn unidad-modal-btn-panorama">
               Vista Panorámica
             </button>
-            <button className="unidad-modal-btn unidad-modal-btn-whatsapp">
+            <button
+              className={`unidad-modal-btn unidad-modal-btn-whatsapp${!whatsappUrl ? ' disabled' : ''}`}
+              onClick={handleWhatsappClick}
+              disabled={!whatsappUrl}
+              title={whatsappUrl ? 'Abrir WhatsApp' : 'Número de WhatsApp no configurado'}
+            >
               Hablemos por WhatsApp
             </button>
           </div>
