@@ -1,19 +1,46 @@
 import { NextResponse } from 'next/server';
 
+const SESSION_COOKIE = 'xrs_session';
+
 /**
- * Middleware — currently a passthrough.
- * 
- * COOP/COEP headers are disabled to allow Firebase Storage cross-origin fetches.
- * Three.js and Spark work without SharedArrayBuffer (WASM decoders use single-thread fallback).
- * 
- * To re-enable for full WASM threading performance, uncomment the headers below
- * and configure Firebase Storage CORS rules.
+ * Protected routes — require auth cookie.
+ * /view/* is public (client-facing showroom).
+ * /login and /api/* are always accessible.
  */
+const PROTECTED_PREFIXES = ['/', '/scenes'];
+
+function isProtectedRoute(pathname) {
+  // Always allow these
+  if (pathname.startsWith('/login')) return false;
+  if (pathname.startsWith('/api/')) return false;
+  if (pathname.startsWith('/view/')) return false;
+  if (pathname.startsWith('/view')) return false;
+
+  // Protect exact match "/" and anything under /scenes
+  if (pathname === '/') return true;
+  if (pathname.startsWith('/scenes')) return true;
+
+  return false;
+}
+
 export function middleware(request) {
+  const { pathname } = request.nextUrl;
+
+  // ── Auth check ──
+  if (isProtectedRoute(pathname)) {
+    const session = request.cookies.get(SESSION_COOKIE);
+
+    if (!session?.value) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   const response = NextResponse.next();
 
   // Uncomment when Firebase Storage CORS is configured:
-  // if (request.nextUrl.pathname.startsWith('/scenes')) {
+  // if (pathname.startsWith('/scenes')) {
   //   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   //   response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
   // }
