@@ -94,6 +94,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     },
     // Instancing stats
     instancingStats: null,
+    // Splat fade-in animation state
+    splatFade: { active: false, startTime: 0, duration: 2.5, easing: 'easeOut' },
+    // Splat loader settings (persisted)
+    splatSettings: null,
+    // GLB reveal animation state
+    glbReveal: { active: false, startTime: 0, duration: 2, easing: 'easeOut', mode: 'none', minY: 0, maxY: 1, clippingPlane: null, materials: [] },
+    // GLB reveal settings (persisted)
+    glbSettings: null,
   });
 
   // Expose methods to parent via ref
@@ -112,9 +120,11 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         console.log(`[Viewer] Pixel ratio set to ${clamped}`);
       }
     },
-    loadGlb: (url) => loadGlbModel(url),
+    loadGlb: (url, settings) => loadGlbModel(url, settings),
+    setGlbSettings: (settings) => { stateRef.current.glbSettings = settings; },
     loadColliders: (url) => loadCollidersModel(url),
-    loadSog: (url) => loadSogModel(url),
+    loadSog: (url, settings) => loadSogModel(url, settings),
+    setSplatSettings: (settings) => { stateRef.current.splatSettings = settings; },
     loadSkyboxTexture: (url) => loadSkyboxTexture(url),
     loadFloorTexture: (url) => loadFloorTexture(url),
     loadModelHdri: (url) => loadModelHdri(url),
@@ -480,6 +490,17 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
           break;
         case 'skybox':
           if (s.skyboxMesh) s.skyboxMesh.visible = visible;
+          // Also toggle scene.background for HDR
+          if (s.scene && THREE) {
+            if (visible) {
+              // Restore HDR background if we have a raw texture with equirect mapping
+              if (s.skyboxRawTexture?.mapping === THREE.EquirectangularReflectionMapping) {
+                s.scene.background = s.skyboxRawTexture;
+              }
+            } else {
+              s.scene.background = new THREE.Color(0x08080e);
+            }
+          }
           break;
         case 'floor':
           if (s.floorMesh) s.floorMesh.visible = visible;
@@ -520,8 +541,8 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         stateRef.current.adaptiveQuality.enabled = enabled;
       }
     },
-    loadGlbWithProgress: (url, onProgress) => loadGlbModel(url, onProgress),
-    loadGlbProgressive: async (proxyUrl, fullUrl, onProgress) => {
+    loadGlbWithProgress: (url, _onProgress) => loadGlbModel(url),
+    loadGlbProgressive: async (proxyUrl, fullUrl, _onProgress) => {
       // 1. Load proxy GLB immediately (tiny, ~200KB) — instant preview
       if (proxyUrl) {
         await loadGlbModel(proxyUrl);
@@ -531,8 +552,8 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
           console.log('[Viewer] ⚡ Proxy GLB loaded, loading full model in background...');
         }
       }
-      // 2. Load full model in background with progress tracking
-      await loadGlbModel(fullUrl, onProgress);
+      // 2. Load full model in background
+      await loadGlbModel(fullUrl);
       const s = stateRef.current;
       if (s.glbModel) {
         s.glbModel.userData._isProxy = false;
@@ -813,10 +834,13 @@ if (uMaskEnabled > 0.5) {
   }, []);
 
   /* ─── GLB Loading ─── */
-  const loadGlbModel = useCallback(async (url, onProgress) => {
+  const loadGlbModel = useCallback(async (url, settings) => {
     const s = stateRef.current;
     const THREE = s.THREE;
     if (!THREE || !url) return;
+
+    // Merge passed settings with stored settings
+    const glbCfg = { ...s.glbSettings, ...settings };
 
     // Remove previous
     removeGlb();
@@ -848,36 +872,10 @@ if (uMaskEnabled > 0.5) {
 
       console.log('[Viewer] Loading GLB:', url);
 
-      // Fetch with progress tracking via ReadableStream
+      // Fetch as ArrayBuffer to bypass COEP restrictions on cross-origin URLs
       const res = await fetch(url, { mode: 'cors' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      let buffer;
-      const contentLength = parseInt(res.headers.get('content-length') || '0', 10);
-
-      if (onProgress && contentLength > 0 && res.body) {
-        // Stream-based progress tracking
-        const reader = res.body.getReader();
-        const chunks = [];
-        let received = 0;
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.length;
-          onProgress(received / contentLength);
-        }
-        // Merge chunks into a single buffer
-        const merged = new Uint8Array(received);
-        let offset = 0;
-        for (const chunk of chunks) {
-          merged.set(chunk, offset);
-          offset += chunk.length;
-        }
-        buffer = merged.buffer;
-      } else {
-        buffer = await res.arrayBuffer();
-      }
+      const buffer = await res.arrayBuffer();
 
       // Parse the buffer instead of loading from URL
       const gltf = await new Promise((resolve, reject) => {
@@ -1057,6 +1055,111 @@ if (uMaskEnabled > 0.5) {
       // Fit camera
       fitCamera(model);
 
+      // ─── GLB Reveal Animation ───
+      const revealMode = glbCfg.revealType || 'none';
+      const revealDuration = glbCfg.revealDuration ?? 2;
+      const revealEasing = glbCfg.revealEasing || 'easeOut';
+
+      if (revealMode !== 'none' && revealDuration > 0) {
+        // Use world bounding box for Y range
+        const worldBox = new THREE.Box3().setFromObject(wrapper);
+        const minY = worldBox.min.y;
+        const maxY = worldBox.max.y;
+        const range = maxY - minY;
+
+        if (revealMode === 'clip') {
+          const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), minY);
+          wrapper.traverse((child) => {
+            if (child.isMesh) {
+              const mats = Array.isArray(child.material) ? child.material : [child.material];
+              for (const m of mats) {
+                m.clippingPlanes = [plane];
+                m.clipShadows = true;
+                m.needsUpdate = true;
+              }
+            }
+          });
+          s.glbReveal = {
+            active: true,
+            startTime: performance.now(),
+            duration: revealDuration,
+            easing: revealEasing,
+            mode: 'clip',
+            minY,
+            maxY,
+            range,
+            clippingPlane: plane,
+            materials: [],
+          };
+        } else if (revealMode === 'dissolve') {
+          const revealMats = [];
+          wrapper.traverse((child) => {
+            if (child.isMesh) {
+              const mats = Array.isArray(child.material) ? child.material : [child.material];
+              for (const m of mats) {
+                m.userData._origOnBeforeCompile = m.onBeforeCompile;
+                m.onBeforeCompile = (shader) => {
+                  shader.uniforms.uRevealY = { value: minY };
+                  shader.uniforms.uRevealEdge = { value: range * 0.08 };
+
+                  shader.vertexShader = shader.vertexShader.replace(
+                    '#include <clipping_planes_pars_vertex>',
+                    `#include <clipping_planes_pars_vertex>
+                    varying vec3 vRevealWorldPos;
+                    `
+                  );
+                  shader.vertexShader = shader.vertexShader.replace(
+                    '#include <worldpos_vertex>',
+                    `#include <worldpos_vertex>
+                    vRevealWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+                    `
+                  );
+
+                  shader.fragmentShader = shader.fragmentShader.replace(
+                    '#include <clipping_planes_pars_fragment>',
+                    `#include <clipping_planes_pars_fragment>
+                    varying vec3 vRevealWorldPos;
+                    uniform float uRevealY;
+                    uniform float uRevealEdge;
+                    float revealHash(vec3 p) {
+                      p = fract(p * vec3(443.8975, 397.2973, 491.1871));
+                      p += dot(p, p.yxz + 19.19);
+                      return fract((p.x + p.y) * p.z);
+                    }
+                    `
+                  );
+                  shader.fragmentShader = shader.fragmentShader.replace(
+                    '#include <clipping_planes_fragment>',
+                    `#include <clipping_planes_fragment>
+                    {
+                      float edgeNoise = revealHash(vRevealWorldPos * 8.0) * uRevealEdge;
+                      if (vRevealWorldPos.y > uRevealY + edgeNoise) discard;
+                    }
+                    `
+                  );
+                  m.userData._revealShader = shader;
+                };
+                m.needsUpdate = true;
+                revealMats.push(m);
+              }
+            }
+          });
+          s.glbReveal = {
+            active: true,
+            startTime: performance.now(),
+            duration: revealDuration,
+            easing: revealEasing,
+            mode: 'dissolve',
+            minY,
+            maxY,
+            range,
+            clippingPlane: null,
+            materials: revealMats,
+          };
+        }
+        console.log(`[Viewer] GLB reveal starting (${revealMode}, ${revealDuration}s, Y=${minY.toFixed(1)}→${maxY.toFixed(1)})`);
+      }
+
       console.log('[Viewer] ✓ GLB loaded');
       dracoLoader.dispose();
     } catch (err) {
@@ -1120,9 +1223,12 @@ if (uMaskEnabled > 0.5) {
   }, []);
 
   /* ─── SOG Loading ─── */
-  const loadSogModel = useCallback(async (url) => {
+  const loadSogModel = useCallback(async (url, settings) => {
     const s = stateRef.current;
     if (!s.THREE || !url) return;
+
+    // Merge passed settings with stored settings
+    const cfg = { ...s.splatSettings, ...settings };
 
     // Skip SOG on mobile — too heavy for constrained VRAM
     if (s.qualityProfile && !s.qualityProfile.enableSplats) {
@@ -1133,13 +1239,15 @@ if (uMaskEnabled > 0.5) {
     removeSog();
 
     try {
-      const { SparkRenderer, SplatMesh } = await import('@sparkjsdev/spark');
+      const spark = await import('@sparkjsdev/spark');
+      const { SparkRenderer, SplatMesh } = spark;
+      const { DynoFloat, dynoBlock, splitGsplat, combineGsplat, mul, mix, min, vec3, split: splitVec, Gsplat, length: dynoLength, smoothstep, sub, dynoConst } = spark.dyno;
 
       // Ensure SparkRenderer exists in the scene (required by Spark 2.0)
       if (!s.sparkRenderer) {
-        const spark = new SparkRenderer({ renderer: s.renderer });
-        s.scene.add(spark);
-        s.sparkRenderer = spark;
+        const sparkR = new SparkRenderer({ renderer: s.renderer });
+        s.scene.add(sparkR);
+        s.sparkRenderer = sparkR;
         console.log('[Viewer] SparkRenderer created (Spark 2.0)');
       }
 
@@ -1160,23 +1268,127 @@ if (uMaskEnabled > 0.5) {
         throw new Error('Invalid SOG file (not a ZIP container)');
       }
 
-      const useExtSplats = s.qualityProfile?.enableExtSplats !== false;
+      const useLod = cfg.lod !== false;
+      const useExtSplats = cfg.extSplats !== undefined
+        ? cfg.extSplats
+        : (s.qualityProfile?.enableExtSplats !== false);
+
+      // Animation config
+      const animType = cfg.animationType || 'radialReveal';
+      const animDuration = cfg.animationDuration ?? 2.5;
+      const animEasing = cfg.animationEasing || 'easeOut';
+      const wantAnim = animType !== 'none' && animDuration > 0;
+
+      // ── Dyno uniforms ──
+      // Point→splat animation
+      const splatSizeU = new DynoFloat({ value: wantAnim ? 0.01 : 1 });
+      const splatShapeU = new DynoFloat({ value: wantAnim ? 0 : 1 });
+      // Radial clip mask (independent)
+      const wantClip = cfg.radialClip === true;
+      const clipRadiusU = new DynoFloat({ value: wantClip ? 0 : 99999 });
+      const clipEdgeU = new DynoFloat({ value: 0.5 });
+
+      // Dyno modifier: point→splat + radial clip
+      const splatModifier = dynoBlock(
+        { gsplat: Gsplat },
+        { gsplat: Gsplat },
+        ({ gsplat }) => {
+          const { scales, center, opacity } = splitGsplat(gsplat).outputs;
+
+          // ── Point → Splat (size + shape) ──
+          const { x: sx, y: sy, z: sz } = splitVec(scales).outputs;
+          const minAxis = min(min(sx, sy), sz);
+          const shaped = mix(vec3(minAxis), scales, splatShapeU);
+          const sized = mul(shaped, splatSizeU);
+
+          // ── Radial clip mask ──
+          const dist = dynoLength(center);
+          const fadeStart = sub(clipRadiusU, clipEdgeU);
+          const clipFactor = sub(dynoConst('float', 1), smoothstep(fadeStart, clipRadiusU, dist));
+          const clippedOpacity = mul(opacity, clipFactor);
+
+          return { gsplat: combineGsplat({ gsplat, scales: sized, opacity: clippedOpacity }) };
+        }
+      );
+
+      // Radial clip config (independent from point→splat)
+      const clipDuration = cfg.radialClipDuration ?? cfg.animationDuration ?? 2.5;
+      const clipEasing = cfg.radialClipEasing ?? cfg.animationEasing ?? 'easeOut';
 
       const splatMesh = new SplatMesh({
         fileBytes: bytes.buffer,
         fileName: 'splat.sog',
-        lod: true,
+        lod: useLod,
         extSplats: useExtSplats,
+        objectModifier: splatModifier,
         onLoad: () => {
-          console.log(`[Viewer] ✓ SOG splat loaded (LoD=true, ExtSplats=${useExtSplats})`);
+          console.log(`[Viewer] ✓ SOG splat loaded (LoD=${useLod}, ExtSplats=${useExtSplats})`);
+
+          // Estimate max radius by sampling splat centers
+          let maxRadius = 10;
+          try {
+            const mesh = s.splatMesh;
+            const splats = mesh?.packedSplats || mesh?.extSplats;
+            if (splats && typeof splats.getNumSplats === 'function' && typeof splats.getSplat === 'function') {
+              const ns = splats.getNumSplats();
+              const step = Math.max(1, Math.floor(ns / 3000));
+              let maxDist2 = 0;
+              for (let i = 0; i < ns; i += step) {
+                const sp = splats.getSplat(i);
+                const c = sp?.center;
+                if (c) {
+                  const d2 = c.x * c.x + c.y * c.y + c.z * c.z;
+                  if (d2 > maxDist2) maxDist2 = d2;
+                }
+              }
+              if (maxDist2 > 0) maxRadius = Math.sqrt(maxDist2) * 1.15;
+            }
+          } catch (_) { /* fallback stays 10 */ }
+
+          // Point→splat animation
+          if (wantAnim) {
+            s.splatFade = {
+              active: true,
+              startTime: performance.now(),
+              duration: animDuration,
+              easing: animEasing,
+              splatSizeU,
+              splatShapeU,
+            };
+            console.log(`[Viewer] Splat point→splat starting (${animDuration}s)`);
+          }
+
+          // Radial clip animation (independent)
+          if (wantClip) {
+            s.splatClip = {
+              active: true,
+              startTime: performance.now(),
+              duration: clipDuration,
+              easing: clipEasing,
+              clipRadiusU,
+              clipEdgeU,
+              maxRadius,
+            };
+            console.log(`[Viewer] Splat radial clip starting (${clipDuration}s, maxR=${maxRadius.toFixed(2)})`);
+          }
         },
       });
+
+      // Store uniform references on stateRef
+      s.splatSizeU = splatSizeU;
+      s.splatShapeU = splatShapeU;
+      s.clipRadiusU = clipRadiusU;
+      s.clipEdgeU = clipEdgeU;
+
+      // Hide immediately before first render if any animation
+      if (wantAnim || wantClip) {
+        splatMesh.opacity = 0;
+      }
 
       // Render SOG after GLB so it composites on top
       splatMesh.renderOrder = 10;
       s.scene.add(splatMesh);
       s.splatMesh = splatMesh;
-
 
       // Apply pending transforms if they exist
       if (s.pendingTransforms.sog) {
@@ -1645,6 +1857,7 @@ if (uMaskEnabled > 0.5) {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.NoToneMapping;
       renderer.shadowMap.enabled = false;
+      renderer.localClippingEnabled = true;
       container.appendChild(renderer.domElement);
       s.renderer = renderer;
 
@@ -1872,6 +2085,9 @@ if (uMaskEnabled > 0.5) {
           handleFocusAnimation(s);
         }
         handleAdaptiveQuality(s);
+        handleGlbReveal(s);
+        handleSplatFade(s);
+        handleSplatClip(s);
         syncCameraRotation(s);
         // ─── Skybox Zoom Sync — scale + position tracks camera distance ───
         if (s.skyboxMesh) {
@@ -2227,6 +2443,121 @@ function handleFocusAnimation(s) {
  * Degrades quickly (2s cooldown) to stop frame drops ASAP.
  * Upgrades slowly (5s cooldown) to avoid oscillation.
  */
+
+/* ─── Easing functions for animations ─── */
+const EASING_FNS = {
+  linear: (t) => t,
+  easeIn: (t) => t * t,
+  easeOut: (t) => 1 - (1 - t) * (1 - t),
+  easeInOut: (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+  easeOutCubic: (t) => 1 - Math.pow(1 - t, 3),
+  easeOutBack: (t) => { const c = 1.70158; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); },
+};
+
+/* ─── GLB Reveal Animation ─── */
+function handleGlbReveal(s) {
+  const rev = s.glbReveal;
+  if (!rev.active) return;
+
+  const elapsed = (performance.now() - rev.startTime) / 1000;
+  const t = Math.min(elapsed / rev.duration, 1);
+  const easeFn = EASING_FNS[rev.easing] || EASING_FNS.easeOut;
+  const eased = easeFn(t);
+
+  const currentY = rev.minY + eased * (rev.range * 1.05);
+
+  if (rev.mode === 'clip') {
+    rev.clippingPlane.constant = currentY;
+  } else if (rev.mode === 'dissolve') {
+    for (const m of rev.materials) {
+      const shader = m.userData._revealShader;
+      if (shader) {
+        shader.uniforms.uRevealY.value = currentY;
+      }
+    }
+  }
+
+  if (t >= 1) {
+    rev.active = false;
+    if (rev.mode === 'clip' && s.glbModel) {
+      s.glbModel.traverse((child) => {
+        if (child.isMesh) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          for (const m of mats) {
+            m.clippingPlanes = [];
+            m.needsUpdate = true;
+          }
+        }
+      });
+    }
+    if (rev.mode === 'dissolve') {
+      for (const m of rev.materials) {
+        const shader = m.userData._revealShader;
+        if (shader) {
+          shader.uniforms.uRevealY.value = rev.maxY + rev.range;
+        }
+      }
+    }
+    console.log(`[Viewer] GLB reveal complete (${rev.mode}, ${rev.duration}s)`);
+  }
+}
+
+/* ─── Splat Point→Splat Animation ─── */
+function handleSplatFade(s) {
+  const fade = s.splatFade;
+  if (!fade?.active || !s.splatMesh) return;
+
+  const elapsed = (performance.now() - fade.startTime) / 1000;
+  const t = Math.min(elapsed / fade.duration, 1);
+  const easeFn = EASING_FNS[fade.easing] || EASING_FNS.easeOut;
+  const eased = easeFn(t);
+
+  if (!s.splatClip?.active) {
+    s.splatMesh.opacity = eased;
+  }
+
+  if (fade.splatSizeU) {
+    fade.splatSizeU.value = 0.01 + eased * 0.99;
+  }
+
+  if (fade.splatShapeU) {
+    const shapeT = Math.max(0, (t - 0.3) / 0.7);
+    fade.splatShapeU.value = easeFn(Math.min(shapeT, 1));
+  }
+
+  if (t >= 1) {
+    fade.active = false;
+    if (fade.splatSizeU) fade.splatSizeU.value = 1;
+    if (fade.splatShapeU) fade.splatShapeU.value = 1;
+    if (!s.splatClip?.active) s.splatMesh.opacity = 1;
+    console.log(`[Viewer] Splat point→splat complete (${fade.duration}s)`);
+  }
+}
+
+/* ─── Splat Radial Clip Animation ─── */
+function handleSplatClip(s) {
+  const clip = s.splatClip;
+  if (!clip?.active || !s.splatMesh) return;
+
+  const elapsed = (performance.now() - clip.startTime) / 1000;
+  const t = Math.min(elapsed / clip.duration, 1);
+  const easeFn = EASING_FNS[clip.easing] || EASING_FNS.easeOut;
+  const eased = easeFn(t);
+
+  s.splatMesh.opacity = Math.max(s.splatMesh.opacity, eased);
+
+  const currentRadius = eased * clip.maxRadius * 1.4;
+  clip.clipRadiusU.value = currentRadius;
+  clip.clipEdgeU.value = clip.maxRadius * 0.4;
+
+  if (t >= 1) {
+    clip.active = false;
+    clip.clipRadiusU.value = 99999;
+    s.splatMesh.opacity = 1;
+    console.log(`[Viewer] Splat radial clip complete (${clip.duration}s)`);
+  }
+}
+
 function handleAdaptiveQuality(s) {
   const aq = s.adaptiveQuality;
   if (!aq.enabled || !s.renderer) return;

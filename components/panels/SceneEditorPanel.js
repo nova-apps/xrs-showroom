@@ -269,6 +269,10 @@ export default function SceneEditorPanel({
   gizmoMode,
   onGizmoMode,
   onSaveSatelliteUrl,
+  glbSettings,
+  onGlbSettingsChange,
+  splatSettings,
+  onSplatSettingsChange,
 }) {
   // Pre-upload optimization state
   const [preUpload, setPreUpload] = useState(null); // { file, stats }
@@ -278,6 +282,61 @@ export default function SceneEditorPanel({
 
   // General asset stats state
   const [assetStats, setAssetStats] = useState({ glb: 0, colliders: 0, sog: 0 });
+
+  // Local GLB settings state
+  const DEFAULT_GLB = {
+    revealType: 'none',
+    revealDuration: 2,
+    revealEasing: 'easeOut',
+  };
+  const [localGlb, setLocalGlb] = useState(() => ({ ...DEFAULT_GLB, ...glbSettings }));
+
+  useEffect(() => {
+    if (glbSettings) {
+      setLocalGlb((prev) => ({ ...prev, ...glbSettings }));
+    }
+  }, [glbSettings]);
+
+  const updateGlbField = useCallback(
+    (field, value) => {
+      setLocalGlb((prev) => {
+        const next = { ...prev, [field]: value };
+        onGlbSettingsChange?.(next);
+        return next;
+      });
+    },
+    [onGlbSettingsChange]
+  );
+
+  // Local splat settings state
+  const DEFAULT_SPLAT = {
+    lod: true,
+    extSplats: true,
+    animationType: 'radialReveal',
+    animationDuration: 2.5,
+    animationEasing: 'easeOut',
+    radialClip: true,
+    radialClipDuration: 2.5,
+    radialClipEasing: 'easeOut',
+  };
+  const [localSplat, setLocalSplat] = useState(() => ({ ...DEFAULT_SPLAT, ...splatSettings }));
+
+  useEffect(() => {
+    if (splatSettings) {
+      setLocalSplat((prev) => ({ ...prev, ...splatSettings }));
+    }
+  }, [splatSettings]);
+
+  const updateSplatField = useCallback(
+    (field, value) => {
+      setLocalSplat((prev) => {
+        const next = { ...prev, [field]: value };
+        onSplatSettingsChange?.(next);
+        return next;
+      });
+    },
+    [onSplatSettingsChange]
+  );
 
   useEffect(() => {
     if (!viewerReady || !viewerRef?.current) return;
@@ -594,6 +653,52 @@ export default function SceneEditorPanel({
           {materialsContent}
         </SubAccordion>
 
+        {/* ─── GLB Reveal Animation ─── */}
+        <div className="asset-transform-section">
+          <div className="asset-transform-title">Animación de entrada</div>
+          <div className="splat-setting-row">
+            <span className="splat-setting-label">Tipo</span>
+            <select
+              className="splat-select"
+              value={localGlb.revealType}
+              onChange={(e) => updateGlbField('revealType', e.target.value)}
+            >
+              <option value="none">Sin animación</option>
+              <option value="clip">Clipping Plane</option>
+              <option value="dissolve">Dissolve (ruido)</option>
+            </select>
+          </div>
+          {localGlb.revealType !== 'none' && (
+            <>
+              <TransformRow
+                label="Dur"
+                labelClass=""
+                value={localGlb.revealDuration}
+                min={0.5}
+                max={8}
+                step={0.1}
+                onChange={(v) => updateGlbField('revealDuration', v)}
+                help="Duración de la animación en segundos"
+              />
+              <div className="splat-setting-row">
+                <span className="splat-setting-label">Easing</span>
+                <select
+                  className="splat-select"
+                  value={localGlb.revealEasing}
+                  onChange={(e) => updateGlbField('revealEasing', e.target.value)}
+                >
+                  <option value="linear">Linear</option>
+                  <option value="easeIn">Ease In</option>
+                  <option value="easeOut">Ease Out</option>
+                  <option value="easeInOut">Ease In-Out</option>
+                  <option value="easeOutCubic">Ease Out Cubic</option>
+                  <option value="easeOutBack">Ease Out Back</option>
+                </select>
+              </div>
+            </>
+          )}
+        </div>
+
         {/* ─── Transform ─── */}
         {local && (
           <SubAccordion title="Transform" icon="📐">
@@ -696,6 +801,105 @@ export default function SceneEditorPanel({
             </div>
           </SubAccordion>
         )}
+
+        {/* ─── Splat Loader Settings ─── */}
+        <div className="asset-transform-section">
+          <div className="asset-transform-title">Loader — Spark 2.0</div>
+          <div className="splat-setting-row">
+            <label className="splat-checkbox-label">
+              <input type="checkbox" checked={localSplat.lod} onChange={(e) => updateSplatField('lod', e.target.checked)} />
+              Level of Detail (LoD)
+            </label>
+            <HelpTooltip text="Carga progresiva por nivel de detalle. Mejora tiempos de carga inicial." />
+          </div>
+          <div className="splat-setting-row">
+            <label className="splat-checkbox-label">
+              <input type="checkbox" checked={localSplat.extSplats} onChange={(e) => updateSplatField('extSplats', e.target.checked)} />
+              Extended Splats
+            </label>
+            <HelpTooltip text="Duplica VRAM pero mejora la calidad visual. Desactivar en GPUs con poca memoria." />
+          </div>
+
+          <div className="asset-transform-title">Animación de entrada</div>
+          <div className="splat-setting-row">
+            <span className="splat-setting-label">Tipo</span>
+            <select
+              className="splat-select"
+              value={localSplat.animationType}
+              onChange={(e) => updateSplatField('animationType', e.target.value)}
+            >
+              <option value="none">Sin animación</option>
+              <option value="radialReveal">Radial progresivo</option>
+            </select>
+          </div>
+          {localSplat.animationType !== 'none' && (
+            <>
+              <TransformRow
+                label="Dur"
+                labelClass=""
+                value={localSplat.animationDuration}
+                min={0.5}
+                max={8}
+                step={0.1}
+                onChange={(v) => updateSplatField('animationDuration', v)}
+                help="Duración de la animación punto → splat en segundos"
+              />
+              <div className="splat-setting-row">
+                <span className="splat-setting-label">Easing</span>
+                <select
+                  className="splat-select"
+                  value={localSplat.animationEasing}
+                  onChange={(e) => updateSplatField('animationEasing', e.target.value)}
+                >
+                  <option value="linear">Linear</option>
+                  <option value="easeIn">Ease In</option>
+                  <option value="easeOut">Ease Out</option>
+                  <option value="easeInOut">Ease In-Out</option>
+                  <option value="easeOutCubic">Ease Out Cubic</option>
+                  <option value="easeOutBack">Ease Out Back</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          <div className="asset-transform-title">Máscara radial</div>
+          <div className="splat-setting-row">
+            <label className="splat-checkbox-label">
+              <input type="checkbox" checked={localSplat.radialClip === true} onChange={(e) => updateSplatField('radialClip', e.target.checked)} />
+              Activar recorte radial
+            </label>
+            <HelpTooltip text="Revela los splats desde el centro hacia afuera con una esfera de recorte animada." />
+          </div>
+          {localSplat.radialClip === true && (
+            <>
+              <TransformRow
+                label="Dur"
+                labelClass=""
+                value={localSplat.radialClipDuration}
+                min={0.5}
+                max={8}
+                step={0.1}
+                onChange={(v) => updateSplatField('radialClipDuration', v)}
+                help="Duración de la expansión radial en segundos"
+              />
+              <div className="splat-setting-row">
+                <span className="splat-setting-label">Easing</span>
+                <select
+                  className="splat-select"
+                  value={localSplat.radialClipEasing}
+                  onChange={(e) => updateSplatField('radialClipEasing', e.target.value)}
+                >
+                  <option value="linear">Linear</option>
+                  <option value="easeIn">Ease In</option>
+                  <option value="easeOut">Ease Out</option>
+                  <option value="easeInOut">Ease In-Out</option>
+                  <option value="easeOutCubic">Ease Out Cubic</option>
+                  <option value="easeOutBack">Ease Out Back</option>
+                </select>
+              </div>
+            </>
+          )}
+        </div>
       </AssetAccordion>
 
       {/* ─── Skybox ─── */}

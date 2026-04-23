@@ -140,7 +140,7 @@ export default function ViewPage() {
       const sogUrl = assets.sog?.url || null;
       if (sogUrl && sogUrl !== loaded.sog) {
         loaded.sog = sogUrl;
-        bgPromises.push(v.loadSog(sogUrl).catch(() => {}));
+        bgPromises.push(v.loadSog(sogUrl, scene.splatSettings || undefined).catch(() => {}));
       }
 
       if (bgPromises.length > 0) {

@@ -72,6 +72,8 @@ export default function ScenePage() {
     updateUnidades,
     updateAmenities,
     updateLighting,
+    updateGlbSettings,
+    updateSplatSettings,
     updateCollidersVisible,
     uploadAsset,
     removeAsset,
@@ -135,7 +137,7 @@ export default function ScenePage() {
         loaded.glb = glbUrl;
         if (glbUrl) {
           hasCritical = true;
-          criticalPromises.push(v.loadGlb(glbUrl));
+          criticalPromises.push(v.loadGlb(glbUrl, scene.glbSettings || undefined));
         } else {
           v.removeGlb();
         }
@@ -200,7 +202,7 @@ export default function ScenePage() {
       const sogUrl = assets.sog?.url || null;
       if (sogUrl !== loaded.sog) {
         loaded.sog = sogUrl;
-        if (sogUrl) bgPromises.push(v.loadSog(sogUrl).catch(() => {}));
+        if (sogUrl) bgPromises.push(v.loadSog(sogUrl, scene.splatSettings || undefined).catch(() => {}));
         else v.removeSog();
       }
 
@@ -370,6 +372,28 @@ export default function ScenePage() {
       }
     },
     []
+  );
+
+  // Handle GLB settings change — persist and update viewer
+  const handleGlbSettingsChange = useCallback(
+    (settings) => {
+      updateGlbSettings(settings);
+      if (viewerRef.current) {
+        viewerRef.current.setGlbSettings(settings);
+      }
+    },
+    [updateGlbSettings]
+  );
+
+  // Handle splat settings change — persist and update viewer
+  const handleSplatSettingsChange = useCallback(
+    (settings) => {
+      updateSplatSettings(settings);
+      if (viewerRef.current) {
+        viewerRef.current.setSplatSettings(settings);
+      }
+    },
+    [updateSplatSettings]
   );
 
   // Handle asset upload — force reload the asset in the viewer
@@ -655,6 +679,10 @@ export default function ScenePage() {
               gizmoMode={gizmoMode}
               onGizmoMode={handleGizmoMode}
               onSaveSatelliteUrl={handleSaveSatelliteUrl}
+              glbSettings={scene?.glbSettings || null}
+              onGlbSettingsChange={handleGlbSettingsChange}
+              splatSettings={scene?.splatSettings || null}
+              onSplatSettingsChange={handleSplatSettingsChange}
               collapsed={activePanel !== 'assets'}
               onToggle={() => toggle('assets')}
               materialsContent={

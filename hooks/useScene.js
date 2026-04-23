@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { subscribeScene, updateTransforms as dbUpdateTransforms, updateOrbit as dbUpdateOrbit, updateMaterials as dbUpdateMaterials, updateUnidades as dbUpdateUnidades, updateAmenities as dbUpdateAmenities, updateCollidersVisible as dbUpdateCollidersVisible, updateLighting as dbUpdateLighting, updateSceneAsset, removeSceneAsset } from '@/lib/scenes';
+import { subscribeScene, updateTransforms as dbUpdateTransforms, updateOrbit as dbUpdateOrbit, updateMaterials as dbUpdateMaterials, updateUnidades as dbUpdateUnidades, updateAmenities as dbUpdateAmenities, updateCollidersVisible as dbUpdateCollidersVisible, updateLighting as dbUpdateLighting, updateGlbSettings as dbUpdateGlbSettings, updateSplatSettings as dbUpdateSplatSettings, updateSceneAsset, removeSceneAsset } from '@/lib/scenes';
 import { uploadAsset as storageUpload, deleteAsset as storageDelete } from '@/lib/storage';
 
 export function useScene(sceneId) {
@@ -140,6 +140,42 @@ export function useScene(sceneId) {
   );
 
   /**
+   * Update GLB reveal settings with debounce.
+   */
+  const updateGlbSettings = useCallback(
+    (glbSettings) => {
+      if (!sceneId) return;
+
+      if (debounceTimers.current.glbSettings) {
+        clearTimeout(debounceTimers.current.glbSettings);
+      }
+
+      debounceTimers.current.glbSettings = setTimeout(() => {
+        dbUpdateGlbSettings(sceneId, glbSettings).catch(console.error);
+      }, 500);
+    },
+    [sceneId]
+  );
+
+  /**
+   * Update splat loader settings with debounce.
+   */
+  const updateSplatSettings = useCallback(
+    (splatSettings) => {
+      if (!sceneId) return;
+
+      if (debounceTimers.current.splatSettings) {
+        clearTimeout(debounceTimers.current.splatSettings);
+      }
+
+      debounceTimers.current.splatSettings = setTimeout(() => {
+        dbUpdateSplatSettings(sceneId, splatSettings).catch(console.error);
+      }, 500);
+    },
+    [sceneId]
+  );
+
+  /**
    * Update colliders visibility flag (persists to DB immediately).
    */
   const updateCollidersVisible = useCallback(
@@ -231,6 +267,8 @@ export function useScene(sceneId) {
     updateUnidades,
     updateAmenities,
     updateLighting,
+    updateGlbSettings,
+    updateSplatSettings,
     updateCollidersVisible,
     uploadAsset,
     removeAsset,
