@@ -213,18 +213,9 @@ export default function ViewPage() {
     }
   }, []);
 
-  if (loading) {
-    return (
-      <div className="loading-overlay">
-        <div className="loader-content">
-          <div className="loader-spinner" />
-          <div className="loader-title">Cargando escena…</div>
-        </div>
-      </div>
-    );
-  }
+  // Error state — only show after Firebase has finished loading
 
-  if (error || !scene) {
+  if (!loading && (error || !scene)) {
     return (
       <div className="home-container">
         <div className="home-card animate-fade">
@@ -244,7 +235,8 @@ export default function ViewPage() {
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
       {/* Left Sidebar — Units listing only */}
-      <LeftPanelStack title={scene.name} show={!loadingAssets}>
+      {scene && (
+        <LeftPanelStack title={scene.name} show={!loadingAssets}>
         {({ activePanel, toggle }) => (
           <>
             <UnidadesListPanel
@@ -267,7 +259,8 @@ export default function ViewPage() {
             />
           </>
         )}
-      </LeftPanelStack>
+        </LeftPanelStack>
+      )}
 
       {/* Split loading screen */}
       {loadingAssets && (
@@ -276,7 +269,7 @@ export default function ViewPage() {
           <div className="loading-split-half loading-split-bottom" />
           <div className="loader-content">
             <div className="loader-spinner" />
-            <div className="loader-title">{scene.name}</div>
+            <div className="loader-title">{scene?.name || 'Cargando…'}</div>
             <div className="loader-progress-bar">
               <div
                 className="loader-progress-fill"
