@@ -203,6 +203,25 @@ export default function PanoramaViewer({ url, unitId, onClose }) {
     isDraggingRef.current = false;
   }, []);
 
+  // ─── Overlay close: only if mousedown AND mouseup both on overlay bg ───
+  const overlayMouseDownTarget = useRef(null);
+
+  const handleOverlayMouseDown = useCallback((e) => {
+    e.stopPropagation();
+    overlayMouseDownTarget.current = e.target;
+  }, []);
+
+  const handleOverlayMouseUp = useCallback((e) => {
+    e.stopPropagation();
+    if (
+      e.target === e.currentTarget &&
+      overlayMouseDownTarget.current === e.currentTarget
+    ) {
+      onClose?.();
+    }
+    overlayMouseDownTarget.current = null;
+  }, [onClose]);
+
   // ─── Keyboard: Escape to close ───
   useEffect(() => {
     const handleKey = (e) => {
@@ -215,7 +234,7 @@ export default function PanoramaViewer({ url, unitId, onClose }) {
   if (!mounted) return null;
 
   return createPortal(
-    <div className="pano-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
+    <div className="pano-overlay" onMouseDown={handleOverlayMouseDown} onMouseUp={handleOverlayMouseUp} onClick={(e) => e.stopPropagation()}>
       {/* Header bar */}
       <div className="pano-header">
         <div className="pano-label">
