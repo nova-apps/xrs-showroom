@@ -6,6 +6,13 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.9.4] — 2026-04-24
+
+### 🐛 Fixes
+- use hard navigation after login to ensure cookie is sent
+
+---
+
 ## [0.9.3] — 2026-04-24
 
 ### 🐛 Fixes
