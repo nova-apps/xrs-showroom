@@ -6,6 +6,22 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.9.1] — 2026-04-24
+
+### ✨ Features
+- add interactive 360° panorama viewer and support for panoramic images in unit data configuration
+
+### 🐛 Fixes
+- debug login auth in production
+
+### 🔧 Refactors
+- wrap login form in Suspense to support useSearchParams in Next.js 15+
+
+### 📦 Chores
+- v0.9.0
+
+---
+
 ## [0.9.0] — 2026-04-23
 
 ### ✨ Funcionalidades

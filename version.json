@@ -1,13 +1,9 @@
 {
-  "version": "0.9.0",
-  "buildDate": "2026-04-23",
-  "commitHash": "51b9d95",
+  "version": "0.9.1",
+  "buildDate": "2026-04-24",
+  "commitHash": "686119d",
   "environment": "production",
   "features": [
-    "add GLB/Splat reveal animations and HDR skybox toggle",
-    "implement mobile-responsive bottom sheet layout for left panel stack",
-    "add Firebase storage file upload for unit plan images and include migration script",
-    "add WhatsApp integration with custom contact number configuration to unit details",
-    "implement password-based authentication with session cookies, login page, and middleware protection"
+    "add interactive 360° panorama viewer and support for panoramic images in unit data configuration"
   ]
 }
