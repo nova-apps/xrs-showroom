@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import dynamic from 'next/dynamic';
+
+const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), { ssr: false });
 
 /**
  * UnidadModal — fullscreen modal showing unit details.
@@ -9,16 +12,19 @@ import { createPortal } from 'react-dom';
  *
  * Standardized field names:
  *   id, piso, ambientes, superficie_cubierta, superficie_semicubierta,
- *   superficie_amenities, superficie_total, imagen_plano
+ *   superficie_amenities, superficie_total, imagen_plano, imagen_panoramica
  */
 export default function UnidadModal({ unit, onClose, whatsappNumber, projectName }) {
   const [mounted, setMounted] = useState(false);
+  const [showPanorama, setShowPanorama] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!unit || !mounted) return null;
+
+  const hasPanorama = !!unit.imagen_panoramica;
 
   // Build WhatsApp URL with pre-filled message
   const whatsappUrl = whatsappNumber
@@ -74,8 +80,13 @@ export default function UnidadModal({ unit, onClose, whatsappNumber, projectName
           </div>
 
           <div className="unidad-modal-actions">
-            <button className="unidad-modal-btn unidad-modal-btn-panorama">
-              Vista Panorámica
+            <button
+              className={`unidad-modal-btn unidad-modal-btn-panorama${!hasPanorama ? ' disabled' : ''}`}
+              onClick={() => hasPanorama && setShowPanorama(true)}
+              disabled={!hasPanorama}
+              title={hasPanorama ? 'Ver vista panorámica 360°' : 'Sin panorama disponible'}
+            >
+              🌐 Vista Panorámica
             </button>
             <button
               className={`unidad-modal-btn unidad-modal-btn-whatsapp${!whatsappUrl ? ' disabled' : ''}`}
@@ -100,6 +111,15 @@ export default function UnidadModal({ unit, onClose, whatsappNumber, projectName
           )}
         </div>
       </div>
+
+      {/* 360° Panorama Viewer */}
+      {showPanorama && (
+        <PanoramaViewer
+          url={unit.imagen_panoramica}
+          unitId={unit.id}
+          onClose={() => setShowPanorama(false)}
+        />
+      )}
     </div>,
     document.body
   );

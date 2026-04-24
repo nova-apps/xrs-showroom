@@ -1,3 +1,11 @@
+# Registro de cambios
+
+Todos los cambios importantes de XRS Showroom se documentan en este archivo.
+
+Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-MM-DD.
+
+---
+
 ## [0.9.0] — 2026-04-23
 
 ### ✨ Funcionalidades
@@ -18,13 +26,6 @@
 
 ---
 
-# Registro de cambios
-
-Todos los cambios importantes de XRS Showroom se documentan en este archivo.
-
-Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-MM-DD.
-
----
 
 ## [0.8.0] — 2026-04-22
 

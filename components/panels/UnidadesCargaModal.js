@@ -10,14 +10,15 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebas
  * Each column maps to a standardized field name.
  */
 const COLUMNS = [
-  { key: 'id',                     label: 'ID',              type: 'text',   placeholder: 'Ej: A-101' },
-  { key: 'piso',                   label: 'Piso',            type: 'text',   placeholder: 'Ej: 1' },
-  { key: 'ambientes',              label: 'Amb.',            type: 'number', placeholder: '0' },
-  { key: 'superficie_cubierta',    label: 'Sup. Cub.',       type: 'number', placeholder: 'm²' },
-  { key: 'superficie_semicubierta',label: 'Sup. Semi.',      type: 'number', placeholder: 'm²' },
-  { key: 'superficie_amenities',   label: 'Sup. Amen.',      type: 'number', placeholder: 'm²' },
-  { key: 'superficie_total',       label: 'Sup. Total',      type: 'number', placeholder: 'm²' },
-  { key: 'imagen_plano',           label: 'Imagen Plano',    type: 'file',   placeholder: 'Subir imagen...' },
+  { key: 'id', label: 'ID', type: 'text', placeholder: 'Ej: A-101' },
+  { key: 'piso', label: 'Piso', type: 'text', placeholder: 'Ej: 1' },
+  { key: 'ambientes', label: 'Amb.', type: 'number', placeholder: '0' },
+  { key: 'superficie_cubierta', label: 'Sup. Cub.', type: 'number', placeholder: 'm²' },
+  { key: 'superficie_semicubierta', label: 'Sup. Semi.', type: 'number', placeholder: 'm²' },
+  { key: 'superficie_amenities', label: 'Sup. Amen.', type: 'number', placeholder: 'm²' },
+  { key: 'superficie_total', label: 'Sup. Total', type: 'number', placeholder: 'm²' },
+  { key: 'imagen_plano', label: 'Imagen Plano', type: 'file', placeholder: 'Subir imagen...' },
+  { key: 'imagen_panoramica', label: 'Panorama 360°', type: 'file', placeholder: 'Subir panorama...' },
 ];
 
 /** Create an empty row with all fields */
@@ -41,14 +42,15 @@ function parseCSV(text) {
 
   // Try to detect headers by matching against known column keys/labels
   const COLUMN_ALIASES = {
-    id:                     ['id', 'unidad', 'unit', 'codigo', 'código'],
-    piso:                   ['piso', 'floor', 'nivel', 'planta'],
-    ambientes:              ['ambientes', 'amb', 'ambientes', 'rooms', 'dormitorios'],
-    superficie_cubierta:    ['superficie_cubierta', 'sup_cubierta', 'sup. cub.', 'sup cub', 'cubierta', 'covered'],
-    superficie_semicubierta:['superficie_semicubierta', 'sup_semicubierta', 'sup. semi.', 'sup semi', 'semicubierta', 'semi'],
-    superficie_amenities:   ['superficie_amenities', 'sup_amenities', 'sup. amen.', 'sup amen', 'amenities'],
-    superficie_total:       ['superficie_total', 'sup_total', 'sup. total', 'sup total', 'total', 'superficie'],
-    imagen_plano:           ['imagen_plano', 'imagen', 'plano', 'image', 'file', 'url', 'foto'],
+    id: ['id', 'unidad', 'unit', 'codigo', 'código'],
+    piso: ['piso', 'floor', 'nivel', 'planta'],
+    ambientes: ['ambientes', 'amb', 'ambientes', 'rooms', 'dormitorios'],
+    superficie_cubierta: ['superficie_cubierta', 'sup_cubierta', 'sup. cub.', 'sup cub', 'cubierta', 'covered'],
+    superficie_semicubierta: ['superficie_semicubierta', 'sup_semicubierta', 'sup. semi.', 'sup semi', 'semicubierta', 'semi'],
+    superficie_amenities: ['superficie_amenities', 'sup_amenities', 'sup. amen.', 'sup amen', 'amenities'],
+    superficie_total: ['superficie_total', 'sup_total', 'sup. total', 'sup total', 'total', 'superficie'],
+    imagen_plano: ['imagen_plano', 'imagen', 'plano', 'image', 'file', 'url', 'foto'],
+    imagen_panoramica: ['imagen_panoramica', 'panorama', 'panoramica', '360', 'panorama_360'],
   };
 
   // Normalize a string for comparison (lowercase, no accents, trim)

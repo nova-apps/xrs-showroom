@@ -3198,8 +3198,14 @@ body {
   color: #fff;
 }
 
-.unidad-modal-btn-panorama:hover {
+.unidad-modal-btn-panorama:hover:not(:disabled) {
   background: rgba(100, 140, 160, 0.8);
+}
+
+.unidad-modal-btn-panorama.disabled,
+.unidad-modal-btn-panorama:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .unidad-modal-btn-whatsapp {
@@ -5069,5 +5075,170 @@ body {
 
   .left-panel-stack .unidades-list-count {
     font-size: 10px;
+  }
+}
+
+/* ═══════════════════════════════════════
+   PANORAMA VIEWER — 360° Interactive
+   ═══════════════════════════════════════ */
+.pano-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  animation: panoFadeIn 0.3s ease;
+}
+
+@keyframes panoFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Header bar */
+.pano-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+  pointer-events: none;
+}
+
+.pano-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.pano-label-icon {
+  font-size: 1.2rem;
+}
+
+.pano-label-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.pano-close {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.pano-close:hover {
+  background: rgba(255, 68, 102, 0.3);
+  border-color: rgba(255, 68, 102, 0.5);
+  transform: scale(1.05);
+}
+
+/* Canvas area */
+.pano-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.pano-canvas:active {
+  cursor: grabbing;
+}
+
+.pano-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Loading state */
+.pano-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.pano-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Hint */
+.pano-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: panoHintFade 4s ease forwards;
+}
+
+@keyframes panoHintFade {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .pano-header {
+    padding: 12px 14px;
+  }
+
+  .pano-label-text {
+    font-size: 0.85rem;
+  }
+
+  .pano-close {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .pano-hint {
+    bottom: 16px;
+    font-size: 0.7rem;
+    padding: 6px 12px;
   }
 }
