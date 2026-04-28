@@ -6,6 +6,49 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.9.10] — 2026-04-28
+
+### ✨ Features
+- implement comprehensive end-to-end testing suite using Playwright for authentication, API routes, and viewer functionality.
+
+### 🔧 Refactors
+- replace floating side panel with a full-height sidebar featuring tabbed navigation and logo support
+- abstract scene loading logic into useSceneLoader hook and implement adaptive viewer quality system
+
+### 📦 Chores
+- bump version to 0.10.0, remediate security vulnerabilities, and refactor viewer architecture
+- v0.9.9
+
+---
+
+## [0.11.0] — 2026-04-28
+
+### ✨ Features
+- Full-height side panel replaces floating panel — flush left, always visible on desktop
+- Tab navigation system (Unidades / Amenities) replaces accordion panels
+- File uploader for project logo (Firebase Storage) replaces URL input
+- Right-side floating drawer for unit details replaces fullscreen modal
+- Unit drawer is non-blocking — rest of the page remains interactive
+- Click-outside-to-close and toggle behavior for unit drawer
+- Unit drawer opens instantly on click (camera animation runs in parallel)
+- 3D canvas offset by panel width (340px) on desktop for proper centering
+- Orbit crosshair centered within canvas area
+
+### 🎨 Styles
+- Global font changed to Segoe UI
+- Accordion titles increased to 15px
+- Emojis removed from Unidades and Amenities section titles
+- Logo header padding increased for better breathing room
+- Presets section hidden from editor sidebar
+
+### 🧪 Tests
+- Add `side-panel.spec.js` E2E tests: panel visibility, tab switching, drawer open/close, click-outside behavior, canvas offset verification
+
+### 📦 Chores
+- Bump version to 0.11.0
+
+---
+
 ## [0.10.0] — 2026-04-27
 
 ### 🔒 Security
