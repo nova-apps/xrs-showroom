@@ -1,9 +1,9 @@
 {
-  "version": "0.9.10",
+  "version": "0.9.11",
   "buildDate": "2026-04-28",
-  "commitHash": "656cc7a",
+  "commitHash": "6f401c0",
   "environment": "production",
   "features": [
-    "implement comprehensive end-to-end testing suite using Playwright for authentication, API routes, and viewer functionality."
+    "Maintenance and stability improvements"
   ]
 }

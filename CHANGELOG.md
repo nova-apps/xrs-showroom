@@ -6,18 +6,10 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
-## [0.9.10] — 2026-04-28
-
-### ✨ Features
-- implement comprehensive end-to-end testing suite using Playwright for authentication, API routes, and viewer functionality.
-
-### 🔧 Refactors
-- replace floating side panel with a full-height sidebar featuring tabbed navigation and logo support
-- abstract scene loading logic into useSceneLoader hook and implement adaptive viewer quality system
+## [0.9.11] — 2026-04-28
 
 ### 📦 Chores
-- bump version to 0.10.0, remediate security vulnerabilities, and refactor viewer architecture
-- v0.9.9
+- v0.9.10
 
 ---
 
@@ -74,6 +66,21 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ### 📦 Chores
 - Bump version to 0.10.0
+
+---
+
+## [0.9.10] — 2026-04-28
+
+### ✨ Features
+- implement comprehensive end-to-end testing suite using Playwright for authentication, API routes, and viewer functionality.
+
+### 🔧 Refactors
+- replace floating side panel with a full-height sidebar featuring tabbed navigation and logo support
+- abstract scene loading logic into useSceneLoader hook and implement adaptive viewer quality system
+
+### 📦 Chores
+- bump version to 0.10.0, remediate security vulnerabilities, and refactor viewer architecture
+- v0.9.9
 
 ---
 
