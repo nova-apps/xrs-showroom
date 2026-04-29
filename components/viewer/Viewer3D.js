@@ -1920,7 +1920,9 @@ if (uMaskEnabled > 0.5) {
             const _d = Math.max(0.5, s.camera.position.distanceTo(s.controls.target));
             const _br = s.pendingTransforms?.skybox?.radius ?? 400;
             const _zf = Math.pow(_d / 20, 0.6);
-            s.skyboxMesh.scale.setScalar((_br / 400) * Math.max(0.15, _zf));
+            // Ensure the skybox sphere always encloses the camera (radius > 2× dist)
+            const _minScale = (_d * 2.5) / 400;
+            s.skyboxMesh.scale.setScalar(Math.max((_br / 400) * Math.max(0.15, _zf), _minScale));
             const _sp = s.pendingTransforms?.skybox?.position;
             s.skyboxMesh.position.set(
               s.controls.target.x + (_sp?.x ?? 0),
@@ -2109,7 +2111,9 @@ if (uMaskEnabled > 0.5) {
           const baseScale = baseRadius / 400;
           // Power curve: skybox scales at ~60% of camera dolly rate → natural parallax
           const zoomFactor = Math.pow(dist / 20, 0.6);
-          s.skyboxMesh.scale.setScalar(baseScale * Math.max(0.15, zoomFactor));
+          // Ensure the skybox sphere always encloses the camera (radius > 2× dist)
+          const minScale = (dist * 2.5) / 400;
+          s.skyboxMesh.scale.setScalar(Math.max(baseScale * Math.max(0.15, zoomFactor), minScale));
           // Center skybox on orbit target + configured position offset
           const skyPos = s.pendingTransforms?.skybox?.position;
           s.skyboxMesh.position.set(
