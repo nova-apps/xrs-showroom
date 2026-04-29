@@ -27,6 +27,7 @@ export default function ViewPage() {
   const params = useParams();
   const sceneId = params?.id;
   const viewerRef = useRef(null);
+  const panelRef = useRef(null);
   const [viewerReady, setViewerReady] = useState(false);
 
   const [modalUnit, setModalUnit] = useState(null);
@@ -56,6 +57,8 @@ export default function ViewPage() {
     if (viewerRef.current && unit?.id) {
       viewerRef.current.focusOnCollider(String(unit.id));
     }
+    // Collapse expanded panel on mobile when opening a unit
+    panelRef.current?.collapse();
   }, []);
 
   // Error state — only show after Firebase has finished loading
@@ -82,6 +85,7 @@ export default function ViewPage() {
       {/* Left Sidebar — Units listing only */}
       {scene && (
         <LeftPanelStack
+          ref={panelRef}
           title={scene.name}
           logoUrl={scene?.panelLogoUrl}
           show={!loadingAssets}

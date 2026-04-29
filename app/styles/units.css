@@ -970,7 +970,7 @@
     left: 0;
     right: 0;
     width: 100%;
-    max-height: 45vh;
+    max-height: 28vh;
     border-radius: 18px 18px 0 0;
     border-right: none;
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
@@ -978,7 +978,8 @@
     filter: none;
     opacity: 0;
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                opacity 0.35s ease;
+      opacity 0.35s ease,
+      max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .left-panel-stack.stack-entered {
@@ -986,7 +987,13 @@
     opacity: 1;
     filter: none;
     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-                opacity 0.4s ease;
+      opacity 0.4s ease,
+      max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ─── Expanded state ─── */
+  .left-panel-stack.stack-expanded {
+    max-height: 55vh;
   }
 
   .left-panel-stack.stack-hidden {
@@ -994,7 +1001,40 @@
     opacity: 0;
     filter: none;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s ease;
+      opacity 0.3s ease;
+  }
+
+  /* ─── Mobile drag handle (clickable) ─── */
+  .mobile-panel-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px 0 4px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+  }
+
+  .mobile-panel-handle-bar {
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+    transition: width 0.2s, background 0.2s;
+  }
+
+  .mobile-panel-handle:active .mobile-panel-handle-bar {
+    width: 48px;
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .stack-expanded .mobile-panel-handle-bar {
+    background: rgba(255, 255, 255, 0.35);
   }
 
   /* ─── Drag handle indicator ─── */
@@ -1113,13 +1153,107 @@
     font-size: 12px;
   }
 
-  /* ─── List header ─── */
+  /* ─── List header — hidden on mobile (count shown in filter toggle row) ─── */
   .left-panel-stack .unidades-list-header {
-    padding: 6px 4px;
+    display: none;
   }
 
-  .left-panel-stack .unidades-list-count {
-    font-size: 10px;
+  /* ─── Hide logo on mobile ─── */
+  .left-panel-stack .sidebar-header-desktop {
+    display: none;
+  }
+
+  /* ─── Mobile filter toggle row ─── */
+  .mobile-filters-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px 10px;
+    flex-shrink: 0;
+  }
+
+  .mobile-filters-toggle-row .unidades-list-count {
+    font-size: 12px;
+    color: var(--lp-text-dim);
+    font-weight: 500;
+  }
+
+  .mobile-filters-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--lp-border);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--lp-text);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+  }
+
+  .mobile-filters-btn:active {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .mobile-filters-btn-icon {
+    font-size: 13px;
+    opacity: 0.7;
+  }
+
+  .mobile-filters-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--lp-accent, #7d8e6e);
+    border: 2px solid var(--lp-bg, #1a1d23);
+  }
+
+  /* ─── Mobile filter full-view ─── */
+  .mobile-filters-view {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 0;
+    animation: mobileFiltersSlideIn 0.25s ease;
+  }
+
+  @keyframes mobileFiltersSlideIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .mobile-filters-back {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border: none;
+    background: none;
+    color: var(--lp-accent-light, #a3b18a);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: color 0.15s;
+    align-self: flex-start;
+  }
+
+  .mobile-filters-back:active {
+    color: var(--lp-text, #fff);
   }
 }
 
@@ -1219,8 +1353,13 @@
 }
 
 @keyframes panoFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Header bar */
@@ -1343,8 +1482,15 @@
 }
 
 @keyframes panoHintFade {
-  0%, 70% { opacity: 1; }
-  100% { opacity: 0; }
+
+  0%,
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Mobile adjustments */

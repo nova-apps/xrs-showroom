@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import UnidadModal from './UnidadModal';
 
 /**
@@ -20,6 +20,17 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
   const [showAmbientes, setShowAmbientes] = useState(false);
   const [showMetraje, setShowMetraje] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mql.matches);
+    const handler = (e) => setIsMobile(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   // Compute min/max metraje from data
   const metrajeMinMax = useMemo(() => {
@@ -99,6 +110,158 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     metrajeRange[1] !== metrajeMinMax[1] ||
     searchQuery.length > 0;
 
+  // Shared filter UI (used in both mobile filter view and desktop inline)
+  const renderFilters = () => (
+    <div className="unidad-filters">
+      {/* Ambientes */}
+      <div className="unidad-filter-section">
+        <div
+          className="unidad-filter-header"
+          onClick={() => setShowAmbientes(!showAmbientes)}
+        >
+          <span>Ambientes</span>
+          <span className={`unidad-filter-chevron ${showAmbientes ? 'open' : ''}`}>▾</span>
+        </div>
+        {showAmbientes && (
+          <div className="unidad-filter-pills">
+            {[1, 2, 3, 4].map((n) => (
+              <button
+                key={n}
+                className={`unidad-pill ${selectedAmb.has(n) ? 'active' : ''}`}
+                onClick={() => toggleAmb(n)}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              className={`unidad-pill ${selectedAmb.has('+') ? 'active' : ''}`}
+              onClick={() => toggleAmb('+')}
+            >
+              +
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Metraje */}
+      <div className="unidad-filter-section">
+        <div
+          className="unidad-filter-header"
+          onClick={() => setShowMetraje(!showMetraje)}
+        >
+          <span>Metraje</span>
+          <span className={`unidad-filter-chevron ${showMetraje ? 'open' : ''}`}>▾</span>
+        </div>
+        {showMetraje && (
+          <>
+            <div className="unidad-range-slider">
+              <input
+                type="range"
+                min={metrajeMinMax[0]}
+                max={metrajeMinMax[1]}
+                step={5}
+                value={metrajeRange[0]}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setMetrajeRange([Math.min(v, metrajeRange[1]), metrajeRange[1]]);
+                }}
+              />
+              <input
+                type="range"
+                min={metrajeMinMax[0]}
+                max={metrajeMinMax[1]}
+                step={5}
+                value={metrajeRange[1]}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setMetrajeRange([metrajeRange[0], Math.max(v, metrajeRange[0])]);
+                }}
+              />
+            </div>
+            <div className="unidad-range-labels">
+              <span>{metrajeRange[0]}m²</span>
+              <span>{metrajeRange[1]}m²</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Clear */}
+      {hasActiveFilters && (
+        <button className="unidad-clear-filters" onClick={clearFilters}>
+          Limpiar filtros
+        </button>
+      )}
+    </div>
+  );
+
+  const renderSearch = () => (
+    <div className="sidebar-search unidades-search">
+      <div className="sidebar-search-wrapper">
+        <span className="sidebar-search-icon">🔍</span>
+        <input
+          id="sidebar-unit-search"
+          type="text"
+          className="sidebar-search-input"
+          placeholder="Buscar unidad..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button
+            className="sidebar-search-clear"
+            onClick={() => setSearchQuery('')}
+            title="Limpiar búsqueda"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderList = () => (
+    <div className="unidades-list">
+      <div className="unidades-list-header">
+        <span className="unidades-list-count">
+          Mostrando {filtered.length} resultados
+        </span>
+      </div>
+      <div className="unidades-list-items">
+        {filtered.map((unit, index) => (
+          <div
+            key={unit.id || index}
+            className="unidad-card"
+            onClick={() => {
+              if (onSelectUnit) onSelectUnit(unit);
+            }}
+          >
+            <div className="unidad-thumb">
+              {unit.imagen_plano ? (
+                <img src={unit.imagen_plano} alt={unit.id || ''} loading="lazy" />
+              ) : (
+                <div className="unidad-thumb-placeholder">🏠</div>
+              )}
+            </div>
+            <div className="unidad-info">
+              <div className="unidad-title">
+                Piso {unit.piso || '—'} - {unit.id || 'Sin ID'}
+              </div>
+              <div className="unidad-meta">
+                {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m² sup. total
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="empty-state">
+            <p>No hay unidades que coincidan con los filtros.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <div className="tab-content-body">
@@ -107,155 +270,45 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
             <div className="empty-icon">📊</div>
             <p>Sin datos.<br />Cargá unidades desde el panel Unidades en el editor.</p>
           </div>
-        ) : (
+        ) : isMobile ? (
+          /* ─── Mobile layout: toggle between filters and list ─── */
           <>
-            {/* ─── Search ─── */}
-            <div className="sidebar-search unidades-search">
-              <div className="sidebar-search-wrapper">
-                <span className="sidebar-search-icon">🔍</span>
-                <input
-                  id="sidebar-unit-search"
-                  type="text"
-                  className="sidebar-search-input"
-                  placeholder="Buscar unidad..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button
-                    className="sidebar-search-clear"
-                    onClick={() => setSearchQuery('')}
-                    title="Limpiar búsqueda"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* ─── Filters ─── */}
-            <div className="unidad-filters">
-              {/* Ambientes */}
-              <div className="unidad-filter-section">
-                <div
-                  className="unidad-filter-header"
-                  onClick={() => setShowAmbientes(!showAmbientes)}
+            {mobileFiltersOpen ? (
+              <div className="mobile-filters-view">
+                <button
+                  className="mobile-filters-back"
+                  onClick={() => setMobileFiltersOpen(false)}
                 >
-                  <span>Ambientes</span>
-                  <span className={`unidad-filter-chevron ${showAmbientes ? 'open' : ''}`}>▾</span>
-                </div>
-                {showAmbientes && (
-                  <div className="unidad-filter-pills">
-                    {[1, 2, 3, 4].map((n) => (
-                      <button
-                        key={n}
-                        className={`unidad-pill ${selectedAmb.has(n) ? 'active' : ''}`}
-                        onClick={() => toggleAmb(n)}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                    <button
-                      className={`unidad-pill ${selectedAmb.has('+') ? 'active' : ''}`}
-                      onClick={() => toggleAmb('+')}
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Metraje */}
-              <div className="unidad-filter-section">
-                <div
-                  className="unidad-filter-header"
-                  onClick={() => setShowMetraje(!showMetraje)}
-                >
-                  <span>Metraje</span>
-                  <span className={`unidad-filter-chevron ${showMetraje ? 'open' : ''}`}>▾</span>
-                </div>
-                {showMetraje && (
-                  <>
-                    <div className="unidad-range-slider">
-                      <input
-                        type="range"
-                        min={metrajeMinMax[0]}
-                        max={metrajeMinMax[1]}
-                        step={5}
-                        value={metrajeRange[0]}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          setMetrajeRange([Math.min(v, metrajeRange[1]), metrajeRange[1]]);
-                        }}
-                      />
-                      <input
-                        type="range"
-                        min={metrajeMinMax[0]}
-                        max={metrajeMinMax[1]}
-                        step={5}
-                        value={metrajeRange[1]}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          setMetrajeRange([metrajeRange[0], Math.max(v, metrajeRange[0])]);
-                        }}
-                      />
-                    </div>
-                    <div className="unidad-range-labels">
-                      <span>{metrajeRange[0]}m²</span>
-                      <span>{metrajeRange[1]}m²</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Clear */}
-              {hasActiveFilters && (
-                <button className="unidad-clear-filters" onClick={clearFilters}>
-                  Limpiar filtros
+                  ← Volver a unidades
                 </button>
-              )}
-            </div>
-
-            {/* ─── List ─── */}
-            <div className="unidades-list">
-              <div className="unidades-list-header">
-                <span className="unidades-list-count">
-                  Mostrando {filtered.length} resultados
-                </span>
+                {renderSearch()}
+                {renderFilters()}
               </div>
-              <div className="unidades-list-items">
-                {filtered.map((unit, index) => (
-                  <div
-                    key={unit.id || index}
-                    className="unidad-card"
-                    onClick={() => {
-                      if (onSelectUnit) onSelectUnit(unit);
-                    }}
+            ) : (
+              <>
+                <div className="mobile-filters-toggle-row">
+                  <span className="unidades-list-count">
+                    {filtered.length} unidades
+                  </span>
+                  <button
+                    className="mobile-filters-btn"
+                    onClick={() => setMobileFiltersOpen(true)}
                   >
-                    <div className="unidad-thumb">
-                      {unit.imagen_plano ? (
-                        <img src={unit.imagen_plano} alt={unit.id || ''} loading="lazy" />
-                      ) : (
-                        <div className="unidad-thumb-placeholder">🏠</div>
-                      )}
-                    </div>
-                    <div className="unidad-info">
-                      <div className="unidad-title">
-                        Piso {unit.piso || '—'} - {unit.id || 'Sin ID'}
-                      </div>
-                      <div className="unidad-meta">
-                        {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m² sup. total
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {filtered.length === 0 && (
-                  <div className="empty-state">
-                    <p>No hay unidades que coincidan con los filtros.</p>
-                  </div>
-                )}
-              </div>
-            </div>
+                    <span className="mobile-filters-btn-icon">⚙</span>
+                    Filtros
+                    {hasActiveFilters && <span className="mobile-filters-badge" />}
+                  </button>
+                </div>
+                {renderList()}
+              </>
+            )}
+          </>
+        ) : (
+          /* ─── Desktop layout: search + filters + list inline ─── */
+          <>
+            {renderSearch()}
+            {renderFilters()}
+            {renderList()}
           </>
         )}
       </div>

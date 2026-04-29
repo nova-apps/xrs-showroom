@@ -132,18 +132,16 @@ body {
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }
 }
 
 .unit-drawer-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,7 +149,7 @@ body {
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.4);
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -169,15 +167,60 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
+/* Header: title + subtitle + close button */
+.unit-drawer-header {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.unit-drawer-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.unit-drawer-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.unit-drawer-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Body: wraps specs + plan */
+.unit-drawer-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Specs */
+.unit-drawer-specs {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
 /* Floor plan */
 .unit-drawer-plan {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px 16px;
+  padding: 16px 20px;
   min-height: 200px;
   background: rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
 }
 
 .unit-drawer-plan img {
@@ -204,27 +247,7 @@ body {
   font-size: 0.78rem;
 }
 
-/* Info section */
-.unit-drawer-info {
-  padding: 20px 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.unit-drawer-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.unit-drawer-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin: 10px 0;
-}
-
+/* Rows */
 .unit-drawer-row {
   display: flex;
   align-items: baseline;
@@ -257,7 +280,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 20px;
+  padding: 16px 24px 24px;
+  flex-shrink: 0;
 }
 
 .unit-drawer-btn {
@@ -303,15 +327,107 @@ body {
   cursor: not-allowed;
 }
 
-/* Mobile: full-width drawer */
+/* Mobile: compact bottom-sheet with horizontal body */
 @media (max-width: 768px) {
   .unit-drawer {
-    top: 0;
+    top: auto;
+    bottom: 0;
     right: 0;
+    left: 0;
     width: 100vw;
     max-width: 100vw;
-    max-height: 100vh;
-    border-radius: 0;
+    max-height: calc(28vh + 36px);
+    border-radius: 18px 18px 0 0;
+    animation: slideInFromBottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1001;
+  }
+
+  @keyframes slideInFromBottom {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .unit-drawer-header {
+    padding: 12px 14px 10px;
+    align-items: center;
+  }
+
+  .unit-drawer-title {
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+
+  .unit-drawer-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* Body: horizontal — specs left, plan right */
+  .unit-drawer-body {
+    flex-direction: row;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .unit-drawer-specs {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    gap: 0;
+  }
+
+  .unit-drawer-plan {
+    width: 140px;
+    flex-shrink: 0;
+    min-height: auto;
+    padding: 10px;
+    border-top: none;
+    border-left: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .unit-drawer-plan img {
+    max-height: 120px;
+    max-width: 100%;
+  }
+
+  .unit-drawer-plan-empty {
+    padding: 8px;
+  }
+
+  .unit-drawer-plan-empty span {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+  }
+
+  .unit-drawer-plan-empty p {
+    font-size: 0.65rem;
+  }
+
+  .unit-drawer-row {
+    padding: 2px 0;
+  }
+
+  .unit-drawer-label,
+  .unit-drawer-value {
+    font-size: 0.7rem;
+  }
+
+  /* Actions: horizontal row */
+  .unit-drawer-actions {
+    flex-direction: row;
+    gap: 8px;
+    padding: 10px 14px 14px;
+  }
+
+  .unit-drawer-btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 0.72rem;
   }
 }
 
@@ -769,4 +885,3 @@ body {
   border: 4px solid transparent;
   border-top-color: rgba(255, 255, 255, 0.1);
 }
-
