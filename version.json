@@ -1,7 +1,7 @@
 {
-  "version": "0.9.13",
+  "version": "0.9.14",
   "buildDate": "2026-04-29",
-  "commitHash": "9f728ac",
+  "commitHash": "a2b5f8f",
   "environment": "production",
   "features": [
     "Maintenance and stability improvements"
