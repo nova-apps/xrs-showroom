@@ -1920,14 +1920,19 @@ if (uMaskEnabled > 0.5) {
             const _d = Math.max(0.5, s.camera.position.distanceTo(s.controls.target));
             const _br = s.pendingTransforms?.skybox?.radius ?? 400;
             const _zf = Math.pow(_d / 20, 0.6);
-            // Ensure the skybox sphere always encloses the camera (radius > 2× dist)
+            const _maxScale = (s.camera.far * 0.8) / 400;
             const _minScale = (_d * 2.5) / 400;
-            s.skyboxMesh.scale.setScalar(Math.max((_br / 400) * Math.max(0.15, _zf), _minScale));
+            const _rawScale = Math.max((_br / 400) * Math.max(0.15, _zf), _minScale);
+            s.skyboxMesh.scale.setScalar(Math.min(_rawScale, _maxScale));
+            const _blendT = Math.min(1, Math.max(0, (_d - 30) / 120));
             const _sp = s.pendingTransforms?.skybox?.position;
+            const _bx = s.controls.target.x + (_sp?.x ?? 0);
+            const _by = s.controls.target.y + (_sp?.y ?? 0);
+            const _bz = s.controls.target.z + (_sp?.z ?? 0);
             s.skyboxMesh.position.set(
-              s.controls.target.x + (_sp?.x ?? 0),
-              s.controls.target.y + (_sp?.y ?? 0),
-              s.controls.target.z + (_sp?.z ?? 0)
+              _bx + (s.camera.position.x - _bx) * _blendT,
+              _by + (s.camera.position.y - _by) * _blendT,
+              _bz + (s.camera.position.z - _bz) * _blendT
             );
           }
           s.renderer?.render(s.scene, s.camera);
@@ -2111,15 +2116,24 @@ if (uMaskEnabled > 0.5) {
           const baseScale = baseRadius / 400;
           // Power curve: skybox scales at ~60% of camera dolly rate → natural parallax
           const zoomFactor = Math.pow(dist / 20, 0.6);
-          // Ensure the skybox sphere always encloses the camera (radius > 2× dist)
+          // Clamp sphere radius so it never exceeds the camera far plane
+          const maxScale = (camera.far * 0.8) / 400;
           const minScale = (dist * 2.5) / 400;
-          s.skyboxMesh.scale.setScalar(Math.max(baseScale * Math.max(0.15, zoomFactor), minScale));
-          // Center skybox on orbit target + configured position offset
+          const rawScale = Math.max(baseScale * Math.max(0.15, zoomFactor), minScale);
+          s.skyboxMesh.scale.setScalar(Math.min(rawScale, maxScale));
+          // Blend skybox center from orbit target → camera position as zoom increases
+          // This prevents the back of the sphere from exceeding the far plane
+          const blendStart = 30;
+          const blendEnd = 150;
+          const blendT = Math.min(1, Math.max(0, (dist - blendStart) / (blendEnd - blendStart)));
           const skyPos = s.pendingTransforms?.skybox?.position;
+          const baseX = controls.target.x + (skyPos?.x ?? 0);
+          const baseY = controls.target.y + (skyPos?.y ?? 0);
+          const baseZ = controls.target.z + (skyPos?.z ?? 0);
           s.skyboxMesh.position.set(
-            controls.target.x + (skyPos?.x ?? 0),
-            controls.target.y + (skyPos?.y ?? 0),
-            controls.target.z + (skyPos?.z ?? 0)
+            baseX + (camera.position.x - baseX) * blendT,
+            baseY + (camera.position.y - baseY) * blendT,
+            baseZ + (camera.position.z - baseZ) * blendT
           );
         }
         renderer.render(scene, camera);

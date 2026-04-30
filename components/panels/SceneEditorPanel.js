@@ -10,7 +10,6 @@ import GizmoToolbar from '@/components/ui/GizmoToolbar';
 import TransformRow from '@/components/ui/TransformRow';
 import { AssetAccordion, SubAccordion } from '@/components/ui/AssetAccordion';
 
-
 export default function SceneEditorPanel({
   scene,
   uploadProgress,
