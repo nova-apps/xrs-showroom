@@ -6,7 +6,7 @@
 
 /* ─── CSS Custom Properties ─── */
 :root {
-  --bg-primary: #08080e;
+  --bg-primary: #1c1c1c;
   --bg-secondary: #0f1019;
   --bg-panel: rgba(12, 13, 24, 0.88);
   --bg-glass: rgba(18, 20, 35, 0.72);

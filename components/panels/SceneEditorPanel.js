@@ -299,6 +299,7 @@ export default function SceneEditorPanel({
     enabled: false,
     color: '#000000',
     opacity: 0.3,
+    targetOpacity: 0,
   });
 
   useEffect(() => {
@@ -307,6 +308,7 @@ export default function SceneEditorPanel({
         enabled: tint.enabled !== false,
         color: tint.color || '#000000',
         opacity: tint.opacity ?? 0.3,
+        targetOpacity: tint.targetOpacity ?? 0,
       });
     }
   }, [tint]);
@@ -848,6 +850,16 @@ export default function SceneEditorPanel({
                 step={0.01}
                 onChange={(v) => updateTintField('opacity', v)}
                 help="Opacidad del tint (0 = transparente, 1 = sólido)"
+              />
+              <TransformRow
+                label="Post"
+                labelClass="label-s"
+                value={localTint.targetOpacity}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => updateTintField('targetOpacity', v)}
+                help="Opacidad objetivo del tint después de la animación de entrada del SOG"
               />
             </>
           )}

@@ -335,6 +335,27 @@ export function handleSplatFade(s) {
     if (fade.splatShapeU) fade.splatShapeU.value = 1;
     if (!s.splatClip?.active) s.splatMesh.opacity = 1;
     console.log(`[Viewer] Splat point→splat complete (${fade.duration}s)`);
+
+    // SOG fully revealed — fade tint to target opacity and hide floor
+    if (s.tintMesh) {
+      const startOpacity = s.tintMesh.material.uniforms.uTintOpacity.value;
+      const endOpacity = s.tintTargetOpacity ?? 0;
+      if (Math.abs(startOpacity - endOpacity) > 0.001) {
+        const dur = 1.5;
+        const t0 = performance.now();
+        function animateTint() {
+          const el = (performance.now() - t0) / 1000;
+          const p = Math.min(el / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          const op = startOpacity + (endOpacity - startOpacity) * eased;
+          s.tintMesh.material.uniforms.uTintOpacity.value = op;
+          s.tintMesh.visible = op > 0.001;
+          if (p < 1) requestAnimationFrame(animateTint);
+        }
+        requestAnimationFrame(animateTint);
+      }
+    }
+    if (s.floorMesh) s.floorMesh.visible = false;
   }
 }
 
@@ -359,5 +380,26 @@ export function handleSplatClip(s) {
     clip.clipRadiusU.value = 99999;
     s.splatMesh.opacity = 1;
     console.log(`[Viewer] Splat radial clip complete (${clip.duration}s)`);
+
+    // SOG fully revealed — fade tint to target opacity and hide floor
+    if (s.tintMesh) {
+      const startOpacity = s.tintMesh.material.uniforms.uTintOpacity.value;
+      const endOpacity = s.tintTargetOpacity ?? 0;
+      if (Math.abs(startOpacity - endOpacity) > 0.001) {
+        const dur = 1.5;
+        const t0 = performance.now();
+        function animateTintClip() {
+          const el = (performance.now() - t0) / 1000;
+          const p = Math.min(el / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          const op = startOpacity + (endOpacity - startOpacity) * eased;
+          s.tintMesh.material.uniforms.uTintOpacity.value = op;
+          s.tintMesh.visible = op > 0.001;
+          if (p < 1) requestAnimationFrame(animateTintClip);
+        }
+        requestAnimationFrame(animateTintClip);
+      }
+    }
+    if (s.floorMesh) s.floorMesh.visible = false;
   }
 }

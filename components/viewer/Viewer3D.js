@@ -117,6 +117,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     glbSettings: null,
     // Tint overlay mesh (fullscreen quad with stencil test)
     tintMesh: null,
+    tintTargetOpacity: 0,
   });
 
   // Expose methods to parent via ref
@@ -204,6 +205,32 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       s.tintMesh.visible = enabled && opacity > 0;
       s.tintMesh.material.uniforms.uTintColor.value.set(color);
       s.tintMesh.material.uniforms.uTintOpacity.value = opacity;
+      // Store the target opacity for post-SOG animation fade
+      s.tintTargetOpacity = tint?.targetOpacity ?? 0;
+    },
+    /**
+     * Smoothly fade the tint overlay opacity to the configured targetOpacity over `duration` seconds.
+     * Uses requestAnimationFrame with easeOutCubic for a natural feel.
+     */
+    fadeTintOut: (duration = 1.5) => {
+      const s = stateRef.current;
+      if (!s.tintMesh) return;
+      const startOpacity = s.tintMesh.material.uniforms.uTintOpacity.value;
+      const endOpacity = s.tintTargetOpacity ?? 0;
+      if (Math.abs(startOpacity - endOpacity) < 0.001) return;
+      const startTime = performance.now();
+      function animate() {
+        const elapsed = (performance.now() - startTime) / 1000;
+        const t = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        const opacity = startOpacity + (endOpacity - startOpacity) * eased;
+        s.tintMesh.material.uniforms.uTintOpacity.value = opacity;
+        s.tintMesh.visible = opacity > 0.001;
+        if (t < 1) {
+          requestAnimationFrame(animate);
+        }
+      }
+      requestAnimationFrame(animate);
     },
     setGizmoMode: (mode, assetType) => {
       const s = stateRef.current;

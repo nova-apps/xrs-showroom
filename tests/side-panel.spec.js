@@ -14,9 +14,9 @@ test.describe('Side Panel & Unit Drawer (/view)', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(`/view/${TEST_SCENE_ID}`);
-    // Wait for loading screen to dismiss
-    const loader = page.locator('.loading-split');
-    await expect(loader).toBeHidden({ timeout: 80_000 });
+    // Wait for the left panel to be visible (no loading screen to wait for)
+    const panel = page.locator('.left-panel-stack');
+    await expect(panel).toBeVisible({ timeout: 80_000 });
   });
 
   test('left panel is visible on desktop', async ({ page }) => {

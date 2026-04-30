@@ -65,10 +65,6 @@ export default function ScenePage() {
 
   // ─── Shared scene loader (assets + transforms + orbit + lighting + materials) ───
   const {
-    loadingAssets,
-    dismissing,
-    loadProgress,
-    loadStatus,
     loadMetrics,
     resetLoadedAsset,
   } = useSceneLoader({
@@ -406,18 +402,10 @@ export default function ScenePage() {
     }
   }, []);
 
-  if (loading) {
-    return (
-      <div className="loading-overlay">
-        <div className="loader-content">
-          <div className="loader-spinner" />
-          <div className="loader-title">Cargando escena…</div>
-        </div>
-      </div>
-    );
-  }
+  // While Firebase data is loading, render the viewer structure anyway.
+  // Scene content will populate once `scene` arrives.
 
-  if (error || !scene) {
+  if (!loading && (error || !scene)) {
     return (
       <div className="home-container">
         <div className="home-card animate-fade">
@@ -435,35 +423,22 @@ export default function ScenePage() {
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
-      {/* Split loading screen while critical assets load */}
-      {loadingAssets && (
-        <div className={`loading-split${dismissing ? ' dismissing' : ''}`}>
-          <div className="loading-split-half loading-split-top" />
-          <div className="loading-split-half loading-split-bottom" />
-          <div className="loader-content">
-            <div className="loader-spinner" />
-            <div className="loader-title">{scene.name}</div>
-            <div className="loader-progress-bar">
-              <div
-                className="loader-progress-fill"
-                style={{ width: `${Math.round(loadProgress * 100)}%` }}
-              />
-            </div>
-            <div className="loader-status">{loadStatus}{loadProgress > 0 && loadProgress < 1 ? ` (${Math.round(loadProgress * 100)}%)` : ''}</div>
-          </div>
-        </div>
-      )}
+      {/* Canvas-scoped curtain animation — plays immediately on mount */}
+      <div className="canvas-curtain">
+        <div className="canvas-curtain-half canvas-curtain-top" />
+        <div className="canvas-curtain-half canvas-curtain-bottom" />
+      </div>
 
       {/* Orbit center crosshair */}
       <div className="orbit-crosshair" />
 
       {/* Bottom-right: ViewCube + camera info + compact performance */}
       <div className="bottom-right-bar">
-        <PerformancePanel
+        {scene && <PerformancePanel
           scene={scene}
           loadMetrics={loadMetrics}
           viewerRef={viewerRef}
-        />
+        />}
         <div className="bottom-right-stack">
           <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
           <div className="camera-info-panel">
@@ -475,10 +450,9 @@ export default function ScenePage() {
       </div>
 
       {/* Left Sidebar — Units listing only */}
-      <LeftPanelStack
+      {scene && <LeftPanelStack
         title={scene.name}
         logoUrl={scene?.panelLogoUrl}
-        show={!loadingAssets}
         tabs={[
           { id: 'unidades', label: 'Unidades' },
           { id: 'amenities', label: 'Amenities' },
@@ -506,10 +480,10 @@ export default function ScenePage() {
             )}
           </>
         )}
-      </LeftPanelStack>
+      </LeftPanelStack>}
 
       {/* Right Sidebar — Scene settings & adjustments */}
-      <RightPanelStack
+      {scene && <RightPanelStack
         sceneName={scene.name}
         sceneId={sceneId}
       >
@@ -579,7 +553,7 @@ export default function ScenePage() {
             />
           </>
         )}
-      </RightPanelStack>
+      </RightPanelStack>}
     </>
   );
 }

@@ -35,12 +35,7 @@ export default function ViewPage() {
 
   const { scene, loading, error } = useScene(sceneId);
 
-  const {
-    loadingAssets,
-    dismissing,
-    loadProgress,
-    loadStatus,
-  } = useSceneLoader({
+  useSceneLoader({
     viewerRef,
     scene,
     viewerReady,
@@ -76,19 +71,22 @@ export default function ViewPage() {
     );
   }
 
-  const progressPct = Math.round(loadProgress * 100);
-
   return (
     <>
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
-      {/* Left Sidebar — Units listing only */}
+      {/* Canvas-scoped curtain animation — plays immediately on mount */}
+      <div className="canvas-curtain">
+        <div className="canvas-curtain-half canvas-curtain-top" />
+        <div className="canvas-curtain-half canvas-curtain-bottom" />
+      </div>
+
+      {/* Left Sidebar — Units listing, always visible */}
       {scene && (
         <LeftPanelStack
           ref={panelRef}
           title={scene.name}
           logoUrl={scene?.panelLogoUrl}
-          show={!loadingAssets}
           tabs={[
             { id: 'unidades', label: 'Unidades' },
             { id: 'amenities', label: 'Amenities' },
@@ -117,25 +115,6 @@ export default function ViewPage() {
           </>
         )}
         </LeftPanelStack>
-      )}
-
-      {/* Split loading screen */}
-      {loadingAssets && (
-        <div className={`loading-split${dismissing ? ' dismissing' : ''}`}>
-          <div className="loading-split-half loading-split-top" />
-          <div className="loading-split-half loading-split-bottom" />
-          <div className="loader-content">
-            <div className="loader-spinner" />
-            <div className="loader-title">{scene?.name || 'Cargando…'}</div>
-            <div className="loader-progress-bar">
-              <div
-                className="loader-progress-fill"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-            <div className="loader-status">{loadStatus}{progressPct > 0 && progressPct < 100 ? ` (${progressPct}%)` : ''}</div>
-          </div>
-        </div>
       )}
     </>
   );

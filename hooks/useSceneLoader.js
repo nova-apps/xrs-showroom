@@ -5,8 +5,7 @@
  * Used by both the editor (scenes/[id]) and the public view (view/[id]).
  *
  * Handles:
- *   - Two-phase asset loading (critical → background)
- *   - Loading overlay state (progress, status, dismiss animation)
+ *   - Parallel asset loading with priority ordering (floor → skybox → GLB → SOG → colliders)
  *   - Applying transforms, orbit, lighting, and materials from Firebase to the viewer
  *   - Dedup tracking to avoid re-loading unchanged assets
  */
@@ -20,13 +19,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * @param {boolean} options.viewerReady - Whether the viewer is initialized
  * @param {boolean} [options.isEditor=false] - Editor mode (has timing metrics, modelHdri, keeps colliders visible)
  * @param {boolean} [options.useProgressiveLoading=false] - Use proxy GLB → full GLB swap (view mode)
- * @returns {{ loadingAssets, dismissing, loadProgress, loadStatus, loadMetrics }}
+ * @returns {{ loadMetrics, resetLoadedAsset }}
  */
 export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false, useProgressiveLoading = false }) {
-  const [loadingAssets, setLoadingAssets] = useState(true);
-  const [dismissing, setDismissing] = useState(false);
-  const [loadProgress, setLoadProgress] = useState(0);
-  const [loadStatus, setLoadStatus] = useState('Iniciando…');
   const [loadMetrics, setLoadMetrics] = useState(null);
 
   // Track which assets have been loaded to avoid re-loading
@@ -55,6 +50,8 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
   }, [isEditor]);
 
   // ── Asset Loading Effect ──
+  // All assets load in parallel, initiated in priority order:
+  // 1. Floor  2. Skybox  3. GLB (maqueta)  4. SOG  5. Colliders
   useEffect(() => {
     if (!viewerReady || !scene || !viewerRef.current) return;
 
@@ -68,101 +65,78 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         timing.startTime = timing.startTime || performance.now();
       }
 
-      // ── Phase 1: Critical assets (GLB + Floor) ──
-      const criticalPromises = [];
-      let hasCritical = false;
+      const allPromises = [];
 
-      setLoadStatus('Cargando modelo 3D…');
-      setLoadProgress(0.05);
+      // ── Priority 1: Floor ──
+      const floorUrl = assets.floor?.url || null;
+      if (floorUrl !== loaded.floor) {
+        loaded.floor = floorUrl;
+        if (floorUrl) {
+          allPromises.push(v.loadFloorTexture(floorUrl).catch(() => {}));
+        } else if (isEditor) {
+          v.removeFloorTexture();
+        }
+      }
 
+      // ── Priority 2: Skybox ──
+      const skyUrl = assets.skybox?.url || null;
+      if (skyUrl !== loaded.skybox) {
+        loaded.skybox = skyUrl;
+        if (skyUrl) {
+          allPromises.push(v.loadSkyboxTexture(skyUrl).catch(() => {}));
+        } else if (isEditor) {
+          v.removeSkyboxTexture();
+        }
+      }
+
+      // ── Priority 3: GLB (Maqueta 3D) ──
       const glbUrl = assets.glb?.url || null;
       const proxyUrl = assets.glb_proxy?.url || null;
 
       if (glbUrl !== loaded.glb) {
         loaded.glb = glbUrl;
         if (glbUrl) {
-          hasCritical = true;
           if (useProgressiveLoading && proxyUrl) {
-            criticalPromises.push(
-              v.loadGlbProgressive(proxyUrl, glbUrl, (p) => {
-                setLoadProgress(0.05 + p * 0.75);
-              }).catch(() => {})
+            allPromises.push(
+              v.loadGlbProgressive(proxyUrl, glbUrl).catch(() => {})
             );
           } else if (useProgressiveLoading) {
-            criticalPromises.push(
-              v.loadGlbWithProgress(glbUrl, (p) => {
-                setLoadProgress(0.05 + p * 0.75);
-              }).catch(() => {})
+            allPromises.push(
+              v.loadGlbWithProgress(glbUrl).catch(() => {})
             );
           } else {
-            criticalPromises.push(v.loadGlb(glbUrl, scene.glbSettings || undefined));
+            allPromises.push(v.loadGlb(glbUrl, scene.glbSettings || undefined));
           }
         } else if (isEditor) {
           v.removeGlb();
         }
       }
 
-      const floorUrl = assets.floor?.url || null;
-      if (floorUrl !== loaded.floor) {
-        loaded.floor = floorUrl;
-        if (floorUrl) {
-          hasCritical = true;
-          criticalPromises.push(v.loadFloorTexture(floorUrl).catch(() => {}));
+      // ── Priority 4: SOG ──
+      const sogUrl = assets.sog?.url || null;
+      if (sogUrl !== loaded.sog) {
+        loaded.sog = sogUrl;
+        if (sogUrl) {
+          allPromises.push(v.loadSog(sogUrl, scene.splatSettings || undefined).catch(() => {}));
         } else if (isEditor) {
-          v.removeFloorTexture();
+          v.removeSog();
         }
       }
 
-      // Wait for GLB + floor
-      if (criticalPromises.length > 0) {
-        await Promise.all(criticalPromises).catch(() => {});
-      }
-
-      setLoadProgress(isEditor ? 0.8 : 1);
-      setLoadStatus('Listo');
-
-      // ── Apply initial camera position after GLB is loaded ──
-      if (scene.orbit?.initialCamera) {
-        setTimeout(() => {
-          viewerRef.current?.setInitialCameraPosition(scene.orbit.initialCamera);
-        }, 150);
-      }
-
-      // ── Dismiss loading overlay ──
-      if (isEditor) {
-        if (hasCritical || !loadingAssets) {
-          setLoadProgress(1);
-          setTimeout(() => {
-            setDismissing(true);
-            setTimeout(() => setLoadingAssets(false), 900);
-          }, 300);
-        } else {
-          setDismissing(true);
-          setTimeout(() => setLoadingAssets(false), 900);
-        }
-      } else {
-        setTimeout(() => {
-          setDismissing(true);
-          setTimeout(() => setLoadingAssets(false), 900);
-        }, 300);
-      }
-
-      // ── Phase 2: Secondary assets — load in background ──
-      const bgPromises = [];
-
+      // ── Priority 5: Colliders ──
       const collidersUrl = assets.colliders?.url || null;
       if (collidersUrl !== loaded.colliders) {
         loaded.colliders = collidersUrl;
         if (collidersUrl) {
           if (isEditor) {
-            bgPromises.push((async () => {
+            allPromises.push((async () => {
               await v.loadColliders(collidersUrl);
               const vis = scene.collidersVisible;
               if (vis === false) v.setCollidersVisible(false);
             })());
           } else {
             // View mode: load colliders but hide them (used only for click targeting)
-            bgPromises.push(v.loadColliders(collidersUrl).then(() => {
+            allPromises.push(v.loadColliders(collidersUrl).then(() => {
               v.setCollidersVisible(false);
             }).catch(() => {}));
           }
@@ -171,48 +145,42 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         }
       }
 
-      const sogUrl = assets.sog?.url || null;
-      if (sogUrl !== loaded.sog) {
-        loaded.sog = sogUrl;
-        if (sogUrl) bgPromises.push(v.loadSog(sogUrl, scene.splatSettings || undefined).catch(() => {}));
-        else if (isEditor) v.removeSog();
-      }
-
-      const skyUrl = assets.skybox?.url || null;
-      if (skyUrl !== loaded.skybox) {
-        loaded.skybox = skyUrl;
-        if (skyUrl) bgPromises.push(v.loadSkyboxTexture(skyUrl).catch(() => {}));
-        else if (isEditor) v.removeSkyboxTexture();
-      }
-
-      // Model HDRI — editor only
+      // ── Model HDRI — editor only ──
       if (isEditor) {
         const modelHdriUrl = assets.modelHdri?.url || null;
         if (modelHdriUrl !== loaded.modelHdri) {
           loaded.modelHdri = modelHdriUrl;
-          if (modelHdriUrl) bgPromises.push(v.loadModelHdri(modelHdriUrl).catch(() => {}));
+          if (modelHdriUrl) allPromises.push(v.loadModelHdri(modelHdriUrl).catch(() => {}));
           else v.removeModelHdri();
         }
       }
 
-      if (bgPromises.length > 0) {
+      // Wait for all assets (parallel, but initiated in priority order)
+      if (allPromises.length > 0) {
         if (!isEditor) {
           // View mode: detect mobile for sequential loading to avoid memory spikes
           const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
           if (isMobile) {
-            console.log('[SceneLoader] Mobile — loading secondary assets sequentially');
-            for (const p of bgPromises) {
+            console.log('[SceneLoader] Mobile — loading assets sequentially');
+            for (const p of allPromises) {
               await p;
             }
           } else {
-            await Promise.all(bgPromises);
+            await Promise.all(allPromises);
           }
-          console.log('[SceneLoader] ✓ All secondary assets loaded');
+          console.log('[SceneLoader] ✓ All assets loaded');
         } else {
-          await Promise.all(bgPromises).catch(() => {});
+          await Promise.all(allPromises).catch(() => {});
         }
+      }
+
+      // ── Apply initial camera position after GLB is loaded ──
+      if (scene.orbit?.initialCamera) {
+        setTimeout(() => {
+          viewerRef.current?.setInitialCameraPosition(scene.orbit.initialCamera);
+        }, 150);
       }
 
       // Measure total load time (editor only)
@@ -275,10 +243,6 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
   }, [viewerReady, scene?.tint]);
 
   return {
-    loadingAssets,
-    dismissing,
-    loadProgress,
-    loadStatus,
     loadMetrics,
     resetLoadedAsset,
   };
