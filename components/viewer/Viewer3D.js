@@ -656,17 +656,27 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     // Reset click zoom state when orbit settings change
     s.clickZoom.state = 'idle';
     s.controls.enableRotate = true;
-    s.controls.enablePan = true;
     s.controls.enableZoom = true;
+
+    // Detect mobile for overrides
+    const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+      window.matchMedia('(max-width: 768px)').matches;
+
+    // Pan: disabled on mobile (two-finger = dolly+rotate only)
+    s.controls.enablePan = !isMobile;
 
     // Orbit target — use GLB model center if available, otherwise scene origin
     if (s.glbCenter) {
       s.controls.target.copy(s.glbCenter);
     }
 
-    // Zoom / distance limits
-    s.controls.minDistance = orbit.zoomMin ?? 0.5;
-    s.controls.maxDistance = orbit.zoomMax ?? Infinity;
+    // Zoom / distance limits — use mobile overrides when available
+    const mobileOrbit = orbit.mobile || {};
+    const effectiveZoomMin = (isMobile && mobileOrbit.zoomMin != null) ? mobileOrbit.zoomMin : (orbit.zoomMin ?? 0.5);
+    const effectiveZoomMax = (isMobile && mobileOrbit.zoomMax != null) ? mobileOrbit.zoomMax : (orbit.zoomMax ?? Infinity);
+    s.controls.minDistance = effectiveZoomMin;
+    s.controls.maxDistance = effectiveZoomMax;
 
     // Pitch (vertical angle) — OrbitControls uses polar angle (0 = top, PI = bottom)
     // pitchMax=90° → looking from top → minPolarAngle = 0°
@@ -1986,6 +1996,18 @@ if (uMaskEnabled > 0.5) {
       controls.minDistance = 0.5;
       controls.maxDistance = Infinity;
       controls.target.set(0, 0, 0);
+
+      // ─── Mobile: disable two-finger pan, keep pinch zoom + rotate ───
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isMobileDevice) {
+        controls.touches = {
+          ONE: THREE.TOUCH.ROTATE,
+          TWO: THREE.TOUCH.DOLLY_ROTATE,
+        };
+        controls.enablePan = false;
+      }
+
       s.controls = controls;
 
       // Cancel any pending camera animation when user starts orbiting

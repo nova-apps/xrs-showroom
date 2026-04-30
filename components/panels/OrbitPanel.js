@@ -46,6 +46,7 @@ export const DEFAULT_ORBIT = {
   clickZoomEnabled: false,
   clickZoomAmount: 30,
   focusSpeed: 25,
+  mobile: {},
 };
 
 /**
@@ -68,11 +69,12 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
   const [local, setLocal] = useState(null);
   const [freeCam, setFreeCam] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
+  const [mobileSaveFlash, setMobileSaveFlash] = useState(false);
 
   // Sync from Firebase when scene data arrives/changes
   useEffect(() => {
     if (orbit) {
-      setLocal({ ...DEFAULT_ORBIT, ...orbit });
+      setLocal({ ...DEFAULT_ORBIT, ...orbit, mobile: { ...DEFAULT_ORBIT.mobile, ...orbit?.mobile } });
     } else if (scene && !orbit) {
       setLocal({ ...DEFAULT_ORBIT });
     }
@@ -88,6 +90,19 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
         // In free cam, apply with free limits; otherwise apply saved limits
         onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
 
+        return next;
+      });
+    },
+    [onOrbitChange, onApplyOrbit, freeCam]
+  );
+
+  const updateMobileField = useCallback(
+    (field, value) => {
+      setLocal((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, mobile: { ...prev.mobile, [field]: value } };
+        onOrbitChange?.(next);
+        onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
         return next;
       });
     },
@@ -266,6 +281,82 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
           onChange={(v) => updateField('zoomMax', v)}
           help="Distancia máxima de la cámara al punto de enfoque"
         />
+      </div>
+
+      <div className="section-divider" />
+
+      {/* ─── Mobile Overrides ─── */}
+      <div className="transform-section">
+        <div className="transform-section-title">📱 Mobile</div>
+
+        {/* Mobile Zoom */}
+        <ControlRow
+          label="Min"
+          labelClass="label-zoom"
+          value={local.mobile?.zoomMin ?? local.zoomMin}
+          min={0.1}
+          max={100}
+          step={0.5}
+          onChange={(v) => updateMobileField('zoomMin', v)}
+          help="Distancia mínima de la cámara en mobile"
+        />
+        <ControlRow
+          label="Max"
+          labelClass="label-zoom"
+          value={local.mobile?.zoomMax ?? local.zoomMax}
+          min={1}
+          max={5000}
+          step={10}
+          onChange={(v) => updateMobileField('zoomMax', v)}
+          help="Distancia máxima de la cámara en mobile"
+        />
+
+        {/* Mobile Initial Camera */}
+        <div className="transform-section-title" style={{ marginTop: 8 }}>📍 Posición Inicial (Mobile)</div>
+        <div className="initial-camera-row">
+          <button
+            className={`initial-camera-btn${mobileSaveFlash ? ' saved' : ''}`}
+            onClick={() => {
+              if (!viewerRef?.current) return;
+              const state = viewerRef.current.getCameraState();
+              if (!state) return;
+              const next = { ...local, mobile: { ...local.mobile, initialCamera: state } };
+              setLocal(next);
+              onOrbitChange?.(next);
+              onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
+              setMobileSaveFlash(true);
+              setTimeout(() => setMobileSaveFlash(false), 1200);
+            }}
+          >
+            {mobileSaveFlash ? '✓ Guardado' : 'Capturar posición actual'}
+          </button>
+          {local.mobile?.initialCamera && (
+            <button
+              className="initial-camera-clear"
+              onClick={() => {
+                const nextMobile = { ...local.mobile };
+                delete nextMobile.initialCamera;
+                const next = { ...local, mobile: nextMobile };
+                setLocal(next);
+                onOrbitChange?.(next);
+                onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
+              }}
+              title="Borrar posición inicial mobile"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        {local.mobile?.initialCamera && (
+          <div className="initial-camera-info">
+            <span>Zoom: {local.mobile.initialCamera.zoom}</span>
+            <span>Pitch: {local.mobile.initialCamera.pitch}°</span>
+            <span>Yaw: {local.mobile.initialCamera.yaw}°</span>
+          </div>
+        )}
+        <div className="initial-camera-help">
+          Overrides de cámara aplicados solo en dispositivos móviles
+        </div>
       </div>
 
       <div className="section-divider" />

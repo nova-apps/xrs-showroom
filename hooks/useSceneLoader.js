@@ -177,9 +177,16 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       }
 
       // ── Apply initial camera position after GLB is loaded ──
-      if (scene.orbit?.initialCamera) {
+      const isMobileDevice = typeof navigator !== 'undefined' && (
+        /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      );
+      const mobileCamera = scene.orbit?.mobile?.initialCamera;
+      const desktopCamera = scene.orbit?.initialCamera;
+      const initialCamera = (isMobileDevice && mobileCamera) ? mobileCamera : desktopCamera;
+      if (initialCamera) {
         setTimeout(() => {
-          viewerRef.current?.setInitialCameraPosition(scene.orbit.initialCamera);
+          viewerRef.current?.setInitialCameraPosition(initialCamera);
         }, 150);
       }
 

@@ -231,25 +231,35 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
         {filtered.map((unit, index) => (
           <div
             key={unit.id || index}
-            className="unidad-card"
+            className={`unidad-card${isMobile ? ' unidad-card-compact' : ''}`}
             onClick={() => {
               if (onSelectUnit) onSelectUnit(unit);
             }}
           >
-            <div className="unidad-thumb">
-              {unit.imagen_plano ? (
-                <img src={unit.imagen_plano} alt={unit.id || ''} loading="lazy" />
-              ) : (
-                <div className="unidad-thumb-placeholder">🏠</div>
-              )}
-            </div>
+            {!isMobile && (
+              <div className="unidad-thumb">
+                {unit.imagen_plano ? (
+                  <img src={unit.imagen_plano} alt={unit.id || ''} loading="lazy" />
+                ) : (
+                  <div className="unidad-thumb-placeholder">🏠</div>
+                )}
+              </div>
+            )}
             <div className="unidad-info">
-              <div className="unidad-title">
-                Piso {unit.piso || '—'} - {unit.id || 'Sin ID'}
-              </div>
-              <div className="unidad-meta">
-                {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m² sup. total
-              </div>
+              {isMobile ? (
+                <div className="unidad-title">
+                  Piso {unit.piso || '—'} - {unit.id || 'Sin ID'} · {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m²
+                </div>
+              ) : (
+                <>
+                  <div className="unidad-title">
+                    Piso {unit.piso || '—'} - {unit.id || 'Sin ID'}
+                  </div>
+                  <div className="unidad-meta">
+                    {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m² sup. total
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ))}

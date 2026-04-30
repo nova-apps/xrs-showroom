@@ -991,9 +991,28 @@
       max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  /* ─── Collapsed: only tabs visible ─── */
+  .left-panel-stack.stack-tabs-only {
+    max-height: none;
+    overflow: hidden;
+  }
+
+  /* ─── Hide panel content on mobile unless expanded ─── */
+  .left-panel-stack .sidebar-panels {
+    display: none !important;
+  }
+
+  .left-panel-stack.stack-expanded .sidebar-panels {
+    display: flex !important;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+
   /* ─── Expanded state ─── */
   .left-panel-stack.stack-expanded {
-    max-height: 55vh;
+    max-height: 28vh;
   }
 
   .left-panel-stack.stack-hidden {
@@ -1138,6 +1157,26 @@
     font-size: 11px;
   }
 
+  /* ─── Compact unit cards (no thumbnails) ─── */
+  .left-panel-stack .unidad-card-compact {
+    gap: 0;
+    padding: 8px 14px;
+    border-radius: 8px;
+  }
+
+  .left-panel-stack .unidad-card-compact .unidad-info {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+
+  .left-panel-stack .unidad-card-compact .unidad-title {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   /* ─── Filters compact ─── */
   .left-panel-stack .unidad-filters {
     padding: 6px 0;
@@ -1168,7 +1207,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 4px 10px;
+    padding: 0 4px 4px;
     flex-shrink: 0;
   }
 

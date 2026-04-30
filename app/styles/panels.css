@@ -34,18 +34,18 @@
   grid-template-rows: 0fr;
 }
 
-.panel-body-wrapper > .panel-body {
+.panel-body-wrapper>.panel-body {
   min-height: 0;
   overflow: hidden;
   transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.floating-panel.collapsed .panel-body-wrapper > .panel-body {
+.floating-panel.collapsed .panel-body-wrapper>.panel-body {
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.floating-panel:not(.collapsed) .panel-body-wrapper > .panel-body {
+.floating-panel:not(.collapsed) .panel-body-wrapper>.panel-body {
   overflow-y: auto;
 }
 
@@ -58,7 +58,7 @@
   cursor: pointer;
   user-select: none;
   transition: background var(--transition-fast),
-              border-color 0.3s ease;
+    border-color 0.3s ease;
   flex-shrink: 0;
 }
 
@@ -217,7 +217,7 @@
   pointer-events: none;
   filter: none;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.3s ease;
+    opacity 0.3s ease;
 }
 
 /* Hide toggle button until JS mounts */
@@ -311,7 +311,7 @@
   min-height: 0;
   overflow-y: auto;
   pointer-events: auto;
-  padding: 12px 14px;
+  padding: 10px 14px;
 }
 
 .sidebar-scene-name-row {
@@ -716,7 +716,7 @@
   flex-direction: column;
 }
 
-.sidebar-panels>.floating-panel:not(.collapsed) .panel-body-wrapper > .panel-body {
+.sidebar-panels>.floating-panel:not(.collapsed) .panel-body-wrapper>.panel-body {
   overflow-y: auto;
   min-height: 0;
 }
@@ -743,7 +743,7 @@
   -webkit-backdrop-filter: none;
 }
 
-.sidebar-bottom>.floating-panel:not(.collapsed) .panel-body-wrapper > .panel-body {
+.sidebar-bottom>.floating-panel:not(.collapsed) .panel-body-wrapper>.panel-body {
   overflow-y: auto;
   max-height: 300px;
 }
@@ -846,4 +846,3 @@
   opacity: 0;
   pointer-events: none;
 }
-
