@@ -6,6 +6,24 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.9.16] — 2026-04-30
+
+### ✨ Features
+- Configuración de cámara independiente para mobile (zoom min/max y posición inicial) en OrbitPanel
+- Desactivación de pan con dos dedos en mobile (pinch zoom + rotación sin desplazamiento)
+- Cards compactas de unidades en mobile: fila única sin thumbnails, formato "Piso X - ID · amb · m²"
+- Bottom sheet colapsado en mobile: solo tabs visibles al cargar, expandir al tocar, colapsar al tocar afuera
+- Click-outside del panel ignora drawers/modals portalizados para evitar cierres accidentales
+
+### 🐛 Fixes
+- Panel de unidades ya no se cierra al cerrar el drawer de detalle de unidad
+- Padding reducido en mobile-filters-toggle-row para aprovechar espacio vertical
+
+### 📦 Chores
+- v0.9.16
+
+---
+
 ## [0.9.15] — 2026-04-29
 
 ### 📦 Chores
