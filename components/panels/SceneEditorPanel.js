@@ -36,6 +36,8 @@ export default function SceneEditorPanel({
   onGlbSettingsChange,
   splatSettings,
   onSplatSettingsChange,
+  onTintChange,
+  onApplyTint,
 }) {
   // Pre-upload optimization state
   const [preUpload, setPreUpload] = useState(null); // { file, stats }
@@ -289,6 +291,36 @@ export default function SceneEditorPanel({
       });
     },
     [onLightingChange, onApplyLighting]
+  );
+
+  // Local tint state
+  const tint = scene?.tint;
+  const [localTint, setLocalTint] = useState({
+    enabled: false,
+    color: '#000000',
+    opacity: 0.3,
+  });
+
+  useEffect(() => {
+    if (tint) {
+      setLocalTint({
+        enabled: tint.enabled !== false,
+        color: tint.color || '#000000',
+        opacity: tint.opacity ?? 0.3,
+      });
+    }
+  }, [tint]);
+
+  const updateTintField = useCallback(
+    (field, value) => {
+      setLocalTint((prev) => {
+        const next = { ...prev, [field]: value };
+        onTintChange?.(next);
+        onApplyTint?.(next);
+        return next;
+      });
+    },
+    [onTintChange, onApplyTint]
   );
 
   if (!scene) return null;
@@ -781,6 +813,44 @@ export default function SceneEditorPanel({
               style={{ flex: 1, height: 24, border: 'none', background: 'transparent', cursor: 'pointer' }}
             />
           </div>
+        </div>
+
+        {/* ─── Tint Overlay ─── */}
+        <div className="asset-transform-section">
+          <div className="asset-transform-title">Tint del entorno</div>
+          <label className="hdri-checkbox-row">
+            <input
+              type="checkbox"
+              checked={localTint.enabled}
+              onChange={(e) => updateTintField('enabled', e.target.checked)}
+            />
+            <span>Activar tint</span>
+            <HelpTooltip text="Capa de color semitransparente sobre el entorno (skybox, floor, splat). No afecta la maqueta 3D." />
+          </label>
+          {localTint.enabled && (
+            <>
+              <div className="transform-row">
+                <span className="transform-label label-s">Color</span>
+                <HelpTooltip text="Color del tint del entorno" />
+                <input
+                  type="color"
+                  value={localTint.color}
+                  onChange={(e) => updateTintField('color', e.target.value)}
+                  style={{ flex: 1, height: 24, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                />
+              </div>
+              <TransformRow
+                label="Op"
+                labelClass="label-s"
+                value={localTint.opacity}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => updateTintField('opacity', v)}
+                help="Opacidad del tint (0 = transparente, 1 = sólido)"
+              />
+            </>
+          )}
         </div>
       </AssetAccordion>
     </FloatingPanel>

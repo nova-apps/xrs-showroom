@@ -115,6 +115,8 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     glbReveal: { active: false, startTime: 0, duration: 2, easing: 'easeOut', mode: 'none', minY: 0, maxY: 1, clippingPlane: null, materials: [] },
     // GLB reveal settings (persisted)
     glbSettings: null,
+    // Tint overlay mesh (fullscreen quad with stencil test)
+    tintMesh: null,
   });
 
   // Expose methods to parent via ref
@@ -192,6 +194,16 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       if (lighting.envMapIntensity !== undefined && s.scene) {
         s.scene.environmentIntensity = lighting.envMapIntensity;
       }
+    },
+    setTint: (tint) => {
+      const s = stateRef.current;
+      if (!s.tintMesh || !s.THREE) return;
+      const enabled = tint?.enabled !== false;
+      const color = tint?.color || '#000000';
+      const opacity = tint?.opacity ?? 0;
+      s.tintMesh.visible = enabled && opacity > 0;
+      s.tintMesh.material.uniforms.uTintColor.value.set(color);
+      s.tintMesh.material.uniforms.uTintOpacity.value = opacity;
     },
     setGizmoMode: (mode, assetType) => {
       const s = stateRef.current;
@@ -2073,6 +2085,41 @@ if (uMaskEnabled > 0.5) {
 
       // Patch floor material with mask shader
       _patchMaterialWithMask(s, floorMat);
+
+      // ─── Tint Overlay Quad (depth-masked, excludes GLB) ───
+      // The GLB writes to the depth buffer; skybox, floor and SOG don’t.
+      // By rendering a fullscreen quad at depth 0.9999 with depthTest=true,
+      // the quad is rejected wherever the GLB wrote closer depth values,
+      // effectively masking the tint off the maqueta.
+      const tintGeo = new THREE.PlaneGeometry(2, 2);
+      const tintMat = new THREE.ShaderMaterial({
+        uniforms: {
+          uTintColor: { value: new THREE.Color(0x000000) },
+          uTintOpacity: { value: 0.0 },
+        },
+        vertexShader: `
+          void main() {
+            // Render in clip-space at z=0.9999 (near far plane)
+            gl_Position = vec4(position.xy, 0.9999, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uTintColor;
+          uniform float uTintOpacity;
+          void main() {
+            gl_FragColor = vec4(uTintColor, uTintOpacity);
+          }
+        `,
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+      });
+      const tintQuad = new THREE.Mesh(tintGeo, tintMat);
+      tintQuad.frustumCulled = false;
+      tintQuad.renderOrder = 999;
+      tintQuad.visible = false;
+      scene.add(tintQuad);
+      s.tintMesh = tintQuad;
 
       // ─── Resize ───
       const resizeObserver = new ResizeObserver(() => {

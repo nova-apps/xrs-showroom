@@ -14,6 +14,7 @@ import {
   updateAmenities as dbUpdateAmenities,
   updateCollidersVisible as dbUpdateCollidersVisible,
   updateLighting as dbUpdateLighting,
+  updateTint as dbUpdateTint,
   updateGlbSettings as dbUpdateGlbSettings,
   updateSplatSettings as dbUpdateSplatSettings,
   updateSceneAsset,
@@ -79,6 +80,7 @@ export function useScene(sceneId) {
   const updateUnidades = useMemo(() => makeDebouncedUpdate('unidades', dbUpdateUnidades), [makeDebouncedUpdate]);
   const updateAmenities = useMemo(() => makeDebouncedUpdate('amenities', dbUpdateAmenities), [makeDebouncedUpdate]);
   const updateLighting = useMemo(() => makeDebouncedUpdate('lighting', dbUpdateLighting), [makeDebouncedUpdate]);
+  const updateTint = useMemo(() => makeDebouncedUpdate('tint', dbUpdateTint), [makeDebouncedUpdate]);
   const updateGlbSettings = useMemo(() => makeDebouncedUpdate('glbSettings', dbUpdateGlbSettings), [makeDebouncedUpdate]);
   const updateSplatSettings = useMemo(() => makeDebouncedUpdate('splatSettings', dbUpdateSplatSettings), [makeDebouncedUpdate]);
 
@@ -174,6 +176,7 @@ export function useScene(sceneId) {
     updateUnidades,
     updateAmenities,
     updateLighting,
+    updateTint,
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,

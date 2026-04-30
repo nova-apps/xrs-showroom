@@ -265,6 +265,15 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     viewerRef.current.applyMaterialOverrides(scene.materials);
   }, [viewerReady, scene?.materials]);
 
+  // ── Apply tint overlay settings ──
+  useEffect(() => {
+    if (!viewerReady || !viewerRef.current) return;
+    const tint = scene?.tint;
+    if (tint) {
+      viewerRef.current.setTint(tint);
+    }
+  }, [viewerReady, scene?.tint]);
+
   return {
     loadingAssets,
     dismissing,

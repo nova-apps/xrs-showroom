@@ -55,6 +55,7 @@ export default function ScenePage() {
     updateUnidades,
     updateAmenities,
     updateLighting,
+    updateTint,
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
@@ -195,6 +196,24 @@ export default function ScenePage() {
     (lighting) => {
       if (viewerRef.current) {
         viewerRef.current.setLighting(lighting);
+      }
+    },
+    []
+  );
+
+  // Handle tint changes from the panel (debounced save)
+  const handleTintChange = useCallback(
+    (tint) => {
+      updateTint(tint);
+    },
+    [updateTint]
+  );
+
+  // Apply tint immediately to 3D scene (no delay)
+  const handleApplyTint = useCallback(
+    (tint) => {
+      if (viewerRef.current) {
+        viewerRef.current.setTint(tint);
       }
     },
     []
@@ -519,6 +538,8 @@ export default function ScenePage() {
               onGlbSettingsChange={handleGlbSettingsChange}
               splatSettings={scene?.splatSettings || null}
               onSplatSettingsChange={handleSplatSettingsChange}
+              onTintChange={handleTintChange}
+              onApplyTint={handleApplyTint}
               collapsed={activePanel !== 'assets'}
               onToggle={() => toggle('assets')}
               materialsContent={
