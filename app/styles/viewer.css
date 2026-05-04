@@ -301,6 +301,35 @@
   height: 100%;
 }
 
+/* Mobile: canvas shrinks to fill only the space above the bottom panel */
+@media (max-width: 768px) {
+  .viewer-canvas-container {
+    bottom: auto;
+    height: calc(100dvh - var(--mobile-panel-h, 0px));
+  }
+}
+
+/* ─── Canvas Blackout Overlay ───────────────────────────────────────────────
+   Sits between the canvas (z 0) and all UI panels (z 100+).
+   When JS adds .canvas-resizing to <html>, it snaps to opaque in ~50ms,
+   hiding the WebGL resize flicker. Removed after the panel transition
+   completes, fading back out over 220ms.
+────────────────────────────────────────────────────────────────────────── */
+.canvas-blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 1;            /* above canvas (z 0), below all panels (z 100+) */
+  background: #08080e;   /* matches scene background colour */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms ease;   /* slow fade-out after resize */
+}
+
+:root.canvas-resizing .canvas-blackout {
+  opacity: 1;
+  transition: opacity 50ms ease;    /* fast fade-in before resize */
+}
+
 /* ═══════════════════════════════════════
    ORBIT CROSSHAIR
 /* ═══════════════════════════════════════

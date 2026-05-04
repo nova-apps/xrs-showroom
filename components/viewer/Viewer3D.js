@@ -2171,12 +2171,21 @@ if (uMaskEnabled > 0.5) {
       s.tintMesh = tintQuad;
 
       // ─── Resize ───
+      // Schedule the actual setSize via rAF so it only fires once per frame,
+      // even when the ResizeObserver fires rapidly during a CSS transition.
+      // This eliminates the flicker caused by mid-animation size mismatches.
+      let _resizeRaf = null;
       const resizeObserver = new ResizeObserver(() => {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
+        if (_resizeRaf) cancelAnimationFrame(_resizeRaf);
+        _resizeRaf = requestAnimationFrame(() => {
+          _resizeRaf = null;
+          const w = container.clientWidth;
+          const h = container.clientHeight;
+          if (w === 0 || h === 0) return;
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        });
       });
       resizeObserver.observe(container);
 

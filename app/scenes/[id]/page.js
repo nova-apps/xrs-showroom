@@ -423,6 +423,9 @@ export default function ScenePage() {
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
 
+      {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
+      <div className="canvas-blackout" aria-hidden="true" />
+
       {/* Canvas-scoped curtain animation — plays immediately on mount */}
       <div className="canvas-curtain">
         <div className="canvas-curtain-half canvas-curtain-top" />
