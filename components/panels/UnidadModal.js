@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
+import LazyImage from '../ui/LazyImage';
 
 const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), { ssr: false });
 
@@ -102,7 +103,11 @@ export default function UnidadModal({ unit, onClose, whatsappNumber, projectName
             {/* Floor plan */}
             <div className="unit-drawer-plan">
               {unit.imagen_plano ? (
-                <img src={unit.imagen_plano} alt={`Plano ${unit.id}`} />
+                <LazyImage
+                  src={unit.imagen_plano}
+                  alt={`Plano ${unit.id}`}
+                  wrapperClassName="lazy-img-plan"
+                />
               ) : (
                 <div className="unit-drawer-plan-empty">
                   <span>🏠</span>

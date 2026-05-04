@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import AmenityModal from './AmenityModal';
+import LazyImage from '../ui/LazyImage';
 
 /**
  * AmenitiesListPanel — left-side panel listing amenities.
@@ -34,9 +35,9 @@ export default function AmenitiesListPanel({
                 >
                   <div className="unidad-thumb">
                     {amenity.plano ? (
-                      <img src={amenity.plano} alt={amenity.nombre || ''} loading="lazy" />
+                      <LazyImage src={amenity.plano} alt={amenity.nombre || ''} />
                     ) : (
-                      <div className="unidad-thumb-placeholder">🏊</div>
+                      <div className="unidad-thumb-placeholder">🏔</div>
                     )}
                   </div>
                   <div className="unidad-info">

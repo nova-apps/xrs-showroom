@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import LazyImage from '../ui/LazyImage';
 
 /**
  * AmenityModal — modal showing amenity details.
@@ -32,10 +33,14 @@ export default function AmenityModal({ amenity, onClose }) {
         {/* Plano image */}
         <div className="amenity-modal-image">
           {amenity.plano ? (
-            <img src={amenity.plano} alt={amenity.nombre || 'Plano'} />
+            <LazyImage
+              src={amenity.plano}
+              alt={amenity.nombre || 'Plano'}
+              wrapperClassName="lazy-img-plan"
+            />
           ) : (
             <div className="unidad-modal-plan-empty">
-              <span>🏊</span>
+              <span>🏔</span>
               <p>Sin plano disponible</p>
             </div>
           )}

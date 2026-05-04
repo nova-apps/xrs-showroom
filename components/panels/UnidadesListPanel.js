@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import UnidadModal from './UnidadModal';
+import LazyImage from '../ui/LazyImage';
 
 /**
  * UnidadesListPanel — left-side panel with filters + unit list.
@@ -239,7 +240,7 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
             {!isMobile && (
               <div className="unidad-thumb">
                 {unit.imagen_plano ? (
-                  <img src={unit.imagen_plano} alt={unit.id || ''} loading="lazy" />
+                  <LazyImage src={unit.imagen_plano} alt={unit.id || ''} />
                 ) : (
                   <div className="unidad-thumb-placeholder">🏠</div>
                 )}
