@@ -43,13 +43,6 @@ export default function AmenitiesListPanel({
                     <div className="unidad-title">
                       {amenity.nombre || 'Sin nombre'}
                     </div>
-                    {amenity.descripcion && (
-                      <div className="unidad-meta">
-                        {amenity.descripcion.length > 60
-                          ? amenity.descripcion.slice(0, 60) + '…'
-                          : amenity.descripcion}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}

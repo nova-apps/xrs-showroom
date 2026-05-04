@@ -690,6 +690,42 @@ body {
   font-size: 0.82rem;
 }
 
+/* ─── Amenity Modal: column layout (name top, image below) ─── */
+.amenity-modal {
+  flex-direction: column;
+  max-width: 640px;
+  max-height: 85vh;
+  align-items: stretch;
+}
+
+.amenity-modal-header {
+  padding: 28px 28px 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.amenity-modal .unidad-modal-title {
+  font-size: 1.3rem;
+}
+
+.amenity-modal-image {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.amenity-modal-image img {
+  max-width: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+
 /* ═══════════════════════════════════════
    CONFIRM DIALOG
    ═══════════════════════════════════════ */
