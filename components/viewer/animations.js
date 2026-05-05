@@ -336,7 +336,7 @@ export function handleSplatFade(s) {
     if (!s.splatClip?.active) s.splatMesh.opacity = 1;
     console.log(`[Viewer] Splat point→splat complete (${fade.duration}s)`);
 
-    // SOG fully revealed — fade tint to target opacity and hide floor
+    // SOG fully revealed — fade tint to target opacity
     if (s.tintMesh) {
       const startOpacity = s.tintMesh.material.uniforms.uTintOpacity.value;
       const endOpacity = s.tintTargetOpacity ?? 0;
@@ -355,11 +355,7 @@ export function handleSplatFade(s) {
         requestAnimationFrame(animateTint);
       }
     }
-    if (s.floorMesh) s.floorMesh.visible = false;
-  }
-}
 
-/* ─── Splat Radial Clip Animation ─── */
 export function handleSplatClip(s) {
   const clip = s.splatClip;
   if (!clip?.active || !s.splatMesh) return;
@@ -381,7 +377,7 @@ export function handleSplatClip(s) {
     s.splatMesh.opacity = 1;
     console.log(`[Viewer] Splat radial clip complete (${clip.duration}s)`);
 
-    // SOG fully revealed — fade tint to target opacity and hide floor
+    // SOG fully revealed — fade tint to target opacity
     if (s.tintMesh) {
       const startOpacity = s.tintMesh.material.uniforms.uTintOpacity.value;
       const endOpacity = s.tintTargetOpacity ?? 0;
@@ -400,6 +396,5 @@ export function handleSplatClip(s) {
         requestAnimationFrame(animateTintClip);
       }
     }
-    if (s.floorMesh) s.floorMesh.visible = false;
   }
 }
