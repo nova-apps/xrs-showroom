@@ -355,7 +355,10 @@ export function handleSplatFade(s) {
         requestAnimationFrame(animateTint);
       }
     }
+  }
+}
 
+/* ─── Splat Radial Clip Animation ─── */
 export function handleSplatClip(s) {
   const clip = s.splatClip;
   if (!clip?.active || !s.splatMesh) return;
