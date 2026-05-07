@@ -232,7 +232,7 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
         {filtered.map((unit, index) => (
           <div
             key={unit.id || index}
-            className={`unidad-card${isMobile ? ' unidad-card-compact' : ''}`}
+            className={`unidad-card${isMobile ? ' unidad-card-grid-item' : ''}`}
             onClick={() => {
               if (onSelectUnit) onSelectUnit(unit);
             }}
@@ -247,20 +247,12 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
               </div>
             )}
             <div className="unidad-info">
-              {isMobile ? (
-                <div className="unidad-title">
-                  Piso {unit.piso || '—'} - {unit.id || 'Sin ID'} · {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m²
-                </div>
-              ) : (
-                <>
-                  <div className="unidad-title">
-                    Piso {unit.piso || '—'} - {unit.id || 'Sin ID'}
-                  </div>
-                  <div className="unidad-meta">
-                    {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m² sup. total
-                  </div>
-                </>
-              )}
+              <div className="unidad-title">
+                Piso {unit.piso || '—'} · {unit.id || 'Sin ID'}
+              </div>
+              <div className="unidad-meta">
+                {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m²
+              </div>
             </div>
           </div>
         ))}

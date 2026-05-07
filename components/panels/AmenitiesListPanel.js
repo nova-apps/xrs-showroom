@@ -26,22 +26,22 @@ export default function AmenitiesListPanel({
           </div>
         ) : (
           <div className="unidades-list">
-            <div className="unidades-list-items">
+            <div className="unidades-list-items amenities-grid-list">
               {items.map((amenity, index) => (
                 <div
                   key={amenity.nombre || index}
-                  className="unidad-card"
+                  className="unidad-card amenity-card"
                   onClick={() => onSelectAmenity?.(amenity)}
                 >
-                  <div className="unidad-thumb">
+                  <div className="unidad-thumb amenity-card-thumb">
                     {amenity.plano ? (
                       <LazyImage src={amenity.plano} alt={amenity.nombre || ''} />
                     ) : (
                       <div className="unidad-thumb-placeholder">🏔</div>
                     )}
                   </div>
-                  <div className="unidad-info">
-                    <div className="unidad-title">
+                  <div className="unidad-info amenity-card-info">
+                    <div className="unidad-title amenity-card-name">
                       {amenity.nombre || 'Sin nombre'}
                     </div>
                   </div>
