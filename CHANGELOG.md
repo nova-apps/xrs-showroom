@@ -6,6 +6,37 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.10.0] — 2026-05-07
+
+### ✨ Features
+- add splat radial clip animation structure to viewer animations
+- implement multi-stage mobile panel snapping with canvas-blackout overlay to prevent resize flicker
+- introduce LazyImage component with skeleton loading and apply to modal and list views
+- implement mobile-responsive left panel with tab-based expand/collapse and device-specific camera initialization settings
+- add configurable tint overlay to environment scenes with depth masking
+- implement skybox scaling caps and dynamic centering to prevent camera clipping
+- implement responsive mobile-first UI updates for unit list panel and drawer with collapsible interactions
+- enable Gaussian splats in renderer configuration for proximity rendering
+
+### 🐛 Fixes
+- install drawer click-outside listener immediately
+- ensure skybox scale remains large enough to enclose camera by enforcing minimum scale relative to camera distance
+
+### 🔧 Refactors
+- implement grid-based layout for unit and amenity lists using compact cards
+- remove floor mesh visibility toggle from splat animation completions
+- update AmenityModal to a vertical column layout and remove descriptions from the list panel
+- replace loading overlay with canvas-scoped curtain animation and remove asset loading state dependencies
+
+### 📦 Chores
+- bump version to 0.9.16
+- v0.9.15
+
+### 📝 Other
+- v0.9.16 — mobile UX: camera config, pan disable, compact cards, collapsed tabs
+
+---
+
 ## [0.9.16] — 2026-04-30
 
 ### ✨ Features

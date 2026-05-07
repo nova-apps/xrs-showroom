@@ -1,9 +1,16 @@
 {
-  "version": "0.9.15",
-  "buildDate": "2026-04-29",
-  "commitHash": "eaa6f5e",
+  "version": "0.10.0",
+  "buildDate": "2026-05-07",
+  "commitHash": "7705bc0",
   "environment": "production",
   "features": [
-    "Maintenance and stability improvements"
+    "add splat radial clip animation structure to viewer animations",
+    "implement multi-stage mobile panel snapping with canvas-blackout overlay to prevent resize flicker",
+    "introduce LazyImage component with skeleton loading and apply to modal and list views",
+    "implement mobile-responsive left panel with tab-based expand/collapse and device-specific camera initialization settings",
+    "add configurable tint overlay to environment scenes with depth masking",
+    "implement skybox scaling caps and dynamic centering to prevent camera clipping",
+    "implement responsive mobile-first UI updates for unit list panel and drawer with collapsible interactions",
+    "enable Gaussian splats in renderer configuration for proximity rendering"
   ]
 }
