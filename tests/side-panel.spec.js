@@ -112,9 +112,9 @@ test.describe('Side Panel & Unit Drawer (/view)', () => {
     const plan = page.locator('.unit-drawer-plan');
     await expect(plan).toBeVisible();
 
-    // Should have info section with rows
-    const info = page.locator('.unit-drawer-info');
-    await expect(info).toBeVisible();
+    // Should have specs section with rows
+    const specs = page.locator('.unit-drawer-specs');
+    await expect(specs).toBeVisible();
 
     // Should have action buttons
     const actions = page.locator('.unit-drawer-actions');

@@ -25,7 +25,9 @@ export default function UnidadModal({ unit, onClose, whatsappNumber, projectName
     setMounted(true);
   }, []);
 
-  // Close on click outside
+  // Close on click outside.
+  // The opening click has fully propagated by the time this effect runs (post-commit),
+  // so the new listener won't receive it.
   useEffect(() => {
     if (!mounted || !unit) return;
     const handleClickOutside = (e) => {
@@ -33,14 +35,8 @@ export default function UnidadModal({ unit, onClose, whatsappNumber, projectName
         onClose();
       }
     };
-    // Delay to avoid closing immediately from the same click that opened it
-    const timer = setTimeout(() => {
-      document.addEventListener('pointerdown', handleClickOutside);
-    }, 100);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('pointerdown', handleClickOutside);
-    };
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
   }, [mounted, unit, onClose]);
 
   if (!unit || !mounted) return null;
