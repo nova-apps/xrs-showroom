@@ -1,0 +1,1074 @@
+[debug] [2026-05-08T19:42:31.237Z] ----------------------------------------------------------------------
+[debug] [2026-05-08T19:42:31.239Z] Command:       /Users/martin/.nvm/versions/node/v20.20.2/bin/node /Users/martin/.nvm/versions/node/v20.20.2/bin/firebase deploy
+[debug] [2026-05-08T19:42:31.240Z] CLI Version:   15.16.0
+[debug] [2026-05-08T19:42:31.240Z] Platform:      darwin
+[debug] [2026-05-08T19:42:31.240Z] Node Version:  v20.20.2
+[debug] [2026-05-08T19:42:31.240Z] Time:          Fri May 08 2026 16:42:31 GMT-0300 (Argentina Standard Time)
+[debug] [2026-05-08T19:42:31.240Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-08T19:42:31.241Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-05-08T19:42:32.355Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-08T19:42:32.355Z] > authorizing via signed-in user (martin@novaworks.com.ar)
+[debug] [2026-05-08T19:42:32.355Z] [iam] checking project xrs-showroom for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-05-08T19:42:32.355Z] Checked if tokens are valid: false, expires at: 1778252325948
+[debug] [2026-05-08T19:42:32.356Z] Checked if tokens are valid: false, expires at: 1778252325948
+[debug] [2026-05-08T19:42:32.356Z] > refreshing access token with scopes: []
+[debug] [2026-05-08T19:42:32.356Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-05-08T19:42:32.356Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-08T19:42:32.649Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-05-08T19:42:32.649Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-08T19:42:32.661Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions [none]
+[debug] [2026-05-08T19:42:32.661Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions  x-goog-user-project=xrs-showroom
+[debug] [2026-05-08T19:42:32.661Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-05-08T19:42:32.865Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-05-08T19:42:32.865Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-05-08T19:42:33.736Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions 200
+[debug] [2026-05-08T19:42:33.736Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-05-08T19:42:33.737Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:33.737Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:33.737Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom [none]
+[debug] [2026-05-08T19:42:34.231Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom 200
+[debug] [2026-05-08T19:42:34.231Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom {"projectId":"xrs-showroom","projectNumber":"331289251162","displayName":"xrs-showroom","name":"projects/xrs-showroom","resources":{"hostingSite":"xrs-showroom","realtimeDatabaseInstance":"xrs-showroom-default-rtdb"},"state":"ACTIVE","etag":"1_61ce12ea-b41d-467b-a69b-5fecc05eb72b"}
+[debug] [2026-05-08T19:42:35.156Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:35.156Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:35.157Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites pageToken=&pageSize=10
+[debug] [2026-05-08T19:42:36.904Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites 200
+[debug] [2026-05-08T19:42:36.904Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites {"sites":[{"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}]}
+[debug] [2026-05-08T19:42:36.905Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:36.905Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:36.905Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:331289251162:web:7460cc7e35bb4fa926b763/config [none]
+[debug] [2026-05-08T19:42:37.897Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:331289251162:web:7460cc7e35bb4fa926b763/config 200
+[debug] [2026-05-08T19:42:37.897Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:331289251162:web:7460cc7e35bb4fa926b763/config {"projectId":"xrs-showroom","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","databaseURL":"https://xrs-showroom-default-rtdb.firebaseio.com","storageBucket":"xrs-showroom.firebasestorage.app","apiKey":"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8","authDomain":"xrs-showroom.firebaseapp.com","messagingSenderId":"331289251162","projectNumber":"331289251162","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-05-08T19:42:39.774Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:39.774Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:39.774Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom [none]
+[debug] [2026-05-08T19:42:40.349Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom 200
+[debug] [2026-05-08T19:42:40.349Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom {"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}
+[info] ▲ Next.js 16.2.3 (Turbopack)
+- Environments: .env.local
+
+[info] 
+
+[info] ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+[info]   Creating an optimized production build ...
+
+[info] ✓ Compiled successfully in 2.2s
+
+[info]   Running TypeScript ...
+
+[info]   Finished TypeScript in 50ms ...
+
+[info]   Collecting page data using 7 workers ...
+
+[info]   Generating static pages using 7 workers (0/6) ...
+
+[info]   Generating static pages using 7 workers (1/6) 
+
+[info]   Generating static pages using 7 workers (2/6) 
+
+[info]   Generating static pages using 7 workers (4/6) 
+
+[info] ✓ Generating static pages using 7 workers (6/6) in 228ms
+
+[info]   Finalizing page optimization ...
+
+[info] 
+
+[info] Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/auth
+├ ƒ /api/map2tex
+├ ○ /login
+├ ƒ /scenes/[id]
+└ ƒ /view/[id]
+
+
+ƒ Proxy (Middleware)
+
+[info] 
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • middleware
+[info]  • non-static component /api/auth/route
+[info]  • non-static component /api/map2tex/route
+[info]  • non-static component /scenes/[id]/page
+[info]  • non-static component /view/[id]/page
+[info] 
+[debug] [2026-05-08T19:42:45.703Z] skipping / due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T19:42:45.703Z] skipping /_global-error due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T19:42:45.703Z] skipping /_not-found due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T19:42:45.703Z] skipping /login due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T19:42:45.703Z] skipping /404 due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T19:42:45.703Z] skipping /500 due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T19:42:47.047Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:47.047Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:42:47.047Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom [none]
+[debug] [2026-05-08T19:42:48.498Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom 200
+[debug] [2026-05-08T19:42:48.498Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom {"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}
+[debug] [2026-05-08T19:43:03.485Z] [web frameworks] effective firebase.json:  {
+  "hosting": [
+    {
+      "source": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "frameworksBackend": {
+        "region": "us-central1"
+      },
+      "headers": [
+        {
+          "source": "**/*.glb",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400, immutable"
+            }
+          ]
+        },
+        {
+          "source": "**/*.sog",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400, immutable"
+            }
+          ]
+        },
+        {
+          "source": "**/*.ktx2",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=2592000, immutable"
+            }
+          ]
+        },
+        {
+          "source": "**/*.hdr",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
+        },
+        {
+          "source": "**/*.wasm",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=2592000, immutable"
+            }
+          ]
+        },
+        {
+          "source": "/_global-error",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/_global-error/layout,_N_T_/_global-error/page,_N_T_/_global-error"
+            }
+          ]
+        },
+        {
+          "source": "/login",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/login/layout,_N_T_/login/page,_N_T_/login"
+            }
+          ]
+        },
+        {
+          "source": "/_not-found",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/_not-found/layout,_N_T_/_not-found/page,_N_T_/_not-found"
+            }
+          ]
+        },
+        {
+          "source": "**/*.[jt]s",
+          "headers": [
+            {
+              "key": "Set-Cookie",
+              "value": "__FIREBASE_DEFAULTS__=eyJjb25maWciOnsicHJvamVjdElkIjoieHJzLXNob3dyb29tIiwiYXBwSWQiOiIxOjMzMTI4OTI1MTE2Mjp3ZWI6NzQ2MGNjN2UzNWJiNGZhOTI2Yjc2MyIsImRhdGFiYXNlVVJMIjoiaHR0cHM6Ly94cnMtc2hvd3Jvb20tZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29tIiwic3RvcmFnZUJ1Y2tldCI6Inhycy1zaG93cm9vbS5maXJlYmFzZXN0b3JhZ2UuYXBwIiwiYXBpS2V5IjoiQUl6YVN5QVdNQ01mc2RXTUx4bXE1LUJUV1IwcS1oYVFPNjVseEg4IiwiYXV0aERvbWFpbiI6Inhycy1zaG93cm9vbS5maXJlYmFzZWFwcC5jb20iLCJtZXNzYWdpbmdTZW5kZXJJZCI6IjMzMTI4OTI1MTE2MiIsInByb2plY3ROdW1iZXIiOiIzMzEyODkyNTExNjIiLCJ2ZXJzaW9uIjoiMiJ9LCJfYXV0aFRva2VuU3luY1VSTCI6Ii9fX3Nlc3Npb24ifQ; SameSite=Strict; Expires=2028-04-02T06:23:03.485Z; Path=/;"
+            }
+          ]
+        }
+      ],
+      "site": "xrs-showroom",
+      "rewrites": [
+        {
+          "source": "**",
+          "function": {
+            "functionId": "ssrxrsshowroom",
+            "region": "us-central1",
+            "pinTag": true
+          }
+        }
+      ],
+      "redirects": [],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "public": ".firebase/xrs-showroom/hosting",
+      "webFramework": "next_ssr"
+    }
+  ],
+  "functions": [
+    {
+      "source": ".firebase/xrs-showroom/functions",
+      "codebase": "firebase-frameworks-xrs-showroom"
+    }
+  ]
+}
+[debug] [2026-05-08T19:43:03.486Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-08T19:43:03.486Z] > authorizing via signed-in user (martin@novaworks.com.ar)
+[debug] [2026-05-08T19:43:03.486Z] [iam] checking project xrs-showroom for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-05-08T19:43:03.487Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:03.487Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:03.487Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions [none]
+[debug] [2026-05-08T19:43:03.487Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions  x-goog-user-project=xrs-showroom
+[debug] [2026-05-08T19:43:03.487Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-05-08T19:43:04.478Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions 200
+[debug] [2026-05-08T19:43:04.478Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'xrs-showroom'...
+[info] 
+[info] i  deploying functions, hosting 
+[debug] [2026-05-08T19:43:04.481Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:04.482Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:04.482Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom [none]
+[debug] [2026-05-08T19:43:04.757Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom 200
+[debug] [2026-05-08T19:43:04.757Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom {"projectNumber":"331289251162","projectId":"xrs-showroom","lifecycleState":"ACTIVE","name":"xrs-showroom","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-04-09T18:50:22.155Z","parent":{"type":"organization","id":"386854486764"}}
+[info] i  functions: preparing codebase firebase-frameworks-xrs-showroom for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-05-08T19:43:04.758Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:04.758Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:04.758Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom/adminSdkConfig [none]
+[debug] [2026-05-08T19:43:05.600Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom/adminSdkConfig 200
+[debug] [2026-05-08T19:43:05.600Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom/adminSdkConfig {"projectId":"xrs-showroom","databaseURL":"https://xrs-showroom-default-rtdb.firebaseio.com","storageBucket":"xrs-showroom.firebasestorage.app"}
+[debug] [2026-05-08T19:43:05.600Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:05.600Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:05.600Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/xrs-showroom/configs [none]
+[debug] [2026-05-08T19:43:07.242Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/xrs-showroom/configs 200
+[debug] [2026-05-08T19:43:07.242Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/xrs-showroom/configs {}
+[debug] [2026-05-08T19:43:07.242Z] Validating nodejs source
+[warn] ⚠  functions: Runtime Node.js 20 was deprecated on 2026-04-30 and will be decommissioned on 2026-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy 
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-05-08T19:43:07.939Z] > [functions] package.json contents: {
+  "name": "xrs-showroom",
+  "version": "0.10.0",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@sparkjsdev/spark": "^2.0.0",
+    "firebase": "^12.11.0",
+    "leaflet": "^1.9.4",
+    "next": "16.2.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "three": "^0.180.0",
+    "firebase-frameworks": "^0.11.0",
+    "firebase-functions": "^6.0.1",
+    "firebase-admin": "^11.11.1"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "main": "server.js"
+}
+[debug] [2026-05-08T19:43:07.939Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase firebase-frameworks-xrs-showroom to determine what to deploy 
+[debug] [2026-05-08T19:43:07.939Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-05-08T19:43:07.944Z] Found firebase-functions binary at '/Users/martin/Documents/Novaworks/xrs-showroom/.firebase/xrs-showroom/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8590
+
+[debug] [2026-05-08T19:43:08.322Z] Got response from /__/functions.yaml {"endpoints":{"ssrxrsshowroom":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"ssrxrsshowroom"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2026-05-08T19:43:12.337Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-08T19:43:12.337Z] > authorizing via signed-in user (martin@novaworks.com.ar)
+[debug] [2026-05-08T19:43:12.337Z] [iam] checking project xrs-showroom for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2026-05-08T19:43:12.337Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:12.337Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:12.337Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions [none]
+[debug] [2026-05-08T19:43:12.338Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions  x-goog-user-project=xrs-showroom
+[debug] [2026-05-08T19:43:12.338Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-05-08T19:43:13.385Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions 200
+[debug] [2026-05-08T19:43:13.385Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-05-08T19:43:13.385Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:13.385Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:13.385Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/xrs-showroom/instances pageSize=100&pageToken=
+[debug] [2026-05-08T19:43:14.614Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/xrs-showroom/instances 200
+[debug] [2026-05-08T19:43:14.614Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/xrs-showroom/instances {}
+[info] i  functions: Loaded environment variables from .env. 
+[info] i  functions: preparing .firebase/xrs-showroom/functions directory for uploading... 
+[info] i  functions: packaged /Users/martin/Documents/Novaworks/xrs-showroom/.firebase/xrs-showroom/functions (273.91 MB) for uploading 
+[debug] [2026-05-08T19:43:24.408Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:24.408Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:24.408Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/xrs-showroom/locations/-/functions [none]
+[debug] [2026-05-08T19:43:25.555Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/xrs-showroom/locations/-/functions 200
+[debug] [2026-05-08T19:43:25.555Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/xrs-showroom/locations/-/functions {}
+[debug] [2026-05-08T19:43:25.555Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:25.555Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:25.556Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2026-05-08T19:43:27.024Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/-/functions 200
+[debug] [2026-05-08T19:43:27.024Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/-/functions {"functions":[{"name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"build":"projects/331289251162/locations/us-central1/builds/ea573def-6649-4335-acfb-82dc484bd7b9","runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-05-08T19:09:27.055755964Z","labels":{"firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"67f61e72d846914935edd8fd759df55725df13f2","deployment-tool":"cli-firebase"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","createTime":"2026-04-14T15:58:37.026083343Z","satisfiesPzi":true}]}
+[info] i  functions: ensuring required API run.googleapis.com is enabled... 
+[info] i  functions: ensuring required API eventarc.googleapis.com is enabled... 
+[info] i  functions: ensuring required API pubsub.googleapis.com is enabled... 
+[info] i  functions: ensuring required API storage.googleapis.com is enabled... 
+[info] i  functions: generating the service identity for pubsub.googleapis.com... 
+[debug] [2026-05-08T19:43:27.028Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:27.028Z] Checked if tokens are valid: true, expires at: 1778272951649
+[info] i  functions: generating the service identity for eventarc.googleapis.com... 
+[debug] [2026-05-08T19:43:27.029Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:27.029Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:27.029Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-05-08T19:43:27.029Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity  x-goog-user-project=331289251162
+[debug] [2026-05-08T19:43:27.029Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity {}
+[debug] [2026-05-08T19:43:27.034Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-05-08T19:43:27.034Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity  x-goog-user-project=331289251162
+[debug] [2026-05-08T19:43:27.034Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity {}
+[debug] [2026-05-08T19:43:28.838Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity 200
+[debug] [2026-05-08T19:43:28.838Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-331289251162@gcp-sa-pubsub.iam.gserviceaccount.com","uniqueId":"110983286155319776772"}}
+[debug] [2026-05-08T19:43:28.839Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity 200
+[debug] [2026-05-08T19:43:28.839Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-331289251162@gcp-sa-eventarc.iam.gserviceaccount.com","uniqueId":"117385982948547381802"}}
+[debug] [2026-05-08T19:43:28.842Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:28.842Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:28.842Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom [none]
+[debug] [2026-05-08T19:43:30.297Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom 200
+[debug] [2026-05-08T19:43:30.297Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom {"projectNumber":"331289251162","projectId":"xrs-showroom","lifecycleState":"ACTIVE","name":"xrs-showroom","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-04-09T18:50:22.155Z","parent":{"type":"organization","id":"386854486764"}}
+[debug] [2026-05-08T19:43:30.298Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:30.298Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:30.298Z] >>> [apiv2][query] GET https://compute.googleapis.com/compute/v1/projects/331289251162 [none]
+[debug] [2026-05-08T19:43:31.584Z] <<< [apiv2][status] GET https://compute.googleapis.com/compute/v1/projects/331289251162 403
+[debug] [2026-05-08T19:43:31.587Z] <<< [apiv2][body] GET https://compute.googleapis.com/compute/v1/projects/331289251162 {"error":{"code":403,"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"containerInfo":"331289251162","activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162","consumer":"projects/331289251162","serviceTitle":"Compute Engine API","service":"compute.googleapis.com"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162"}]}]}}
+[debug] [2026-05-08T19:43:31.593Z] unable to look up default compute service account. Falling back to 331289251162-compute@developer.gserviceaccount.com. Error: {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":403,"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"containerInfo":"331289251162","activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162","consumer":"projects/331289251162","serviceTitle":"Compute Engine API","service":"compute.googleapis.com"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162"}]}]}},"response":{"statusCode":403}},"exit":1,"message":"Request to https://compute.googleapis.com/compute/v1/projects/331289251162 had HTTP Error: 403, Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":403}
+[debug] [2026-05-08T19:43:31.600Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:31.600Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:31.600Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom [none]
+[debug] [2026-05-08T19:43:33.002Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom 200
+[debug] [2026-05-08T19:43:33.002Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom {"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}
+[debug] [2026-05-08T19:43:33.004Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:33.004Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:33.004Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions [none]
+[debug] [2026-05-08T19:43:33.004Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase","firebase-web-framework":"next_ssr"}}
+[debug] [2026-05-08T19:43:33.993Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions 200
+[debug] [2026-05-08T19:43:33.994Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions {"name":"projects/331289251162/sites/xrs-showroom/versions/debf1181c1546781","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase","firebase-web-framework":"next_ssr"}}
+[debug] [2026-05-08T19:43:33.995Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:33.995Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:33.995Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/xrs-showroom/billingInfo [none]
+[debug] [2026-05-08T19:43:35.463Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/xrs-showroom/billingInfo 200
+[debug] [2026-05-08T19:43:35.463Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/xrs-showroom/billingInfo {"name":"projects/xrs-showroom/billingInfo","projectId":"xrs-showroom","billingAccountName":"billingAccounts/012C97-D00103-879487","billingEnabled":true}
+[debug] [2026-05-08T19:43:35.467Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:35.467Z] Checked if tokens are valid: true, expires at: 1778272951649
+[debug] [2026-05-08T19:43:35.467Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions:generateUploadUrl [none]
+[debug] [2026-05-08T19:43:36.742Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions:generateUploadUrl 200
+[debug] [2026-05-08T19:43:36.742Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/06bbce63-bbce-495e-b5ee-506f1f51b7ae.zip?GoogleAccessId=service-331289251162@gcf-admin-robot.iam.gserviceaccount.com&Expires=1778271216&Signature=PaRWiTM2yzLe%2FnWCc%2F%2FSnQXaYaqL0AeyEnv5PLhvnzUs8J3X0ad0Nk%2Buv4PDD2CgmfRTAyGPQ%2FFpAcGCKcExYA%2BIjtL4a8YWTYgt%2B%2FppzLVKAI%2B4Fhnx3cvBnVVMvbY27pliVG7s7Dn0TdzFqVTTEH7QKx4XvqTXPlSGTin7BzGoXGufzQXcWx4zsehneFUzkHQVmps5P6jJAyqEsXqWiDuPB0KuDi%2FmHr5dJF3Ajr9LNWfJbnHFLjgIuDI%2BPTAguGm3z3tvEdB6ZdCitvsonxRRshgMxsztPlNsHeWeL6j1CgkroacA6VM1sTifpNnlRqMAzfBO4e%2FNYC9im0mCWg%3D%3D","storageSource":{"bucket":"gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com","object":"06bbce63-bbce-495e-b5ee-506f1f51b7ae.zip"}}
+[debug] [2026-05-08T19:43:36.744Z] >>> [apiv2][query] PUT https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/06bbce63-bbce-495e-b5ee-506f1f51b7ae.zip GoogleAccessId=service-331289251162%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1778271216&Signature=PaRWiTM2yzLe%2FnWCc%2F%2FSnQXaYaqL0AeyEnv5PLhvnzUs8J3X0ad0Nk%2Buv4PDD2CgmfRTAyGPQ%2FFpAcGCKcExYA%2BIjtL4a8YWTYgt%2B%2FppzLVKAI%2B4Fhnx3cvBnVVMvbY27pliVG7s7Dn0TdzFqVTTEH7QKx4XvqTXPlSGTin7BzGoXGufzQXcWx4zsehneFUzkHQVmps5P6jJAyqEsXqWiDuPB0KuDi%2FmHr5dJF3Ajr9LNWfJbnHFLjgIuDI%2BPTAguGm3z3tvEdB6ZdCitvsonxRRshgMxsztPlNsHeWeL6j1CgkroacA6VM1sTifpNnlRqMAzfBO4e%2FNYC9im0mCWg%3D%3D
+[debug] [2026-05-08T19:43:36.745Z] >>> [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/06bbce63-bbce-495e-b5ee-506f1f51b7ae.zip [stream]
+[debug] [2026-05-08T20:44:34.966Z] <<< [apiv2][status] PUT https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/06bbce63-bbce-495e-b5ee-506f1f51b7ae.zip 200
+[debug] [2026-05-08T20:44:34.968Z] <<< [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/06bbce63-bbce-495e-b5ee-506f1f51b7ae.zip [omitted]
+[info] ✔  functions: .firebase/xrs-showroom/functions source uploaded successfully 
+[info] i  hosting[xrs-showroom]: beginning deploy... 
+[info] i  hosting[xrs-showroom]: found 43 files in .firebase/xrs-showroom/hosting 
+[debug] [2026-05-08T20:44:34.989Z] [hosting] uploading with 200 concurrency
+[debug] [2026-05-08T20:44:35.195Z] Checked if tokens are valid: false, expires at: 1778272951649
+[debug] [2026-05-08T20:44:35.195Z] Checked if tokens are valid: false, expires at: 1778272951649
+[debug] [2026-05-08T20:44:35.196Z] > refreshing access token with scopes: []
+[debug] [2026-05-08T20:44:35.197Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-05-08T20:44:35.197Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-08T20:44:35.204Z] [hosting] hash cache [LmZpcmViYXNlL3hycy1zaG93cm9vbS9ob3N0aW5n] stored for 43 files
+[debug] [2026-05-08T20:44:35.204Z] [hosting][hash queue][FINAL] {"max":195,"min":54,"avg":59.51162790697674,"active":0,"complete":43,"success":43,"errored":0,"retried":0,"total":43,"elapsed":209}
+[debug] [2026-05-08T20:44:35.461Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-05-08T20:44:35.462Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-08T20:44:35.478Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/331289251162/sites/xrs-showroom/versions/debf1181c1546781:populateFiles [none]
+[debug] [2026-05-08T20:44:35.478Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/331289251162/sites/xrs-showroom/versions/debf1181c1546781:populateFiles {"files":{"/_next/static/media/layers.1220hx8ja1.sy.png":"936eb9d3b0358fcf2574e08cdb851ba88993f01079d60f78249124da2c345970","/_next/static/media/layers-2x.0olxl6i2vnf_c.png":"2375c6a391f52637357b5a47e32a68f1487c9d1093a432e75b2c90b3d4e92e3f","/_next/static/media/marker-icon.0i9~u_difxrfa.png":"abf202b4320f8ad8f49b4539646ca5229f5d22c7646d5cbe1330608dc9707c0b","/_next/static/chunks/189y142ozc1u-.js":"08c4f0f2ce1ae2367a4d1087042c17d683ac1b18c0df0f5b460cbce6ca9c3ff8","/_next/static/chunks/179a0msmdnpdn.js":"e8ad4a81dc910ea76eb4d9a7b2f2bfab3e5ae42347430689625ed89bc44f048e","/_next/static/chunks/14rpnmu.3h_vx.js":"ae2957f02192acbefed95db4d16e112b9d00388332eeac8ee110c0a0487a990d","/_next/static/chunks/100ag.l8tmkx8.js":"b22ccbddbcb12b47c6de7e48b425e058e948f2494c63dd6aef5907aa9e677833","/_next/static/chunks/turbopack-07xxe6m.xb-k3.js":"b066b104e6228a489fcff681c0963a89e2596f3ec9224d31b13514870e392e5d","/_next/static/chunks/0zh_c_cuzpveu.js":"c56041ef5980ed640826b143a14595adc196736d478af22aeccafe10124b6079","/_next/static/chunks/16dwviec7mn90.js":"b6ed130c1dde8b2bf356885c6c4de263db93a74628cadecae8050fb565fd827e","/_next/static/chunks/0zb8lc4rthhhg.js":"f5b9ad79d0880a490009086fe505dae4da97cf439f7c180712f1d41a401c7043","/_next/static/chunks/0ytpfbv9jzbf8.js":"8c16c7b9ef04f47aa676645dcd5807b2958512dad41fb51cf565b90204cfed60","/_next/static/chunks/0x42.f7wrsde1.js":"898d01215996048e719f383d191cc0a55721134ff4f624707fe52097e1155bd4","/_next/static/chunks/0~2qt5tgycoe6.js":"9fea388ae518bb5a8c116f467a86b808f4404bf8b8ec7c0f0d657f1b2e85488c","/_next/static/chunks/0ud1ck_ek9j-x.js":"af8f75cd7199d33d11a68d53fa0b502a89a74366b2ed6c0e9158f423f91c1df4","/_next/static/chunks/0x8p4k~_3k-9m.js":"d6898e47bdb804aebe3fafc1df3a00ff9140fcd699f1ed51fb75a1377cb31812","/_next/static/chunks/0r2xu4-4rj_7e.js":"b174ef5a7e6863ce154f0da7a5fd0c124fb5cf09ca3737b01dfb1364e61cc802","/_next/static/chunks/0jm4664sqq704.js":"039736b4284d10eae36819fb42679695a0abd51c9eeee9b8dc189d69387c7af9","/_next/static/chunks/0i3us7u41yhxi.js":"d4e57cb05021bc69c30c2a830c0c33b5ad5c80eada83af33c3b13db9fbf59dfe","/_next/static/chunks/0dwxua13x24-b.js":"b047ad79a7e7a9c2fd25abc992d12999c2896701b26c9f49b81067ea041eff80","/_next/static/chunks/0t48hzs_6fshe.css":"765e027e76e8a0a649ce042d20e1a6a90ef1251110979ed770fda9ca6f9178e6","/_next/static/chunks/0kie6pbvrkyvi.js":"b6a0b0d43c18590c358fbf499d92aaff459c341285b994fb668a6597e4fb22a3","/_next/static/chunks/0g~.ffeoscyi9.js":"5e059de8f1c96e2c7b58e37c3ca36844877012adb8dbb484b948b8974673b8cb","/_next/static/chunks/0_1s8~bg6oitt.js":"29b40b585671a427d5f91945af0c036bf98825ebeb7ba1604cda64bc7345610a","/_next/static/chunks/0l0mbdj82j2l8.js":"40b46383cc46f15b1e389659e3dba6fdcaf72e8d455d5055bf783b732e986130","/_next/static/chunks/02i7dfk78~t~2.js":"b029f1773b408b6aa804df9238251480c0601a5a470058dfb21ae0bbc5a97190","/_next/static/_eJMwxc0sm4nRC1svJpI-/_ssgManifest.js":"02dbc1aeab6ef0a6ff2ff9a1643158cf9bb38929945eaa343a3627dee9ba6778","/_next/static/chunks/0dbhjjzl8qfwv.js":"12cbac7fc7cc5b7595da2bddad057e4f24a4d941ee5a8dd53c6d78d44720b817","/_next/static/_eJMwxc0sm4nRC1svJpI-/_clientMiddlewareManifest.js":"75aef95f9af80efda412011daa4d637f75af010a204567738c2be8d9b431289f","/_next/static/chunks/0-~e6lvualxbz.js":"54deb12dad4842bb9b2bcd2829fffa1ecedb761b8a0e36b53e2270f3ddf859d9","/_next/static/_eJMwxc0sm4nRC1svJpI-/_buildManifest.js":"30ef2ac8f5c7eb81cae36ed0e00068cbbdf1fe45eaa179abe62d8e5cbcb54834","/_next/static/chunks/00ujro2kof55u.js":"62d36891ac3a4bd51b928880077b434b6761c1975be2ffbf26c9be7219bb35f3","/_next/static/chunks/114dfgtkwwkd2.css":"050efc2a0a4f3667935462a6c232406d4f8c37dc7b76f7790443034a940dd57f","/_next/static/chunks/12_g~w.ec_0g0.js":"5927740fd16447543d238fb03e5ed6dd94f169594842deb0d3042fb0c4ac3451","/_next/static/chunks/0uodpnfawqa23.js":"19998f0551eb9cda4d7a1596a81ef691ddb70fb9ccd3819541f682ae7c3af5dc","/_next/static/chunks/0wyz3fzjhpvhl.js":"4493feceda65c24cdbed52aacea2241870ded5d02f4e9d862f065d1fcc899626","/_next/static/chunks/03~yq9q893hmn.js":"67dee1c02c6a6700d63b5c1898cf2df618101a68a395db469192763d24925a23","/_next/static/chunks/06r9_3ub2r-4z.js":"945d1b63623cd459b012a795b114ba9c414d5329b4377b4b2da55541d3561b78","/_next/static/chunks/0_ysoy2aej1v5.js":"a353700ab053bcc72b566a0ea0bc6a89021abeef1804b50a46a299e1a5bace3d","/_next/static/chunks/0mstyq17cbf8-.js":"b02bb93ebca39e5758b46cf70fa744779e304d889f5f20588e19661454d28b5d","/_next/static/chunks/0d~ivpxg4t6vl.js":"3c09795d37b489f498cf9ee1a1c48daa034dddde756de14c30b80754ee8c0902","/_next/static/chunks/17_r3gk_g1dyu.js":"13d3ed32ce3802788083734c57cd1f841e77d95abc2023e2ac865a311314ba17","/_next/static/chunks/05qf5fcsnz9il.js":"deb49f1e59aaa6c6e65925d33667306c6885dda38918b35256fd225ec4b40a75"}}
+[debug] [2026-05-08T20:44:37.201Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/331289251162/sites/xrs-showroom/versions/debf1181c1546781:populateFiles 200
+[debug] [2026-05-08T20:44:37.201Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/331289251162/sites/xrs-showroom/versions/debf1181c1546781:populateFiles {"uploadRequiredHashes":["54deb12dad4842bb9b2bcd2829fffa1ecedb761b8a0e36b53e2270f3ddf859d9","9fea388ae518bb5a8c116f467a86b808f4404bf8b8ec7c0f0d657f1b2e85488c","af8f75cd7199d33d11a68d53fa0b502a89a74366b2ed6c0e9158f423f91c1df4"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files"}
+[debug] [2026-05-08T20:44:37.202Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:37.203Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:37.203Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:37.203Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:37.203Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:37.203Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:37.203Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/54deb12dad4842bb9b2bcd2829fffa1ecedb761b8a0e36b53e2270f3ddf859d9 [none]
+[debug] [2026-05-08T20:44:37.203Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/54deb12dad4842bb9b2bcd2829fffa1ecedb761b8a0e36b53e2270f3ddf859d9 [stream]
+[debug] [2026-05-08T20:44:37.205Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/9fea388ae518bb5a8c116f467a86b808f4404bf8b8ec7c0f0d657f1b2e85488c [none]
+[debug] [2026-05-08T20:44:37.205Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/9fea388ae518bb5a8c116f467a86b808f4404bf8b8ec7c0f0d657f1b2e85488c [stream]
+[debug] [2026-05-08T20:44:37.206Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/af8f75cd7199d33d11a68d53fa0b502a89a74366b2ed6c0e9158f423f91c1df4 [none]
+[debug] [2026-05-08T20:44:37.206Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/af8f75cd7199d33d11a68d53fa0b502a89a74366b2ed6c0e9158f423f91c1df4 [stream]
+[debug] [2026-05-08T20:44:37.207Z] [hosting][populate queue][FINAL] {"max":2009,"min":2009,"avg":2009,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":2013}
+[debug] [2026-05-08T20:44:37.207Z] [hosting] uploads queued: 3
+[debug] [2026-05-08T20:44:39.200Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/54deb12dad4842bb9b2bcd2829fffa1ecedb761b8a0e36b53e2270f3ddf859d9 200
+[debug] [2026-05-08T20:44:39.201Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/54deb12dad4842bb9b2bcd2829fffa1ecedb761b8a0e36b53e2270f3ddf859d9 [stream]
+[debug] [2026-05-08T20:44:39.228Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/af8f75cd7199d33d11a68d53fa0b502a89a74366b2ed6c0e9158f423f91c1df4 200
+[debug] [2026-05-08T20:44:39.228Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/af8f75cd7199d33d11a68d53fa0b502a89a74366b2ed6c0e9158f423f91c1df4 [stream]
+[debug] [2026-05-08T20:44:39.229Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/9fea388ae518bb5a8c116f467a86b808f4404bf8b8ec7c0f0d657f1b2e85488c 200
+[debug] [2026-05-08T20:44:39.229Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/xrs-showroom/versions/debf1181c1546781/files/9fea388ae518bb5a8c116f467a86b808f4404bf8b8ec7c0f0d657f1b2e85488c [stream]
+[debug] [2026-05-08T20:44:39.230Z] [hosting][upload queue][FINAL] {"max":2026,"min":1999,"avg":2017,"active":0,"complete":3,"success":3,"errored":0,"retried":0,"total":3,"elapsed":2028}
+[info] ✔  hosting[xrs-showroom]: file upload complete 
+[debug] [2026-05-08T20:44:39.231Z] [hosting] deploy completed after 4259ms
+[info] i  functions: updating Node.js 20 (2nd Gen) function firebase-frameworks-xrs-showroom:ssrxrsshowroom(us-central1)... 
+[debug] [2026-05-08T20:44:39.237Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:39.238Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:39.239Z] >>> [apiv2][query] PATCH https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom updateMask=name%2CbuildConfig.runtime%2CbuildConfig.entryPoint%2CbuildConfig.source.storageSource.bucket%2CbuildConfig.source.storageSource.object%2CbuildConfig.environmentVariables%2CbuildConfig.sourceToken%2CserviceConfig.environmentVariables%2CserviceConfig.ingressSettings%2CserviceConfig.timeoutSeconds%2CserviceConfig.serviceAccountEmail%2CserviceConfig.availableMemory%2CserviceConfig.minInstanceCount%2CserviceConfig.maxInstanceCount%2CserviceConfig.maxInstanceRequestConcurrency%2CserviceConfig.availableCpu%2CserviceConfig.vpcConnector%2CserviceConfig.vpcConnectorEgressSettings%2CserviceConfig.directVpcNetworkInterface%2CserviceConfig.directVpcEgress%2Clabels
+[debug] [2026-05-08T20:44:39.239Z] >>> [apiv2][body] PATCH https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom {"name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com","object":"06bbce63-bbce-495e-b5ee-506f1f51b7ae.zip"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""}},"serviceConfig":{"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":null,"timeoutSeconds":null,"serviceAccountEmail":null,"availableMemory":"256Mi","minInstanceCount":null,"maxInstanceCount":null,"maxInstanceRequestConcurrency":80,"availableCpu":"1","vpcConnector":null,"vpcConnectorEgressSettings":null,"directVpcNetworkInterface":null,"directVpcEgress":null},"labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"}}
+[debug] [2026-05-08T20:44:41.791Z] <<< [apiv2][status] PATCH https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom 200
+[debug] [2026-05-08T20:44:41.791Z] <<< [apiv2][body] PATCH https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2"},"done":false}
+[debug] [2026-05-08T20:44:41.793Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:41.793Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:41.793Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:44:42.786Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:44:42.786Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:44:43.288Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:44:43.289Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:43.289Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:43.289Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:44:44.284Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:44:44.284Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:44:45.285Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:44:45.287Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:45.287Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:45.287Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:44:46.301Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:44:46.301Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:44:48.302Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:44:48.303Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:48.303Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:48.303Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:44:49.429Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:44:49.429Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:44:53.430Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:44:53.431Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:53.431Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:44:53.433Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:44:54.546Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:44:54.547Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:45:02.549Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:45:02.549Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:02.549Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:02.549Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:45:03.653Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:45:03.653Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:45:13.655Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:45:13.655Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:13.655Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:13.656Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:45:14.773Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:45:14.773Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:45:24.773Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:45:24.774Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:24.774Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:24.775Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:45:26.234Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:45:26.234Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:45:36.236Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:45:36.237Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:36.237Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:36.237Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:45:37.499Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:45:37.499Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:45:47.501Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:45:47.503Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:47.503Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:47.504Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:45:48.612Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:45:48.612Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:45:58.613Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:45:58.613Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:58.613Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:45:58.613Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:45:59.744Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:45:59.744Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:46:09.745Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:46:09.746Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:09.746Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:09.746Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:46:10.982Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:46:10.982Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:46:20.983Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:46:20.985Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:20.985Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:20.985Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:46:22.156Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:46:22.157Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:46:32.159Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:46:32.160Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:32.160Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:32.161Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:46:33.296Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:46:33.296Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:46:43.298Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:46:43.299Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:43.299Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:43.300Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:46:45.140Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:46:45.140Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:46:55.141Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:46:55.142Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:55.142Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:46:55.142Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:46:57.069Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:46:57.069Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:47:07.070Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:47:07.070Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:07.070Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:07.071Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:47:08.901Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:47:08.901Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:47:18.902Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:47:18.903Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:18.903Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:18.904Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:47:20.114Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:47:20.115Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:47:30.117Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:47:30.119Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:30.120Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:30.120Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:47:31.941Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:47:31.942Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:47:41.942Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:47:41.947Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:41.947Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:41.947Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] [2026-05-08T20:47:43.316Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba 200
+[debug] [2026-05-08T20:47:43.316Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba {"name":"projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba","metadata":{"@type":"type.googleapis.com/google.cloud.functions.v2.OperationMetadata","createTime":"2026-05-08T20:44:41.640119699Z","target":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","verb":"update","cancelRequested":false,"apiVersion":"v2","requestResource":{"@type":"type.googleapis.com/google.cloud.functions.v2.Function","name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778248733934977"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00061-wam","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","labels":{"deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom","firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","satisfiesPzi":true},"stages":[{"name":"BUILD","message":"Build in progress","state":"IN_PROGRESS","resource":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","resourceUri":"https://console.cloud.google.com/cloud-build/builds;region=us-central1/d3b3b131-e885-42e7-8b46-ab6a050005be?project=331289251162"},{"name":"SERVICE","state":"NOT_STARTED"}],"operationType":"UPDATE_FUNCTION","buildName":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be"},"done":false}
+[debug] [2026-05-08T20:47:53.317Z] [update-firebase-frameworks-xrs-showroom-us-central1-ssrxrsshowroom] Retrying task index 0
+[debug] [2026-05-08T20:47:53.318Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:53.318Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T20:47:53.318Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/operations/operation-1778273080506-651547746f83c-fed14fa5-daaf28ba [none]
+[debug] Task index 0 failed: timed out after 1500000ms.
+[error] Task index 0 failed: timed out after 1500000ms.
+[warn] ⚠  functions: Deploys failed. Skipping deletes. 
+[debug] [2026-05-08T21:09:41.843Z] Total Function Deployment time: 1502574
+[debug] [2026-05-08T21:09:41.843Z] 1 Functions Deployed
+[debug] [2026-05-08T21:09:41.843Z] 1 Functions Errored
+[debug] [2026-05-08T21:09:41.843Z] 0 Function Deployments Aborted
+[debug] [2026-05-08T21:09:41.843Z] Average Function Deployment time: 1502572
+[info] 
+[info] Functions deploy had errors with the following functions:
+	firebase-frameworks-xrs-showroom:ssrxrsshowroom(us-central1)
+[debug] [2026-05-08T21:09:42.484Z] Not printing URL for HTTPS function. Typically this means it didn't match a filter or we failed deployment
+[debug] [2026-05-08T21:09:42.484Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:09:42.484Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:09:42.484Z] >>> [apiv2][query] GET https://artifactregistry.googleapis.com/v1/projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts [none]
+[debug] [2026-05-08T21:09:45.283Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts 200
+[debug] [2026-05-08T21:09:45.284Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts {"name":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","format":"DOCKER","description":"This repository is created and used by Cloud Functions for storing function docker images.","labels":{"goog-managed-by":"cloudfunctions"},"createTime":"2026-04-14T15:58:48.432611Z","updateTime":"2026-05-08T20:47:35.963764Z","mode":"STANDARD_REPOSITORY","cleanupPolicies":{"firebase-functions-cleanup":{"id":"firebase-functions-cleanup","action":"DELETE","condition":{"tagState":"ANY","olderThan":"2592000s"}}},"sizeBytes":"2534361319","vulnerabilityScanningConfig":{"lastEnableTime":"2026-04-14T15:58:37.248364766Z","enablementState":"SCANNING_DISABLED","enablementStateReason":"API containerscanning.googleapis.com is not enabled."},"satisfiesPzi":true,"registryUri":"us-central1-docker.pkg.dev/xrs-showroom/gcf-artifacts"}
+[debug] [2026-05-08T21:09:45.284Z] Functions deploy failed.
+[debug] [2026-05-08T21:09:45.284Z] {
+  "endpoint": {
+    "id": "ssrxrsshowroom",
+    "project": "xrs-showroom",
+    "region": "us-central1",
+    "entryPoint": "ssrxrsshowroom",
+    "platform": "gcfv2",
+    "runtime": "nodejs20",
+    "httpsTrigger": {},
+    "labels": {
+      "deployment-tool": "cli-firebase"
+    },
+    "serviceAccount": null,
+    "ingressSettings": null,
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "maxInstances": null,
+    "minInstances": null,
+    "concurrency": 80,
+    "vpc": null,
+    "environmentVariables": {
+      "VERCEL_URL": "xrs-showroom.web.app",
+      "__FIREBASE_FRAMEWORKS_ENTRY__": "next.js",
+      "__FIREBASE_DEFAULTS__": "{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}",
+      "FIREBASE_CONFIG": "{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}",
+      "GCLOUD_PROJECT": "xrs-showroom",
+      "EVENTARC_CLOUD_EVENT_SOURCE": "projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom"
+    },
+    "codebase": "firebase-frameworks-xrs-showroom",
+    "runServiceId": "ssrxrsshowroom",
+    "cpu": 1,
+    "securityLevel": "SECURE_ALWAYS",
+    "targetedByOnly": false,
+    "hash": "76a82d502b4c8ce09dfe1348b620f281088f3d92"
+  },
+  "op": "update",
+  "original": {
+    "name": "FirebaseError",
+    "children": [],
+    "exit": 1,
+    "message": "Task index 0 failed: timed out after 1500000ms.",
+    "status": 500,
+    "level": "debug",
+    "code": 500
+  }
+}
+[debug] [2026-05-08T21:09:45.353Z] Error: Failed to update function ssrxrsshowroom in region us-central1
+    at /Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:454:19
+    at async Fabricator.updateV2Function (/Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:438:32)
+    at async Fabricator.updateEndpoint (/Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:174:13)
+    at async Fabricator.wrapOperation (/Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:138:13)
+    at async Promise.all (index 0)
+    at async Promise.allSettled (index 0)
+    at async Fabricator.applyPlan (/Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:77:45)
+    at async release (/Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/functions/release/index.js:87:21)
+    at async chain (/Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/index.js:45:9)
+    at async deploy (/Users/martin/.nvm/versions/node/v20.20.2/lib/node_modules/firebase-tools/lib/deploy/index.js:128:9)
+[error] 
+[error] Error: There was an error deploying functions
+[debug] [2026-05-08T21:12:15.286Z] ----------------------------------------------------------------------
+[debug] [2026-05-08T21:12:15.292Z] Command:       /Users/martin/.nvm/versions/node/v20.20.2/bin/node /Users/martin/.nvm/versions/node/v20.20.2/bin/firebase deploy --only hosting
+[debug] [2026-05-08T21:12:15.292Z] CLI Version:   15.16.0
+[debug] [2026-05-08T21:12:15.292Z] Platform:      darwin
+[debug] [2026-05-08T21:12:15.292Z] Node Version:  v20.20.2
+[debug] [2026-05-08T21:12:15.292Z] Time:          Fri May 08 2026 18:12:15 GMT-0300 (Argentina Standard Time)
+[debug] [2026-05-08T21:12:15.292Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-08T21:12:16.497Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-08T21:12:16.497Z] > authorizing via signed-in user (martin@novaworks.com.ar)
+[debug] [2026-05-08T21:12:16.497Z] [iam] checking project xrs-showroom for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-05-08T21:12:16.498Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:16.498Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:16.499Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions [none]
+[debug] [2026-05-08T21:12:16.499Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions  x-goog-user-project=xrs-showroom
+[debug] [2026-05-08T21:12:16.499Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-05-08T21:12:20.802Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions 200
+[debug] [2026-05-08T21:12:20.802Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-05-08T21:12:20.802Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:20.802Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:20.802Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom [none]
+[debug] [2026-05-08T21:12:21.349Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom 200
+[debug] [2026-05-08T21:12:21.349Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom {"projectId":"xrs-showroom","projectNumber":"331289251162","displayName":"xrs-showroom","name":"projects/xrs-showroom","resources":{"hostingSite":"xrs-showroom","realtimeDatabaseInstance":"xrs-showroom-default-rtdb"},"state":"ACTIVE","etag":"1_61ce12ea-b41d-467b-a69b-5fecc05eb72b"}
+[debug] [2026-05-08T21:12:22.241Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:22.241Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:22.242Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites pageToken=&pageSize=10
+[debug] [2026-05-08T21:12:24.098Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites 200
+[debug] [2026-05-08T21:12:24.098Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites {"sites":[{"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}]}
+[debug] [2026-05-08T21:12:24.099Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:24.099Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:24.099Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:331289251162:web:7460cc7e35bb4fa926b763/config [none]
+[debug] [2026-05-08T21:12:25.570Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:331289251162:web:7460cc7e35bb4fa926b763/config 200
+[debug] [2026-05-08T21:12:25.570Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:331289251162:web:7460cc7e35bb4fa926b763/config {"projectId":"xrs-showroom","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","databaseURL":"https://xrs-showroom-default-rtdb.firebaseio.com","storageBucket":"xrs-showroom.firebasestorage.app","apiKey":"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8","authDomain":"xrs-showroom.firebaseapp.com","messagingSenderId":"331289251162","projectNumber":"331289251162","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-05-08T21:12:27.108Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:27.108Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:27.108Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom [none]
+[debug] [2026-05-08T21:12:27.680Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom 200
+[debug] [2026-05-08T21:12:27.680Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom {"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}
+[info] ▲ Next.js 16.2.3 (Turbopack)
+
+[info] - Environments: .env.local
+
+
+[info] ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+[info]   Creating an optimized production build ...
+
+[info] ✓ Compiled successfully in 1798ms
+
+[info]   Running TypeScript ...
+
+[info]   Finished TypeScript in 48ms ...
+
+[info]   Collecting page data using 7 workers ...
+
+[info]   Generating static pages using 7 workers (0/6) ...
+
+[info]   Generating static pages using 7 workers (1/6) 
+
+[info]   Generating static pages using 7 workers (2/6) 
+
+[info]   Generating static pages using 7 workers (4/6) 
+
+[info] ✓ Generating static pages using 7 workers (6/6) in 114ms
+
+[info]   Finalizing page optimization ...
+
+[info] 
+
+[info] Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/auth
+├ ƒ /api/map2tex
+├ ○ /login
+├ ƒ /scenes/[id]
+└ ƒ /view/[id]
+
+
+ƒ Proxy (Middleware)
+
+[info] 
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • middleware
+[info]  • non-static component /api/auth/route
+[info]  • non-static component /api/map2tex/route
+[info]  • non-static component /scenes/[id]/page
+[info]  • non-static component /view/[id]/page
+[info] 
+[debug] [2026-05-08T21:12:31.832Z] skipping / due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T21:12:31.832Z] skipping /_global-error due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T21:12:31.832Z] skipping /_not-found due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T21:12:31.832Z] skipping /login due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T21:12:31.832Z] skipping /404 due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T21:12:31.832Z] skipping /500 due to it matching an unsupported rewrite/redirect/header or middlware
+[debug] [2026-05-08T21:12:32.835Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:32.835Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:12:32.835Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom [none]
+[debug] [2026-05-08T21:12:34.749Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom 200
+[debug] [2026-05-08T21:12:34.750Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom {"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}
+[debug] [2026-05-08T21:13:06.921Z] [web frameworks] effective firebase.json:  {
+  "hosting": [
+    {
+      "source": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "frameworksBackend": {
+        "region": "us-central1"
+      },
+      "headers": [
+        {
+          "source": "**/*.glb",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400, immutable"
+            }
+          ]
+        },
+        {
+          "source": "**/*.sog",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400, immutable"
+            }
+          ]
+        },
+        {
+          "source": "**/*.ktx2",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=2592000, immutable"
+            }
+          ]
+        },
+        {
+          "source": "**/*.hdr",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
+        },
+        {
+          "source": "**/*.wasm",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=2592000, immutable"
+            }
+          ]
+        },
+        {
+          "source": "/_global-error",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/_global-error/layout,_N_T_/_global-error/page,_N_T_/_global-error"
+            }
+          ]
+        },
+        {
+          "source": "/_not-found",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/_not-found/layout,_N_T_/_not-found/page,_N_T_/_not-found"
+            }
+          ]
+        },
+        {
+          "source": "/login",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/login/layout,_N_T_/login/page,_N_T_/login"
+            }
+          ]
+        },
+        {
+          "source": "**/*.[jt]s",
+          "headers": [
+            {
+              "key": "Set-Cookie",
+              "value": "__FIREBASE_DEFAULTS__=eyJjb25maWciOnsicHJvamVjdElkIjoieHJzLXNob3dyb29tIiwiYXBwSWQiOiIxOjMzMTI4OTI1MTE2Mjp3ZWI6NzQ2MGNjN2UzNWJiNGZhOTI2Yjc2MyIsImRhdGFiYXNlVVJMIjoiaHR0cHM6Ly94cnMtc2hvd3Jvb20tZGVmYXVsdC1ydGRiLmZpcmViYXNlaW8uY29tIiwic3RvcmFnZUJ1Y2tldCI6Inhycy1zaG93cm9vbS5maXJlYmFzZXN0b3JhZ2UuYXBwIiwiYXBpS2V5IjoiQUl6YVN5QVdNQ01mc2RXTUx4bXE1LUJUV1IwcS1oYVFPNjVseEg4IiwiYXV0aERvbWFpbiI6Inhycy1zaG93cm9vbS5maXJlYmFzZWFwcC5jb20iLCJtZXNzYWdpbmdTZW5kZXJJZCI6IjMzMTI4OTI1MTE2MiIsInByb2plY3ROdW1iZXIiOiIzMzEyODkyNTExNjIiLCJ2ZXJzaW9uIjoiMiJ9LCJfYXV0aFRva2VuU3luY1VSTCI6Ii9fX3Nlc3Npb24ifQ; SameSite=Strict; Expires=2028-04-02T07:53:06.921Z; Path=/;"
+            }
+          ]
+        }
+      ],
+      "site": "xrs-showroom",
+      "rewrites": [
+        {
+          "source": "**",
+          "function": {
+            "functionId": "ssrxrsshowroom",
+            "region": "us-central1",
+            "pinTag": true
+          }
+        }
+      ],
+      "redirects": [],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "public": ".firebase/xrs-showroom/hosting",
+      "webFramework": "next_ssr"
+    }
+  ],
+  "functions": [
+    {
+      "source": ".firebase/xrs-showroom/functions",
+      "codebase": "firebase-frameworks-xrs-showroom"
+    }
+  ]
+}
+[debug] [2026-05-08T21:13:06.921Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-08T21:13:06.922Z] > authorizing via signed-in user (martin@novaworks.com.ar)
+[debug] [2026-05-08T21:13:06.922Z] [iam] checking project xrs-showroom for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-05-08T21:13:06.922Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:06.922Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:06.922Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions [none]
+[debug] [2026-05-08T21:13:06.922Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions  x-goog-user-project=xrs-showroom
+[debug] [2026-05-08T21:13:06.922Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-05-08T21:13:08.472Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions 200
+[debug] [2026-05-08T21:13:08.472Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-05-08T21:13:08.473Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:08.473Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:08.473Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/xrs-showroom/locations/-/functions [none]
+[debug] [2026-05-08T21:13:09.665Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/xrs-showroom/locations/-/functions 200
+[debug] [2026-05-08T21:13:09.665Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/xrs-showroom/locations/-/functions {}
+[debug] [2026-05-08T21:13:09.665Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:09.665Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:09.666Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2026-05-08T21:13:11.111Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/-/functions 200
+[debug] [2026-05-08T21:13:11.111Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/-/functions {"functions":[{"name":"projects/xrs-showroom/locations/us-central1/functions/ssrxrsshowroom","buildConfig":{"build":"projects/331289251162/locations/us-central1/builds/d3b3b131-e885-42e7-8b46-ab6a050005be","runtime":"nodejs20","entryPoint":"ssrxrsshowroom","source":{"storageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/xrs-showroom/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-331289251162-us-central1","object":"ssrxrsshowroom/function-source.zip","generation":"1778273081551801"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/xrs-showroom/serviceAccounts/331289251162-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"xrs-showroom.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"xrs-showroom\",\"appId\":\"1:331289251162:web:7460cc7e35bb4fa926b763\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\",\"apiKey\":\"AIzaSyAWMCMfsdWMLxmq5-BTWR0q-haQO65lxH8\",\"authDomain\":\"xrs-showroom.firebaseapp.com\",\"messagingSenderId\":\"331289251162\",\"projectNumber\":\"331289251162\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"xrs-showroom\",\"databaseURL\":\"https://xrs-showroom-default-rtdb.firebaseio.com\",\"storageBucket\":\"xrs-showroom.firebasestorage.app\"}","GCLOUD_PROJECT":"xrs-showroom","EVENTARC_CLOUD_EVENT_SOURCE":"projects/xrs-showroom/locations/us-central1/services/ssrxrsshowroom","FUNCTION_TARGET":"ssrxrsshowroom","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://ssrxrsshowroom-qfbtl5wama-uc.a.run.app","serviceAccountEmail":"331289251162-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"ssrxrsshowroom-00063-neg","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-05-08T20:48:25.834862229Z","labels":{"firebase-functions-hash":"76a82d502b4c8ce09dfe1348b620f281088f3d92","deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-xrs-showroom"},"environment":"GEN_2","url":"https://us-central1-xrs-showroom.cloudfunctions.net/ssrxrsshowroom","createTime":"2026-04-14T15:58:37.026083343Z","satisfiesPzi":true}]}
+[info] i  hosting: The following function(s) are pinned to site xrs-showroom and will be deployed as well: ssrxrsshowroom 
+[info] 
+[info] === Deploying to 'xrs-showroom'...
+[info] 
+[info] i  deploying functions, hosting 
+[debug] [2026-05-08T21:13:11.117Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:11.117Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:11.118Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom [none]
+[debug] [2026-05-08T21:13:11.592Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom 200
+[debug] [2026-05-08T21:13:11.592Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom {"projectNumber":"331289251162","projectId":"xrs-showroom","lifecycleState":"ACTIVE","name":"xrs-showroom","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-04-09T18:50:22.155Z","parent":{"type":"organization","id":"386854486764"}}
+[info] i  functions: preparing codebase firebase-frameworks-xrs-showroom for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-05-08T21:13:11.595Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:11.595Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:11.595Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom/adminSdkConfig [none]
+[debug] [2026-05-08T21:13:14.898Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom/adminSdkConfig 200
+[debug] [2026-05-08T21:13:14.898Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/xrs-showroom/adminSdkConfig {"projectId":"xrs-showroom","databaseURL":"https://xrs-showroom-default-rtdb.firebaseio.com","storageBucket":"xrs-showroom.firebasestorage.app"}
+[debug] [2026-05-08T21:13:14.898Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:14.898Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:14.899Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/xrs-showroom/configs [none]
+[debug] [2026-05-08T21:13:16.476Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/xrs-showroom/configs 200
+[debug] [2026-05-08T21:13:16.476Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/xrs-showroom/configs {}
+[debug] [2026-05-08T21:13:16.478Z] Validating nodejs source
+[warn] ⚠  functions: Runtime Node.js 20 was deprecated on 2026-04-30 and will be decommissioned on 2026-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy 
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-05-08T21:13:17.289Z] > [functions] package.json contents: {
+  "name": "xrs-showroom",
+  "version": "0.10.0",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@sparkjsdev/spark": "^2.0.0",
+    "firebase": "^12.11.0",
+    "leaflet": "^1.9.4",
+    "next": "16.2.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "three": "^0.180.0",
+    "firebase-frameworks": "^0.11.0",
+    "firebase-functions": "^6.0.1",
+    "firebase-admin": "^11.11.1"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "main": "server.js"
+}
+[debug] [2026-05-08T21:13:17.289Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase firebase-frameworks-xrs-showroom to determine what to deploy 
+[debug] [2026-05-08T21:13:17.290Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-05-08T21:13:17.295Z] Found firebase-functions binary at '/Users/martin/Documents/Novaworks/xrs-showroom/.firebase/xrs-showroom/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8120
+
+[debug] [2026-05-08T21:13:17.507Z] Got response from /__/functions.yaml {"endpoints":{"ssrxrsshowroom":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"ssrxrsshowroom"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2026-05-08T21:13:21.527Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-08T21:13:21.527Z] > authorizing via signed-in user (martin@novaworks.com.ar)
+[debug] [2026-05-08T21:13:21.527Z] [iam] checking project xrs-showroom for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2026-05-08T21:13:21.527Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:21.527Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:21.527Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions [none]
+[debug] [2026-05-08T21:13:21.527Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions  x-goog-user-project=xrs-showroom
+[debug] [2026-05-08T21:13:21.527Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-05-08T21:13:22.863Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions 200
+[debug] [2026-05-08T21:13:22.863Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-05-08T21:13:22.863Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:22.863Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:22.864Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/xrs-showroom/instances pageSize=100&pageToken=
+[debug] [2026-05-08T21:13:25.438Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/xrs-showroom/instances 200
+[debug] [2026-05-08T21:13:25.438Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/xrs-showroom/instances {}
+[info] i  functions: Loaded environment variables from .env. 
+[info] i  functions: preparing .firebase/xrs-showroom/functions directory for uploading... 
+[info] i  functions: packaged /Users/martin/Documents/Novaworks/xrs-showroom/.firebase/xrs-showroom/functions (294.16 MB) for uploading 
+[info] i  functions: ensuring required API run.googleapis.com is enabled... 
+[info] i  functions: ensuring required API eventarc.googleapis.com is enabled... 
+[info] i  functions: ensuring required API pubsub.googleapis.com is enabled... 
+[info] i  functions: ensuring required API storage.googleapis.com is enabled... 
+[info] i  functions: generating the service identity for pubsub.googleapis.com... 
+[debug] [2026-05-08T21:13:34.308Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:34.308Z] Checked if tokens are valid: true, expires at: 1778276674462
+[info] i  functions: generating the service identity for eventarc.googleapis.com... 
+[debug] [2026-05-08T21:13:34.308Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:34.308Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:34.308Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-05-08T21:13:34.309Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity  x-goog-user-project=331289251162
+[debug] [2026-05-08T21:13:34.309Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity {}
+[debug] [2026-05-08T21:13:34.309Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-05-08T21:13:34.309Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity  x-goog-user-project=331289251162
+[debug] [2026-05-08T21:13:34.309Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity {}
+[debug] [2026-05-08T21:13:35.862Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity 200
+[debug] [2026-05-08T21:13:35.863Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/eventarc.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-331289251162@gcp-sa-eventarc.iam.gserviceaccount.com","uniqueId":"117385982948547381802"}}
+[debug] [2026-05-08T21:13:35.863Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity 200
+[debug] [2026-05-08T21:13:35.863Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/331289251162/services/pubsub.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-331289251162@gcp-sa-pubsub.iam.gserviceaccount.com","uniqueId":"110983286155319776772"}}
+[debug] [2026-05-08T21:13:35.866Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:35.866Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:35.866Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom [none]
+[debug] [2026-05-08T21:13:36.907Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom 200
+[debug] [2026-05-08T21:13:36.907Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/xrs-showroom {"projectNumber":"331289251162","projectId":"xrs-showroom","lifecycleState":"ACTIVE","name":"xrs-showroom","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-04-09T18:50:22.155Z","parent":{"type":"organization","id":"386854486764"}}
+[debug] [2026-05-08T21:13:36.908Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:36.908Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:36.908Z] >>> [apiv2][query] GET https://compute.googleapis.com/compute/v1/projects/331289251162 [none]
+[debug] [2026-05-08T21:13:41.380Z] <<< [apiv2][status] GET https://compute.googleapis.com/compute/v1/projects/331289251162 403
+[debug] [2026-05-08T21:13:41.380Z] <<< [apiv2][body] GET https://compute.googleapis.com/compute/v1/projects/331289251162 {"error":{"code":403,"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"consumer":"projects/331289251162","containerInfo":"331289251162","serviceTitle":"Compute Engine API","activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162","service":"compute.googleapis.com"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162"}]}]}}
+[debug] [2026-05-08T21:13:41.382Z] unable to look up default compute service account. Falling back to 331289251162-compute@developer.gserviceaccount.com. Error: {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":403,"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"consumer":"projects/331289251162","containerInfo":"331289251162","serviceTitle":"Compute Engine API","activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162","service":"compute.googleapis.com"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162"}]}]}},"response":{"statusCode":403}},"exit":1,"message":"Request to https://compute.googleapis.com/compute/v1/projects/331289251162 had HTTP Error: 403, Compute Engine API has not been used in project 331289251162 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=331289251162 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":403}
+[debug] [2026-05-08T21:13:41.383Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:41.383Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:41.383Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom [none]
+[debug] [2026-05-08T21:13:43.260Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom 200
+[debug] [2026-05-08T21:13:43.260Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/xrs-showroom/sites/xrs-showroom {"name":"projects/xrs-showroom/sites/xrs-showroom","defaultUrl":"https://xrs-showroom.web.app","appId":"1:331289251162:web:7460cc7e35bb4fa926b763","type":"DEFAULT_SITE"}
+[debug] [2026-05-08T21:13:43.265Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:43.265Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:43.265Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions [none]
+[debug] [2026-05-08T21:13:43.265Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase","firebase-web-framework":"next_ssr"}}
+[debug] [2026-05-08T21:13:44.354Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions 200
+[debug] [2026-05-08T21:13:44.355Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/xrs-showroom/versions {"name":"projects/331289251162/sites/xrs-showroom/versions/0e3e8ac9e98d7172","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase","firebase-web-framework":"next_ssr"}}
+[debug] [2026-05-08T21:13:44.356Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:44.356Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:44.356Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/xrs-showroom/billingInfo [none]
+[debug] [2026-05-08T21:13:45.902Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/xrs-showroom/billingInfo 200
+[debug] [2026-05-08T21:13:45.903Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/xrs-showroom/billingInfo {"name":"projects/xrs-showroom/billingInfo","projectId":"xrs-showroom","billingAccountName":"billingAccounts/012C97-D00103-879487","billingEnabled":true}
+[debug] [2026-05-08T21:13:45.905Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:45.905Z] Checked if tokens are valid: true, expires at: 1778276674462
+[debug] [2026-05-08T21:13:45.905Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions:generateUploadUrl [none]
+[debug] [2026-05-08T21:13:47.243Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions:generateUploadUrl 200
+[debug] [2026-05-08T21:13:47.243Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/xrs-showroom/locations/us-central1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/ffb28ad5-bcea-4286-bf46-60b09a81d9b8.zip?GoogleAccessId=service-331289251162@gcf-admin-robot.iam.gserviceaccount.com&Expires=1778276627&Signature=Wwtu3JJVzPhIQIratwvu1nlcGh0d2s903UR5a3J9IzN5rCYM5IpnxpUfqBdrGtzOEPHj%2FrQBWN5tiGyaFqGtd1pvZDH20N1hyAUkA8%2Bo9JKw3Ih3MGOjy2QbmtYo29wj4MDRN3IgxBxMZzCksC5XH7hsqbOIpa%2Ffd3On8CCIsozSr15QFJ6A%2BUT%2FP2YoW%2BpEqPWsPhnK3U5qRxnRiE%2BMARXrtESSvS8GjCCyU57p90oJ2fEPqqgmusM%2B9EiIo5QJ92kLIBaM25EeMaLA6GextQ26rJgFR1szOcbjbQ9IlmhiSzZiaxhjy%2BkHgf7PjSdFQJWitOy7yPILQqB2xX%2B8%2Fw%3D%3D","storageSource":{"bucket":"gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com","object":"ffb28ad5-bcea-4286-bf46-60b09a81d9b8.zip"}}
+[debug] [2026-05-08T21:13:47.245Z] >>> [apiv2][query] PUT https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/ffb28ad5-bcea-4286-bf46-60b09a81d9b8.zip GoogleAccessId=service-331289251162%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1778276627&Signature=Wwtu3JJVzPhIQIratwvu1nlcGh0d2s903UR5a3J9IzN5rCYM5IpnxpUfqBdrGtzOEPHj%2FrQBWN5tiGyaFqGtd1pvZDH20N1hyAUkA8%2Bo9JKw3Ih3MGOjy2QbmtYo29wj4MDRN3IgxBxMZzCksC5XH7hsqbOIpa%2Ffd3On8CCIsozSr15QFJ6A%2BUT%2FP2YoW%2BpEqPWsPhnK3U5qRxnRiE%2BMARXrtESSvS8GjCCyU57p90oJ2fEPqqgmusM%2B9EiIo5QJ92kLIBaM25EeMaLA6GextQ26rJgFR1szOcbjbQ9IlmhiSzZiaxhjy%2BkHgf7PjSdFQJWitOy7yPILQqB2xX%2B8%2Fw%3D%3D
+[debug] [2026-05-08T21:13:47.245Z] >>> [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-331289251162.us-central1.cloudfunctions.appspot.com/ffb28ad5-bcea-4286-bf46-60b09a81d9b8.zip [stream]

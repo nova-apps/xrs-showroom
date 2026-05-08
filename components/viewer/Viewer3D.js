@@ -201,12 +201,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       if (!s.tintMesh || !s.THREE) return;
       const enabled = tint?.enabled !== false;
       const color = tint?.color || '#000000';
-      const opacity = tint?.opacity ?? 0;
-      s.tintMesh.visible = enabled && opacity > 0;
+      // When disabled, force both opacities to 0 so neither the initial fade
+      // nor the post-SOG animation can resurrect the overlay.
+      const opacity = enabled ? (tint?.opacity ?? 0) : 0;
+      const targetOpacity = enabled ? (tint?.targetOpacity ?? 0) : 0;
       s.tintMesh.material.uniforms.uTintColor.value.set(color);
       s.tintMesh.material.uniforms.uTintOpacity.value = opacity;
-      // Store the target opacity for post-SOG animation fade
-      s.tintTargetOpacity = tint?.targetOpacity ?? 0;
+      s.tintMesh.visible = opacity > 0;
+      s.tintTargetOpacity = targetOpacity;
     },
     /**
      * Smoothly fade the tint overlay opacity to the configured targetOpacity over `duration` seconds.
