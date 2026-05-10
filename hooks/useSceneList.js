@@ -13,16 +13,26 @@ export function useSceneList() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let unsubscribe;
     try {
-      const unsubscribe = subscribeSceneList((list) => {
-        setScenes(list);
-        setLoading(false);
-      });
-      return () => unsubscribe();
+      unsubscribe = subscribeSceneList(
+        (list) => {
+          setScenes(list);
+          setError(null);
+          setLoading(false);
+        },
+        (err) => {
+          setError(err);
+          setLoading(false);
+        }
+      );
     } catch (err) {
       setError(err);
       setLoading(false);
     }
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   return { scenes, loading, error };

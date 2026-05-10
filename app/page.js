@@ -9,7 +9,7 @@ import versionData from '../version.json';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function HomePage() {
-  const { scenes, loading } = useSceneList();
+  const { scenes, loading, error } = useSceneList();
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -93,7 +93,17 @@ export default function HomePage() {
         </div>
 
         <div className="panel-body">
-          {loading ? (
+          {error ? (
+            <div className="empty-state">
+              <div className="empty-icon">⚠️</div>
+              <p style={{ color: '#ff6b6b' }}>
+                Error al cargar escenas:<br />
+                <code style={{ fontSize: '0.85em', wordBreak: 'break-word' }}>
+                  {error.code || error.name || 'Error'}: {error.message}
+                </code>
+              </p>
+            </div>
+          ) : loading ? (
             <div className="empty-state">
               <p>Cargando escenas…</p>
             </div>
