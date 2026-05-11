@@ -249,6 +249,12 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     }
   }, [viewerReady, scene?.tint]);
 
+  // ── Apply environment desaturation settings ──
+  useEffect(() => {
+    if (!viewerReady || !viewerRef.current) return;
+    viewerRef.current.setSaturation(scene?.saturation);
+  }, [viewerReady, scene?.saturation]);
+
   return {
     loadMetrics,
     resetLoadedAsset,

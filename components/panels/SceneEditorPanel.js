@@ -38,6 +38,8 @@ export default function SceneEditorPanel({
   onSplatSettingsChange,
   onTintChange,
   onApplyTint,
+  onSaturationChange,
+  onApplySaturation,
 }) {
   // Pre-upload optimization state
   const [preUpload, setPreUpload] = useState(null); // { file, stats }
@@ -323,6 +325,31 @@ export default function SceneEditorPanel({
       });
     },
     [onTintChange, onApplyTint]
+  );
+
+  // Local saturation state — desaturates skybox, floor and splat; preserves the GLB.
+  const saturation = scene?.saturation;
+  const [localSaturation, setLocalSaturation] = useState({ enabled: false, value: 0.3 });
+
+  useEffect(() => {
+    if (saturation) {
+      setLocalSaturation({
+        enabled: saturation.enabled === true,
+        value: saturation.value ?? 0.3,
+      });
+    }
+  }, [saturation]);
+
+  const updateSaturationField = useCallback(
+    (field, value) => {
+      setLocalSaturation((prev) => {
+        const next = { ...prev, [field]: value };
+        onSaturationChange?.(next);
+        onApplySaturation?.(next);
+        return next;
+      });
+    },
+    [onSaturationChange, onApplySaturation]
   );
 
   if (!scene) return null;
@@ -862,6 +889,32 @@ export default function SceneEditorPanel({
                 help="Opacidad objetivo del tint después de la animación de entrada del SOG"
               />
             </>
+          )}
+        </div>
+
+        {/* ─── Saturación del entorno ─── */}
+        <div className="asset-transform-section">
+          <div className="asset-transform-title">Saturación del entorno</div>
+          <label className="hdri-checkbox-row">
+            <input
+              type="checkbox"
+              checked={localSaturation.enabled}
+              onChange={(e) => updateSaturationField('enabled', e.target.checked)}
+            />
+            <span>Desaturar entorno</span>
+            <HelpTooltip text="Baja la saturación del skybox, floor y splat. La maqueta 3D queda con su color original." />
+          </label>
+          {localSaturation.enabled && (
+            <TransformRow
+              label="Sat"
+              labelClass="label-s"
+              value={localSaturation.value}
+              min={0}
+              max={1}
+              step={0.01}
+              onChange={(v) => updateSaturationField('value', v)}
+              help="0 = blanco y negro, 1 = color original"
+            />
           )}
         </div>
       </AssetAccordion>

@@ -57,6 +57,7 @@ export default function ScenePage() {
     updateAmenities,
     updateLighting,
     updateTint,
+    updateSaturation,
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
@@ -217,6 +218,17 @@ export default function ScenePage() {
     },
     []
   );
+
+  const handleSaturationChange = useCallback(
+    (saturation) => {
+      updateSaturation(saturation);
+    },
+    [updateSaturation]
+  );
+
+  const handleApplySaturation = useCallback((saturation) => {
+    viewerRef.current?.setSaturation(saturation);
+  }, []);
 
   // Apply orbit immediately to controls (no delay)
   const handleApplyOrbit = useCallback(
@@ -527,6 +539,8 @@ export default function ScenePage() {
               onSplatSettingsChange={handleSplatSettingsChange}
               onTintChange={handleTintChange}
               onApplyTint={handleApplyTint}
+              onSaturationChange={handleSaturationChange}
+              onApplySaturation={handleApplySaturation}
               collapsed={activePanel !== 'assets'}
               onToggle={() => toggle('assets')}
               materialsContent={

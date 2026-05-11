@@ -65,6 +65,13 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       uMaskRadius: { value: 50.0 },
       uMaskFalloff: { value: 10.0 },
     },
+    // Environment desaturation (skybox, floor, splat). Excludes GLB.
+    // uSaturation: 1.0 = original color, 0.0 = grayscale.
+    saturationUniforms: {
+      uSaturation: { value: 1.0 },
+    },
+    // Per-splat saturation uniform (Spark dyno) — populated when splat loads.
+    splatSaturationU: null,
     // Ambient light reference
     ambientLight: null,
     // Store material overrides so they can be applied after GLB loads
@@ -209,6 +216,14 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       s.tintMesh.material.uniforms.uTintOpacity.value = opacity;
       s.tintMesh.visible = opacity > 0;
       s.tintTargetOpacity = targetOpacity;
+    },
+    setSaturation: (saturation) => {
+      const s = stateRef.current;
+      const enabled = saturation?.enabled === true;
+      const raw = typeof saturation?.value === 'number' ? saturation.value : 1;
+      const value = enabled ? Math.max(0, Math.min(1, raw)) : 1;
+      s.saturationUniforms.uSaturation.value = value;
+      if (s.splatSaturationU) s.splatSaturationU.value = value;
     },
     /**
      * Smoothly fade the tint overlay opacity to the configured targetOpacity over `duration` seconds.
@@ -762,6 +777,38 @@ if (uMaskEnabled > 0.5) {
     material.needsUpdate = true;
   }, []);
 
+  /* ─── Saturation Shader Injection ───
+   * Mixes the final fragment color toward its luma using a shared uniform.
+   * Chains over any existing onBeforeCompile so it composes with the mask patch.
+   */
+  const _patchMaterialWithSaturation = useCallback((s, material) => {
+    if (!material || material.userData._saturationPatched) return;
+    const uniforms = s.saturationUniforms;
+    const prevOnBeforeCompile = material.onBeforeCompile;
+
+    material.onBeforeCompile = (shader) => {
+      if (typeof prevOnBeforeCompile === 'function') {
+        prevOnBeforeCompile.call(material, shader);
+      }
+      shader.uniforms.uSaturation = uniforms.uSaturation;
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        `#include <common>
+uniform float uSaturation;`
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <dithering_fragment>',
+        `#include <dithering_fragment>
+{
+  float _luma = dot(gl_FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+  gl_FragColor.rgb = mix(vec3(_luma), gl_FragColor.rgb, uSaturation);
+}`
+      );
+    };
+    material.userData._saturationPatched = true;
+    material.needsUpdate = true;
+  }, []);
+
   /* ─── Transform Application ─── */
   const applyTransformToObject = useCallback(async (type, transforms) => {
     const s = stateRef.current;
@@ -1305,7 +1352,7 @@ if (uMaskEnabled > 0.5) {
     try {
       const spark = await import('@sparkjsdev/spark');
       const { SparkRenderer, SplatMesh } = spark;
-      const { DynoFloat, dynoBlock, splitGsplat, combineGsplat, mul, mix, min, vec3, split: splitVec, Gsplat, length: dynoLength, smoothstep, sub, dynoConst } = spark.dyno;
+      const { DynoFloat, dynoBlock, splitGsplat, combineGsplat, mul, mix, min, vec3, split: splitVec, Gsplat, length: dynoLength, smoothstep, sub, dynoConst, dot } = spark.dyno;
 
       // Ensure SparkRenderer exists in the scene (required by Spark 2.0)
       if (!s.sparkRenderer) {
@@ -1351,13 +1398,16 @@ if (uMaskEnabled > 0.5) {
       const wantClip = cfg.radialClip === true;
       const clipRadiusU = new DynoFloat({ value: wantClip ? 0 : 99999 });
       const clipEdgeU = new DynoFloat({ value: 0.5 });
+      // Saturation — mirrored from shared THREE uniform so editor edits stay in sync.
+      const saturationU = new DynoFloat({ value: s.saturationUniforms.uSaturation.value });
+      const lumaCoefs = dynoConst('vec3', [0.2126, 0.7152, 0.0722]);
 
-      // Dyno modifier: point→splat + radial clip
+      // Dyno modifier: point→splat + radial clip + saturation
       const splatModifier = dynoBlock(
         { gsplat: Gsplat },
         { gsplat: Gsplat },
         ({ gsplat }) => {
-          const { scales, center, opacity } = splitGsplat(gsplat).outputs;
+          const { scales, center, opacity, rgb } = splitGsplat(gsplat).outputs;
 
           // ── Point → Splat (size + shape) ──
           const { x: sx, y: sy, z: sz } = splitVec(scales).outputs;
@@ -1371,7 +1421,11 @@ if (uMaskEnabled > 0.5) {
           const clipFactor = sub(dynoConst('float', 1), smoothstep(fadeStart, clipRadiusU, dist));
           const clippedOpacity = mul(opacity, clipFactor);
 
-          return { gsplat: combineGsplat({ gsplat, scales: sized, opacity: clippedOpacity }) };
+          // ── Saturation (mix toward luma) ──
+          const luma = dot(rgb, lumaCoefs);
+          const desatRgb = mix(vec3(luma), rgb, saturationU);
+
+          return { gsplat: combineGsplat({ gsplat, scales: sized, opacity: clippedOpacity, rgb: desatRgb }) };
         }
       );
 
@@ -1443,6 +1497,7 @@ if (uMaskEnabled > 0.5) {
       s.splatShapeU = splatShapeU;
       s.clipRadiusU = clipRadiusU;
       s.clipEdgeU = clipEdgeU;
+      s.splatSaturationU = saturationU;
 
       // Hide immediately before first render if any animation
       if (wantAnim || wantClip) {
@@ -1658,6 +1713,7 @@ if (uMaskEnabled > 0.5) {
       if (s.splatMesh.dispose) s.splatMesh.dispose();
       s.splatMesh = null;
     }
+    s.splatSaturationU = null;
   }, []);
 
   const removeSkyboxTex = useCallback(() => {
@@ -2104,6 +2160,7 @@ if (uMaskEnabled > 0.5) {
       skybox.renderOrder = -1;
       scene.add(skybox);
       s.skyboxMesh = skybox;
+      _patchMaterialWithSaturation(s, skyMat);
 
       // ─── Default Floor Plane ───
       const floorGeo = new THREE.PlaneGeometry(800, 800);
@@ -2134,8 +2191,9 @@ if (uMaskEnabled > 0.5) {
       scene.add(maskHelper);
       s.maskHelper = maskHelper;
 
-      // Patch floor material with mask shader
+      // Patch floor material with mask shader (chains saturation on top)
       _patchMaterialWithMask(s, floorMat);
+      _patchMaterialWithSaturation(s, floorMat);
 
       // ─── Tint Overlay Quad (depth-masked, excludes GLB) ───
       // The GLB writes to the depth buffer; skybox, floor and SOG don’t.
