@@ -22,7 +22,7 @@ import { useState, useCallback, useEffect, useImperativeHandle, useRef, forwardR
 const SNAP = { COLLAPSED: 'collapsed', COMPACT: 'compact', TALL: 'tall' };
 
 const LeftPanelStack = forwardRef(function LeftPanelStack(
-  { children, title, logoUrl, tabs = [], show = true },
+  { children, title, logoUrl, tabs = [], show = true, onSelectTab },
   ref,
 ) {
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || null);
@@ -46,11 +46,13 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
         setActiveTab(tabId);
         setSnapState(SNAP.COMPACT);
         setMobileTabChosen(true);
+        onSelectTab?.(tabId, { isMobile: true });
       }
     } else {
       setActiveTab(tabId);
+      onSelectTab?.(tabId, { isMobile: false });
     }
-  }, [isMobile, snapState, activeTab]);
+  }, [isMobile, snapState, activeTab, onSelectTab]);
 
   // Tapping the drag handle cycles: collapsed → compact → tall → collapsed
   const handleToggle = useCallback(() => {

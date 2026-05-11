@@ -405,6 +405,12 @@ export default function ScenePage() {
     }
   }, []);
 
+  const handleSelectTab = useCallback((tabId, { isMobile }) => {
+    if (!isMobile || tabId !== 'unidades') return;
+    const initial = scene?.orbit?.mobile?.initialCamera || scene?.orbit?.initialCamera;
+    if (initial) viewerRef.current?.setInitialCameraPosition(initial);
+  }, [scene]);
+
   // While Firebase data is loading, render the viewer structure anyway.
   // Scene content will populate once `scene` arrives.
 
@@ -459,6 +465,7 @@ export default function ScenePage() {
       {scene && <LeftPanelStack
         title={scene.name}
         logoUrl={scene?.panelLogoUrl}
+        onSelectTab={handleSelectTab}
         tabs={[
           { id: 'unidades', label: 'Unidades' },
           { id: 'amenities', label: 'Amenities' },

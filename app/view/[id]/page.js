@@ -50,6 +50,12 @@ export default function ViewPage() {
     setViewerReady(true);
   }, []);
 
+  const handleSelectTab = useCallback((tabId, { isMobile }) => {
+    if (!isMobile || tabId !== 'unidades') return;
+    const initial = scene?.orbit?.mobile?.initialCamera || scene?.orbit?.initialCamera;
+    if (initial) viewerRef.current?.setInitialCameraPosition(initial);
+  }, [scene]);
+
   const handleSelectUnit = useCallback((unit) => {
     setModalUnit((prev) => prev?.id === unit?.id ? null : unit);
     if (viewerRef.current && unit?.id) {
@@ -90,6 +96,7 @@ export default function ViewPage() {
           ref={panelRef}
           title={scene.name}
           logoUrl={scene?.panelLogoUrl}
+          onSelectTab={handleSelectTab}
           tabs={[
             { id: 'unidades', label: 'Unidades' },
             { id: 'amenities', label: 'Amenities' },
