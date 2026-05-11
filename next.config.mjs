@@ -9,6 +9,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
       { protocol: 'https', hostname: 'storage.googleapis.com' },
     ],
+    qualities: [75, 90],
   },
 
   // Turbopack config (Next.js 16 default bundler)

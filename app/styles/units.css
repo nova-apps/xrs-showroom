@@ -638,6 +638,7 @@
 
 /* Thumbnail */
 .unidad-thumb {
+  position: relative;
   width: 60px;
   height: 60px;
   border-radius: var(--radius-sm);
