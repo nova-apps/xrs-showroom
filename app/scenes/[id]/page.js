@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
 import { useSceneLoader } from '@/hooks/useSceneLoader';
 import { useHistory } from '@/hooks/useHistory';
+import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { updateScene } from '@/lib/scenes';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
@@ -62,6 +63,8 @@ export default function ScenePage() {
     uploadAsset,
     removeAsset,
   } = useScene(sceneId);
+
+  useDocumentMeta(scene?.name, scene?.panelLogoUrl);
 
   // ─── Shared scene loader (assets + transforms + orbit + lighting + materials) ───
   const {

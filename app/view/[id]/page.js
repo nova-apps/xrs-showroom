@@ -15,6 +15,7 @@ import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
 import { useSceneLoader } from '@/hooks/useSceneLoader';
+import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
@@ -34,6 +35,8 @@ export default function ViewPage() {
   const [modalAmenity, setModalAmenity] = useState(null);
 
   const { scene, loading, error } = useScene(sceneId);
+
+  useDocumentMeta(scene?.name, scene?.panelLogoUrl);
 
   useSceneLoader({
     viewerRef,
