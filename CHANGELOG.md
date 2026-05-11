@@ -6,6 +6,27 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.11.0] — 2026-05-11
+
+### ✨ Features
+- desaturate environment (skybox, floor, splat) while preserving GLB
+- reset camera to mobile initial position on Unidades tab tap
+- dynamic page title and favicon from scene panel logo
+
+### 🐛 Fixes
+- surface Firebase listener errors instead of hanging on loading state
+
+### ⚡ Performance
+- optimize amenity thumbnails with next/image
+
+### 📦 Chores
+- v0.10.0
+
+### 📝 Other
+- Refactor code structure for improved readability and maintainability
+
+---
+
 ## [0.10.0] — 2026-05-07
 
 ### ✨ Features
