@@ -1257,6 +1257,36 @@
     display: none;
   }
 
+  /* ─── Mobile logo (between drag handle and tabs) ─── */
+  .left-panel-stack .sidebar-header-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px 8px;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
+    max-height: 60px;
+    opacity: 1;
+  }
+
+  /* Hide logo when panel is expanded (tab tapped) */
+  .left-panel-stack.stack-expanded .sidebar-header-mobile {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .left-panel-stack .sidebar-logo-img-mobile {
+    max-width: 120px;
+    max-height: 28px;
+    object-fit: contain;
+    display: block;
+    opacity: 0.9;
+  }
+
   /* ─── Mobile filter toggle row ─── */
   .mobile-filters-toggle-row {
     display: flex;

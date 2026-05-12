@@ -176,6 +176,13 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
         </button>
       )}
 
+      {/* ─── Mobile logo (between handle and tabs, hidden via CSS when expanded) ─── */}
+      {isMobile && logoUrl && (
+        <div className="sidebar-header-mobile">
+          <img src={logoUrl} alt={title || 'Logo'} className="sidebar-logo-img-mobile" />
+        </div>
+      )}
+
       {/* ─── Header with logo (hidden on mobile via CSS) ─── */}
       <div className="sidebar-header sidebar-header-desktop">
         <div className="sidebar-header-top">
