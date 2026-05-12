@@ -641,7 +641,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
         zoom: Math.round(sph.radius * 100) / 100,
       };
     },
-    setInitialCameraPosition: (initialCamera) => {
+    setInitialCameraPosition: (initialCamera, { animate = true } = {}) => {
       const s = stateRef.current;
       const THREE = s.THREE;
       if (!THREE || !s.camera || !s.controls || !initialCamera) return;
@@ -651,12 +651,24 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
       const radius = initialCamera.zoom;
       const sph = new THREE.Spherical(radius, phi, theta);
       sph.makeSafe();
-      s.focusTarget.targetPhi = sph.phi;
-      s.focusTarget.targetTheta = sph.theta;
-      s.focusTarget.targetRadius = sph.radius;
-      s.focusTarget.onComplete = null;
-      s.focusTarget.lerpOverride = 0.08;
-      s.focusTarget.state = 'animating';
+      if (animate) {
+        s.focusTarget.targetPhi = sph.phi;
+        s.focusTarget.targetTheta = sph.theta;
+        s.focusTarget.targetRadius = sph.radius;
+        s.focusTarget.onComplete = null;
+        s.focusTarget.lerpOverride = 0.08;
+        s.focusTarget.state = 'animating';
+      } else {
+        // Snap directly: OrbitControls' `start` event cancels focus animations,
+        // so any early user touch would leave the camera mid-flight.
+        const offset = new THREE.Vector3().setFromSpherical(sph);
+        s.camera.position.copy(s.controls.target).add(offset);
+        s.camera.lookAt(s.controls.target);
+        s.controls.update();
+        // Cancel any in-flight focus animation so it doesn't pull the camera away.
+        s.focusTarget.state = 'idle';
+        s.focusTarget.lerpOverride = null;
+      }
     },
   }));
 

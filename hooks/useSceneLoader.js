@@ -185,9 +185,12 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       const desktopCamera = scene.orbit?.initialCamera;
       const initialCamera = (isMobileDevice && mobileCamera) ? mobileCamera : desktopCamera;
       if (initialCamera) {
-        setTimeout(() => {
-          viewerRef.current?.setInitialCameraPosition(initialCamera);
-        }, 150);
+        // Snap (no animation): fitCamera has already run at this point, so the
+        // configured position takes effect immediately. Animating here is
+        // unreliable — OrbitControls cancels the focus animation on the user's
+        // first touch, leaving the camera mid-flight (often near the auto-fit
+        // distance, much further than configured).
+        viewerRef.current?.setInitialCameraPosition(initialCamera, { animate: false });
       }
 
       // Measure total load time (editor only)
