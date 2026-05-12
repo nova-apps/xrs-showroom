@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.12.0] — 2026-05-12
+
+### ✨ Features
+- publish/discard workflow for scene editor
+
+### 📦 Chores
+- v0.11.0
+
+---
+
 ## [0.11.0] — 2026-05-11
 
 ### ✨ Features

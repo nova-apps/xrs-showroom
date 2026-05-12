@@ -1,11 +1,9 @@
 {
-  "version": "0.11.0",
-  "buildDate": "2026-05-11",
-  "commitHash": "3cf57cd",
+  "version": "0.12.0",
+  "buildDate": "2026-05-12",
+  "commitHash": "be8b675",
   "environment": "production",
   "features": [
-    "desaturate environment (skybox, floor, splat) while preserving GLB",
-    "reset camera to mobile initial position on Unidades tab tap",
-    "dynamic page title and favicon from scene panel logo"
+    "publish/discard workflow for scene editor"
   ]
 }
