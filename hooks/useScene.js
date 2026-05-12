@@ -16,6 +16,8 @@ import {
   updateLighting as dbUpdateLighting,
   updateTint as dbUpdateTint,
   updateSaturation as dbUpdateSaturation,
+  publishScene as dbPublishScene,
+  discardSceneChanges as dbDiscardSceneChanges,
   updateGlbSettings as dbUpdateGlbSettings,
   updateSplatSettings as dbUpdateSplatSettings,
   updateSceneAsset,
@@ -96,6 +98,34 @@ export function useScene(sceneId) {
     },
     [sceneId]
   );
+
+  /**
+   * Publish the current draft as the version /view/ should render.
+   * Waits past the debounce window so any in-flight slider edits land before
+   * the snapshot is taken.
+   */
+  const publish = useCallback(async () => {
+    if (!sceneId) return;
+    const hasPendingDebounce = Object.values(debounceTimers.current).some(Boolean);
+    if (hasPendingDebounce) {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+    await dbPublishScene(sceneId);
+  }, [sceneId]);
+
+  /**
+   * Discard unpublished draft changes — reverts top-level fields to the last
+   * published snapshot. Cancels any in-flight debounced writes so they don't
+   * clobber the revert.
+   */
+  const discardChanges = useCallback(async () => {
+    if (!sceneId) return;
+    Object.keys(debounceTimers.current).forEach((key) => {
+      clearTimeout(debounceTimers.current[key]);
+      delete debounceTimers.current[key];
+    });
+    await dbDiscardSceneChanges(sceneId);
+  }, [sceneId]);
 
   /**
    * Upload an asset file.
@@ -183,6 +213,8 @@ export function useScene(sceneId) {
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
+    publish,
+    discardChanges,
     uploadAsset,
     removeAsset,
   };

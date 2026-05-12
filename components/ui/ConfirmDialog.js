@@ -1,6 +1,13 @@
 'use client';
 
-export default function ConfirmDialog({ title, message, onConfirm, onCancel }) {
+export default function ConfirmDialog({
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  confirmLabel = 'Eliminar',
+  cancelLabel = 'Cancelar',
+}) {
   return (
     <div className="dialog-overlay" onClick={onCancel}>
       <div className="dialog-box animate-fade" onClick={(e) => e.stopPropagation()}>
@@ -8,10 +15,10 @@ export default function ConfirmDialog({ title, message, onConfirm, onCancel }) {
         <p>{message}</p>
         <div className="dialog-actions">
           <button className="btn" onClick={onCancel}>
-            Cancelar
+            {cancelLabel}
           </button>
           <button className="btn btn-danger" onClick={onConfirm}>
-            Eliminar
+            {confirmLabel}
           </button>
         </div>
       </div>

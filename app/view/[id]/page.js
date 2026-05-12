@@ -10,7 +10,7 @@
  *   - Sequential loading on mobile to avoid memory spikes
  */
 
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
@@ -34,7 +34,17 @@ export default function ViewPage() {
   const [modalUnit, setModalUnit] = useState(null);
   const [modalAmenity, setModalAmenity] = useState(null);
 
-  const { scene, loading, error } = useScene(sceneId);
+  const { scene: rawScene, loading, error } = useScene(sceneId);
+
+  // /view/ renders the published snapshot. If the scene was never published,
+  // fall back to the draft so legacy scenes keep working until first publish.
+  const scene = useMemo(() => {
+    if (!rawScene) return null;
+    if (rawScene.published) {
+      return { id: rawScene.id, ...rawScene.published };
+    }
+    return rawScene;
+  }, [rawScene]);
 
   useDocumentMeta(scene?.name, scene?.panelLogoUrl);
 

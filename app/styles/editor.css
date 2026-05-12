@@ -1354,5 +1354,108 @@
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ─── Top-right floating bar (Publish button) ───
+ * Sits just to the left of .right-panel-stack (310px wide @ right:16px)
+ * so it never overlaps the panel's close button.
+ */
+.top-right-bar {
+  position: fixed;
+  top: 16px;
+  right: 338px;
+  z-index: 300;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .top-right-bar {
+    right: 16px;
+  }
+}
+
+.top-right-bar > * {
+  pointer-events: auto;
+}
+
+.publish-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(20, 20, 28, 0.85);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.publish-button:hover:not(:disabled) {
+  background: rgba(30, 30, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.publish-button:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.publish-button-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.publish-button-dirty .publish-button-dot {
+  background: #fbbf24;
+  animation: publishPulse 1.6s ease-in-out infinite;
+}
+
+.publish-button-loading .publish-button-dot {
+  background: #60a5fa;
+  animation: publishPulse 1s ease-in-out infinite;
+}
+
+.publish-button-success {
+  border-color: rgba(74, 222, 128, 0.5);
+}
+
+.discard-button {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 28, 0.7);
+  backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.discard-button:hover:not(:disabled) {
+  background: rgba(40, 25, 30, 0.9);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+}
+
+.discard-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+@keyframes publishPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(0.7); opacity: 0.55; }
+}
+
 
 

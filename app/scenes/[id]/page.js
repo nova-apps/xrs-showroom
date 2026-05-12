@@ -16,6 +16,7 @@ import { updateScene } from '@/lib/scenes';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
 import SceneEditorPanel from '@/components/panels/SceneEditorPanel';
+import PublishButton from '@/components/ui/PublishButton';
 
 import OrbitPanel from '@/components/panels/OrbitPanel';
 import UnidadesPanel from '@/components/panels/UnidadesPanel';
@@ -61,6 +62,8 @@ export default function ScenePage() {
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
+    publish,
+    discardChanges,
     uploadAsset,
     removeAsset,
   } = useScene(sceneId);
@@ -443,6 +446,11 @@ export default function ScenePage() {
     <>
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
+
+      {/* Top-right: Publish / Discard buttons */}
+      <div className="top-right-bar">
+        <PublishButton scene={scene} onPublish={publish} onDiscard={discardChanges} />
+      </div>
 
       {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
       <div className="canvas-blackout" aria-hidden="true" />
