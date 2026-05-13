@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.12.2] — 2026-05-13
+
+### 🐛 Fixes
+- keep unit drawer open while interacting with panorama viewer
+
+### 📦 Chores
+- v0.12.1
+
+---
+
 ## [0.12.1] — 2026-05-13
 
 ### ✨ Features
