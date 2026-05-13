@@ -4,8 +4,9 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import FloatingPanel from './FloatingPanel';
 import UnidadesCargaModal from './UnidadesCargaModal';
 import AmenitiesModal from './AmenitiesModal';
-import { updateScene } from '@/lib/scenes';
+import { updateScene, updateCustomDomain } from '@/lib/scenes';
 import { uploadAsset as storageUpload, deleteAsset as storageDelete } from '@/lib/storage';
+import { normalizeDomain, isValidDomain, isReservedHost } from '@/lib/customDomain';
 
 /**
  * Configuración Panel — manages Unidades and Amenities data entry.
@@ -27,8 +28,11 @@ export default function UnidadesPanel({
   const [panelLogoUrl, setPanelLogoUrl] = useState('');
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoProgress, setLogoProgress] = useState(0);
+  const [customDomain, setCustomDomain] = useState('');
+  const [customDomainStatus, setCustomDomainStatus] = useState({ type: 'idle', message: '' });
   const whatsappTimer = useRef(null);
   const logoInputRef = useRef(null);
+  const customDomainTimer = useRef(null);
 
   const unidadItems = scene?.unidades?.items || [];
   const amenityItems = scene?.amenities?.items || [];
@@ -46,6 +50,43 @@ export default function UnidadesPanel({
       setPanelLogoUrl(scene.panelLogoUrl || '');
     }
   }, [scene?.panelLogoUrl]);
+
+  // Sync custom domain from scene data
+  useEffect(() => {
+    if (scene?.customDomain !== undefined) {
+      setCustomDomain(scene.customDomain || '');
+      setCustomDomainStatus({ type: 'idle', message: '' });
+    }
+  }, [scene?.customDomain]);
+
+  const handleCustomDomainChange = useCallback((rawValue) => {
+    setCustomDomain(rawValue);
+    if (!sceneId) return;
+    if (customDomainTimer.current) clearTimeout(customDomainTimer.current);
+    customDomainTimer.current = setTimeout(async () => {
+      const normalized = normalizeDomain(rawValue);
+      if (!normalized) {
+        try {
+          await updateCustomDomain(sceneId, '');
+          setCustomDomainStatus({ type: 'idle', message: '' });
+        } catch (err) {
+          setCustomDomainStatus({ type: 'error', message: err.message });
+        }
+        return;
+      }
+      if (isReservedHost(normalized) || !isValidDomain(normalized)) {
+        setCustomDomainStatus({ type: 'error', message: 'Dominio inválido' });
+        return;
+      }
+      setCustomDomainStatus({ type: 'saving', message: 'Guardando…' });
+      try {
+        await updateCustomDomain(sceneId, normalized);
+        setCustomDomainStatus({ type: 'ok', message: '✓ Guardado' });
+      } catch (err) {
+        setCustomDomainStatus({ type: 'error', message: err.message || 'Error al guardar' });
+      }
+    }, 700);
+  }, [sceneId]);
 
   const handleWhatsappChange = useCallback((value) => {
     setWhatsappNumber(value);
@@ -245,6 +286,45 @@ export default function UnidadesPanel({
                 />
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Custom domain section */}
+        <div className="transform-section">
+          <div className="transform-section-title">🌐 Dominio personalizado</div>
+          <div className="whatsapp-config">
+            <label className="whatsapp-config-label" htmlFor="custom-domain">
+              Dominio (sin https://)
+            </label>
+            <input
+              id="custom-domain"
+              type="text"
+              className="whatsapp-input"
+              placeholder="proyecto.ejemplo.com"
+              value={customDomain}
+              onChange={(e) => handleCustomDomainChange(e.target.value)}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            {customDomainStatus.message && (
+              <span
+                className="whatsapp-hint"
+                style={{
+                  color:
+                    customDomainStatus.type === 'error' ? '#f87171'
+                    : customDomainStatus.type === 'ok' ? '#4ade80'
+                    : undefined,
+                }}
+              >
+                {customDomainStatus.message}
+              </span>
+            )}
+            <span className="whatsapp-hint">
+              Apuntá un CNAME desde tu dominio a <code>xrs-showroom.web.app</code>{' '}
+              y agregalo en Firebase Hosting (Console → Hosting → Add custom domain)
+              para que provisione el SSL. Una vez activo, abrir el dominio cargará esta escena.
+            </span>
           </div>
         </div>
       </FloatingPanel>
