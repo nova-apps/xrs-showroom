@@ -1,9 +1,9 @@
 {
-  "version": "0.12.3",
+  "version": "0.12.4",
   "buildDate": "2026-05-13",
-  "commitHash": "4fbdbff",
+  "commitHash": "9c0f44e",
   "environment": "production",
   "features": [
-    "per-scene custom domain with host-based proxy rewrite"
+    "Maintenance and stability improvements"
   ]
 }

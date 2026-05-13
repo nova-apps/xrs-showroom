@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.12.4] — 2026-05-13
+
+### 🐛 Fixes
+- read x-forwarded-host in proxy so custom-domain rewrite works on Firebase
+
+### 📦 Chores
+- v0.12.3
+
+---
+
 ## [0.12.3] — 2026-05-13
 
 ### ✨ Features
