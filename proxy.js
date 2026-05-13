@@ -92,7 +92,12 @@ export async function proxy(request) {
   // Only rewrite the root path. Sub-paths and assets pass through untouched
   // (the rendered /view/{id} page may request /_next/*, /api/*, etc.).
   if (pathname === '/' || pathname === '') {
-    const rawHost = (request.headers.get('host') || '').toLowerCase().split(':')[0];
+    // Firebase Hosting with a frameworks backend (Cloud Run) rewrites the Host
+    // header to the backend's internal hostname before the request reaches us;
+    // the original customer-facing host is preserved in x-forwarded-host.
+    const forwardedHost = request.headers.get('x-forwarded-host') || '';
+    const hostHeader = request.headers.get('host') || '';
+    const rawHost = (forwardedHost || hostHeader).toLowerCase().split(',')[0].trim().split(':')[0];
     if (rawHost && !isDefaultHost(rawHost)) {
       const sceneId = await lookupSceneIdForHost(rawHost);
       if (sceneId) {
