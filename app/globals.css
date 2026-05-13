@@ -716,9 +716,12 @@ body {
   padding: 24px;
   background: rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  min-height: 0;
 }
 
-.amenity-modal-image img {
+.amenity-modal-img {
+  width: auto;
+  height: auto;
   max-width: 100%;
   max-height: 55vh;
   object-fit: contain;
