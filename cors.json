@@ -1,6 +1,6 @@
 [
   {
-    "origin": ["http://localhost:3000", "https://xrs-showroom.web.app", "https://xrs-showroom.firebaseapp.com"],
+    "origin": ["*"],
     "method": ["GET", "HEAD"],
     "maxAgeSeconds": 3600,
     "responseHeader": ["Content-Type", "Content-Length", "Content-Range"]

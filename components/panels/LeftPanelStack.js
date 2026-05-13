@@ -273,11 +273,16 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
         </button>
       )}
 
-      {/* ─── Mobile logo (between handle and tabs, hidden via CSS when expanded) ─── */}
+      {/* ─── Mobile logo (reordered via CSS to sit below the tabs; hidden when expanded) ─── */}
       {isMobile && logoUrl && (
-        <div className="sidebar-header-mobile">
+        <button
+          type="button"
+          className="sidebar-header-mobile"
+          onClick={() => tabs[0]?.id && selectTab(tabs[0].id)}
+          aria-label="Expandir panel"
+        >
           <img src={logoUrl} alt={title || 'Logo'} className="sidebar-logo-img-mobile" />
-        </div>
+        </button>
       )}
 
       {/* ─── Header with logo (hidden on mobile via CSS) ─── */}

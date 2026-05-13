@@ -71,8 +71,6 @@ export default function ViewPage() {
     if (viewerRef.current && unit?.id) {
       viewerRef.current.focusOnCollider(String(unit.id));
     }
-    // Collapse expanded panel on mobile when opening a unit
-    panelRef.current?.collapse();
   }, []);
 
   // Error state — only show after Firebase has finished loading

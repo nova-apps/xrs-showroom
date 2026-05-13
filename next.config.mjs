@@ -14,6 +14,10 @@ const nextConfig = {
 
   // Turbopack config (Next.js 16 default bundler)
   turbopack: {},
+
+  // Allow HMR connections from 127.0.0.1 and LAN IPs in dev
+  // (Next 16 blocks cross-origin dev resource access by default).
+  allowedDevOrigins: ['127.0.0.1', '192.168.1.6'],
 };
 
 export default nextConfig;
