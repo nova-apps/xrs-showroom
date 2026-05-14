@@ -101,9 +101,10 @@ function SelectRow({ label, value, options, onChange }) {
  */
 const SAVEABLE_KEYS = [
   'color', 'opacity', 'transparent', 'depthWrite', 'side', 'visible',
-  'alphaTest', 'flatShading', 'metalness', 'roughness', 'transmission',
-  'thickness', 'ior', 'clearcoat', 'clearcoatRoughness', 'sheen',
-  'sheenRoughness', 'sheenColor', 'reflectivity', 'emissive', 'emissiveIntensity',
+  'alphaTest', 'flatShading', 'metalness', 'roughness', 'envMapIntensity',
+  'transmission', 'thickness', 'ior', 'clearcoat', 'clearcoatRoughness',
+  'sheen', 'sheenRoughness', 'sheenColor', 'reflectivity', 'emissive',
+  'emissiveIntensity',
 ];
 
 /**
@@ -136,6 +137,7 @@ function extractMaterialProps(mat) {
   // Standard / Physical
   if (mat.metalness !== undefined) props.metalness = mat.metalness;
   if (mat.roughness !== undefined) props.roughness = mat.roughness;
+  if (mat.envMapIntensity !== undefined) props.envMapIntensity = mat.envMapIntensity;
 
   // Physical extras
   if (mat.type === 'MeshPhysicalMaterial') {
@@ -374,6 +376,9 @@ function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyCha
               <div className="mat-section-title">PBR</div>
               <ParamRow label="Metalness" value={props.metalness} min={0} max={1} step={0.01} onChange={(v) => update('metalness', v)} />
               <ParamRow label="Roughness" value={props.roughness} min={0} max={1} step={0.01} onChange={(v) => update('roughness', v)} />
+              {props.envMapIntensity !== undefined && (
+                <ParamRow label="Env Map Int." value={props.envMapIntensity} min={0} max={2} step={0.05} onChange={(v) => update('envMapIntensity', v)} />
+              )}
               <ToggleRow label="Flat Shading" value={props.flatShading} onChange={(v) => update('flatShading', v)} />
             </>
           )}
