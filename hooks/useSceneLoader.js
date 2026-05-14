@@ -177,20 +177,27 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       }
 
       // ── Apply initial camera position after GLB is loaded ──
-      const isMobileDevice = typeof navigator !== 'undefined' && (
-        /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-      );
-      const mobileCamera = scene.orbit?.mobile?.initialCamera;
-      const desktopCamera = scene.orbit?.initialCamera;
-      const initialCamera = (isMobileDevice && mobileCamera) ? mobileCamera : desktopCamera;
-      if (initialCamera) {
-        // Snap (no animation): fitCamera has already run at this point, so the
-        // configured position takes effect immediately. Animating here is
-        // unreliable — OrbitControls cancels the focus animation on the user's
-        // first touch, leaving the camera mid-flight (often near the auto-fit
-        // distance, much further than configured).
-        viewerRef.current?.setInitialCameraPosition(initialCamera, { animate: false });
+      // Only when an asset was actually (re)loaded in this pass — otherwise
+      // every scene-data update (e.g. an editor transform tweak that rewrites
+      // the scene to Firebase) would re-emit `scene`, this effect would
+      // re-run, and the camera would snap back to the configured initial
+      // position. allPromises is empty when nothing new was loaded.
+      if (allPromises.length > 0) {
+        const isMobileDevice = typeof navigator !== 'undefined' && (
+          /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+        );
+        const mobileCamera = scene.orbit?.mobile?.initialCamera;
+        const desktopCamera = scene.orbit?.initialCamera;
+        const initialCamera = (isMobileDevice && mobileCamera) ? mobileCamera : desktopCamera;
+        if (initialCamera) {
+          // Snap (no animation): fitCamera has already run at this point, so
+          // the configured position takes effect immediately. Animating here
+          // is unreliable — OrbitControls cancels the focus animation on the
+          // user's first touch, leaving the camera mid-flight (often near the
+          // auto-fit distance, much further than configured).
+          viewerRef.current?.setInitialCameraPosition(initialCamera, { animate: false });
+        }
       }
 
       // Measure total load time (editor only)
