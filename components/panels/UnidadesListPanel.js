@@ -24,6 +24,10 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Refs for list items so we can scrollIntoView the selected unit
+  // (e.g. when the user clicks the collider in the 3D scene).
+  const cardRefs = useRef(new Map());
+
   // Detect mobile viewport
   useEffect(() => {
     const mql = window.matchMedia('(max-width: 768px)');
@@ -32,6 +36,21 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     mql.addEventListener('change', handler);
     return () => mql.removeEventListener('change', handler);
   }, []);
+
+  // When the selected unit changes (e.g. from a collider click), scroll the
+  // matching card into view. Defers to next frame so any tab/expand-driven
+  // layout change has settled.
+  useEffect(() => {
+    const id = selectedUnit?.id;
+    if (id == null) return;
+    const raf = requestAnimationFrame(() => {
+      const el = cardRefs.current.get(String(id));
+      if (el?.scrollIntoView) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedUnit?.id]);
 
   // Compute min/max metraje from data
   const metrajeMinMax = useMemo(() => {
@@ -232,7 +251,14 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
         {filtered.map((unit, index) => (
           <div
             key={unit.id || index}
-            className={`unidad-card${isMobile ? ' unidad-card-grid-item' : ''}`}
+            ref={(el) => {
+              const key = String(unit.id ?? index);
+              if (el) cardRefs.current.set(key, el);
+              else cardRefs.current.delete(key);
+            }}
+            className={`unidad-card${isMobile ? ' unidad-card-grid-item' : ''}${
+              selectedUnit && String(selectedUnit.id) === String(unit.id) ? ' active' : ''
+            }`}
             onClick={() => {
               if (onSelectUnit) onSelectUnit(unit);
             }}

@@ -133,11 +133,13 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
               await v.loadColliders(collidersUrl);
               const vis = scene.collidersVisible;
               if (vis === false) v.setCollidersVisible(false);
+              v.setCollidersHoverEnabled?.(true);
             })());
           } else {
-            // View mode: load colliders but hide them (used only for click targeting)
+            // View mode: colliders are hidden by default; hover surfaces them.
             allPromises.push(v.loadColliders(collidersUrl).then(() => {
               v.setCollidersVisible(false);
+              v.setCollidersHoverEnabled?.(true);
             }).catch(() => {}));
           }
         } else if (isEditor) {

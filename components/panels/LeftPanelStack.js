@@ -233,9 +233,17 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     };
   }, [isMobile, snapState]);
 
-  // Expose collapse method to parent
+  // Expose imperative controls to parent
   useImperativeHandle(ref, () => ({
     collapse: () => setSnapState(SNAP.COLLAPSED),
+    // Switch to a tab and expand the panel (mobile bottom-sheet pops up).
+    expand: (tabId) => {
+      if (tabId) {
+        setActiveTab(tabId);
+        setMobileTabChosen(true);
+      }
+      setSnapState((prev) => (prev === SNAP.COLLAPSED ? SNAP.COMPACT : prev));
+    },
   }), []);
 
   // Determine if a tab should look "active" — on mobile, only after user explicitly chose one

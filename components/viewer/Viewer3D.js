@@ -33,8 +33,10 @@ import { sanitizeMatKey, applyMaterialOverridesToModel, syncCameraRotation, disp
 const DEG2RAD = Math.PI / 180;
 const HALF_PI = Math.PI / 2;
 
-const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref) {
+const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onColliderClick }, ref) {
   const containerRef = useRef(null);
+  const onColliderClickRef = useRef(onColliderClick);
+  onColliderClickRef.current = onColliderClick;
   const stateRef = useRef({
     renderer: null,
     scene: null,
@@ -72,6 +74,28 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     },
     // Per-splat saturation uniform (Spark dyno) — populated when splat loads.
     splatSaturationU: null,
+    // Collider hover-highlight: shows only the collider mesh under the
+    // cursor with a translucent overlay; everything else stays invisible.
+    colliderHover: {
+      enabled: false,
+      raycaster: null,
+      pointerNDC: null,
+      hoveredMesh: null,
+      selectedMesh: null, // persistent highlight while a unit is selected
+      // mesh → { material, visible } pre-highlight snapshot. The same map
+      // backs both hover and select highlights; a mesh stays highlighted as
+      // long as either hover OR select still holds it.
+      originalState: new Map(),
+      highlightMat: null,
+      tooltipEl: null,
+      lastClientX: 0,
+      lastClientY: 0,
+      clickStart: null,
+      onPointerMove: null,
+      onPointerLeave: null,
+      onPointerDown: null,
+      onPointerUp: null,
+    },
     // Post-process selective blur on the BG (everything except GLB layer).
     // Resources are created lazily the first time amount > 0.
     bgBlur: {
@@ -145,6 +169,178 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     tintMesh: null,
     tintTargetOpacity: 0,
   });
+
+  // ─── Collider hover-highlight helpers ───
+  function applyHoverModeToColliders(s) {
+    // Make sure the wrapper itself renders so individual meshes can surface
+    // on hover. Child visibility is left to setCollidersVisible.
+    if (s.collidersModel) s.collidersModel.visible = true;
+    s.colliderHover.hoveredMesh = null;
+    s.colliderHover.originalState.clear();
+  }
+
+  function restoreCollidersToHiddenState(s) {
+    const ch = s.colliderHover;
+    for (const [mesh, prev] of ch.originalState) {
+      mesh.material = prev.material;
+      mesh.visible = prev.visible;
+    }
+    ch.originalState.clear();
+    ch.hoveredMesh = null;
+    ch.selectedMesh = null;
+    hideColliderTooltip(s);
+  }
+
+  function applyColliderHighlight(s, mesh) {
+    if (!mesh || s.colliderHover.originalState.has(mesh)) return;
+    s.colliderHover.originalState.set(mesh, { material: mesh.material, visible: mesh.visible });
+    mesh.material = s.colliderHover.highlightMat;
+    mesh.visible = true;
+  }
+
+  function clearColliderHighlight(s, mesh) {
+    if (!mesh) return;
+    const prev = s.colliderHover.originalState.get(mesh);
+    if (!prev) return;
+    mesh.material = prev.material;
+    mesh.visible = prev.visible;
+    s.colliderHover.originalState.delete(mesh);
+  }
+
+  function ensureColliderTooltip(s) {
+    if (s.colliderHover.tooltipEl) return;
+    const el = document.createElement('div');
+    el.className = 'collider-hover-tooltip';
+    el.style.cssText = [
+      'position: fixed',
+      'pointer-events: none',
+      'padding: 4px 8px',
+      'background: rgba(8, 8, 14, 0.85)',
+      'color: #ffffff',
+      'border: 1px solid rgba(0, 217, 255, 0.6)',
+      'border-radius: 4px',
+      'font-size: 11px',
+      'font-family: ui-monospace, SFMono-Regular, Menlo, monospace',
+      'z-index: 1000',
+      'display: none',
+      'white-space: nowrap',
+      'transform: translate(12px, 12px)',
+    ].join(';');
+    document.body.appendChild(el);
+    s.colliderHover.tooltipEl = el;
+  }
+
+  function showColliderTooltip(s, label, x, y) {
+    const el = s.colliderHover.tooltipEl;
+    if (!el) return;
+    el.textContent = label;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.display = 'block';
+  }
+
+  function hideColliderTooltip(s) {
+    const el = s.colliderHover.tooltipEl;
+    if (el) el.style.display = 'none';
+  }
+
+  function updateColliderHover(s) {
+    const ch = s.colliderHover;
+    if (!ch.enabled || !s.camera || !s.collidersModel || !ch.raycaster) return;
+    ch.raycaster.setFromCamera(ch.pointerNDC, s.camera);
+    const intersects = ch.raycaster.intersectObject(s.collidersModel, true);
+    const hit = intersects.length > 0 ? intersects[0].object : null;
+
+    if (hit) showColliderTooltip(s, hit.name || '—', ch.lastClientX, ch.lastClientY);
+    else hideColliderTooltip(s);
+
+    if (hit === ch.hoveredMesh) return;
+
+    // Clear the previously hovered mesh — but keep it highlighted if it's
+    // the persistent "selected" one.
+    if (ch.hoveredMesh && ch.hoveredMesh !== ch.selectedMesh) {
+      clearColliderHighlight(s, ch.hoveredMesh);
+    }
+    // Highlight the newly hovered one (idempotent if it's already the selected).
+    if (hit && hit.isMesh) applyColliderHighlight(s, hit);
+
+    ch.hoveredMesh = hit;
+  }
+
+  function attachHoverListeners(s) {
+    if (!s.renderer || s.colliderHover.onPointerMove) return;
+    ensureColliderTooltip(s);
+    const canvas = s.renderer.domElement;
+    const ch = s.colliderHover;
+
+    const onMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      ch.lastClientX = e.clientX;
+      ch.lastClientY = e.clientY;
+      ch.pointerNDC.set(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      updateColliderHover(s);
+    };
+    const onLeave = () => {
+      // Move pointer off-screen so the next update unhovers anything.
+      ch.pointerNDC.set(99, 99);
+      updateColliderHover(s);
+      hideColliderTooltip(s);
+    };
+    // Tap-style click: pointerdown→pointerup with little movement & short time.
+    const onDown = (e) => {
+      ch.clickStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+    };
+    const onUp = (e) => {
+      const start = ch.clickStart;
+      ch.clickStart = null;
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      const moved = dx * dx + dy * dy;
+      const dt = performance.now() - start.t;
+      if (moved > 25 || dt > 350) return; // drag / long-press — not a tap
+      const handler = onColliderClickRef.current;
+      if (!handler || !ch.raycaster || !ch.pointerNDC || !s.camera || !s.collidersModel) return;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      ch.pointerNDC.set(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      ch.raycaster.setFromCamera(ch.pointerNDC, s.camera);
+      const hits = ch.raycaster.intersectObject(s.collidersModel, true);
+      const hit = hits.length > 0 ? hits[0].object : null;
+      if (hit?.name) handler(hit.name);
+    };
+
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerleave', onLeave);
+    canvas.addEventListener('pointerdown', onDown);
+    canvas.addEventListener('pointerup', onUp);
+    ch.onPointerMove = onMove;
+    ch.onPointerLeave = onLeave;
+    ch.onPointerDown = onDown;
+    ch.onPointerUp = onUp;
+  }
+
+  function detachHoverListeners(s) {
+    if (!s.renderer) return;
+    const canvas = s.renderer.domElement;
+    const ch = s.colliderHover;
+    if (ch.onPointerMove) canvas.removeEventListener('pointermove', ch.onPointerMove);
+    if (ch.onPointerLeave) canvas.removeEventListener('pointerleave', ch.onPointerLeave);
+    if (ch.onPointerDown) canvas.removeEventListener('pointerdown', ch.onPointerDown);
+    if (ch.onPointerUp) canvas.removeEventListener('pointerup', ch.onPointerUp);
+    ch.onPointerMove = null;
+    ch.onPointerLeave = null;
+    ch.onPointerDown = null;
+    ch.onPointerUp = null;
+    hideColliderTooltip(s);
+  }
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
@@ -569,8 +765,69 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady }, ref
     focusOnCollider: (name, onComplete) => focusCameraOnCollider(name, onComplete),
     setCollidersVisible: (visible) => {
       const s = stateRef.current;
-      if (s.collidersModel) {
-        s.collidersModel.visible = visible;
+      if (!s.collidersModel) return;
+      // Toggle child meshes (not the wrapper) so the hover-highlight code
+      // can keep the wrapper rendered and selectively re-enable one.
+      s.collidersModel.traverse((c) => { if (c.isMesh) c.visible = visible; });
+    },
+    /**
+     * Lock a specific collider mesh as highlighted (visible + tinted) until
+     * cleared. Pass `null` to clear. Used to keep the collider for the
+     * currently-selected unit on screen while the modal is open.
+     */
+    setSelectedCollider: (name) => {
+      const s = stateRef.current;
+      const ch = s.colliderHover;
+      if (!s.collidersModel) return;
+      const norm = (v) => String(v ?? '').replace(/-/g, '').toLowerCase().trim();
+      const target = name ? norm(name) : null;
+      let newMesh = null;
+      if (target) {
+        s.collidersModel.traverse((c) => {
+          if (c.isMesh && norm(c.name) === target) newMesh = c;
+        });
+      }
+      if (newMesh === ch.selectedMesh) return;
+      // Clear the previously selected — unless the cursor is currently hovering
+      // it, in which case the hover still holds it.
+      if (ch.selectedMesh && ch.selectedMesh !== ch.hoveredMesh) {
+        clearColliderHighlight(s, ch.selectedMesh);
+      }
+      ch.selectedMesh = newMesh;
+      if (newMesh) applyColliderHighlight(s, newMesh);
+    },
+    /**
+     * Enable hover-highlight on colliders: the wrapper renders, but every
+     * child mesh stays invisible until the pointer hovers it. Used by the
+     * public viewer (where the colliders should normally be invisible but
+     * surface on hover for click-targeting feedback).
+     */
+    setCollidersHoverEnabled: (enabled) => {
+      const s = stateRef.current;
+      const THREE = s.THREE;
+      if (!THREE) return;
+      const ch = s.colliderHover;
+      ch.enabled = !!enabled;
+
+      if (enabled) {
+        // Lazy-init the raycaster + the highlight material.
+        if (!ch.raycaster) ch.raycaster = new THREE.Raycaster();
+        if (!ch.pointerNDC) ch.pointerNDC = new THREE.Vector2();
+        if (!ch.highlightMat) {
+          ch.highlightMat = new THREE.MeshBasicMaterial({
+            color: 0x00d9ff,
+            transparent: true,
+            opacity: 0.28,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          });
+        }
+        // Apply current state to the model (if it's loaded).
+        applyHoverModeToColliders(s);
+        attachHoverListeners(s);
+      } else {
+        detachHoverListeners(s);
+        restoreCollidersToHiddenState(s);
       }
     },
     setAssetVisible: (assetType, visible) => {
@@ -1366,6 +1623,10 @@ uniform float uSaturation;`
       if (s.pendingTransforms.colliders) {
         applyTransformToObject('colliders', s.pendingTransforms.colliders);
       }
+
+      // If hover-highlight was enabled before the colliders finished
+      // loading, apply the hidden-by-default state now.
+      if (s.colliderHover.enabled) applyHoverModeToColliders(s);
 
       console.log('[Viewer] ✓ Colliders loaded');
       dracoLoader.dispose();

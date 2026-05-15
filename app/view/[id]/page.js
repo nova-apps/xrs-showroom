@@ -10,7 +10,7 @@
  *   - Sequential loading on mobile to avoid memory spikes
  */
 
-import { useRef, useCallback, useMemo, useState } from 'react';
+import { useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
@@ -73,6 +73,31 @@ export default function ViewPage() {
     }
   }, []);
 
+  // Lock the collider for the currently-selected unit (modal open) so it
+  // stays visible until the modal closes.
+  useEffect(() => {
+    viewerRef.current?.setSelectedCollider?.(modalUnit?.id ?? null);
+  }, [modalUnit?.id]);
+
+  const handleColliderClick = useCallback((name) => {
+    // Match the same way focusCameraOnCollider does — collider mesh names
+    // often have hyphens / different casing than the unit IDs.
+    const norm = (v) => String(v ?? '').replace(/-/g, '').toLowerCase().trim();
+    const target = norm(name);
+    if (!target) return;
+    const unit = (scene?.unidades?.items || []).find(
+      (u) => norm(u.id) === target,
+    );
+    if (unit) {
+      setModalUnit(unit);
+      panelRef.current?.expand?.('unidades');
+      // Same camera animation as clicking the unit in the side panel.
+      if (viewerRef.current && unit.id != null) {
+        viewerRef.current.focusOnCollider(String(unit.id));
+      }
+    }
+  }, [scene]);
+
   // Error state — only show after Firebase has finished loading
 
   if (!loading && (error || !scene)) {
@@ -90,7 +115,7 @@ export default function ViewPage() {
 
   return (
     <>
-      <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
+      <Viewer3D ref={viewerRef} onReady={handleViewerReady} onColliderClick={handleColliderClick} />
 
       {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
       <div className="canvas-blackout" aria-hidden="true" />
