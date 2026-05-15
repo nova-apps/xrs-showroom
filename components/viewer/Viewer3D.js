@@ -955,6 +955,10 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
         s.focusTarget.state = 'idle';
         s.focusTarget.lerpOverride = null;
       }
+      // Remember the configured camera so fitCamera (called when the GLB
+      // finishes loading) can re-apply it relative to the GLB center,
+      // instead of jumping to the auto-fit pose for a frame.
+      s.configuredCamera = initialCamera;
     },
   }));
 
@@ -2222,23 +2226,39 @@ uniform float uSaturation;`
     if (!THREE) return;
 
     const box = new THREE.Box3().setFromObject(object);
-    const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fov = s.camera.fov * DEG2RAD;
-    let dist = maxDim / (2 * Math.tan(fov / 2));
-    dist *= 1.5;
 
-    // Store GLB center as the orbit target
+    // Store GLB center as the orbit target — always needed.
     s.glbCenter = center.clone();
     console.log('[Viewer] GLB center (orbit target):', center.x.toFixed(2), center.y.toFixed(2), center.z.toFixed(2));
-
-    s.camera.position.copy(center);
-    s.camera.position.x += dist * 0.6;
-    s.camera.position.y += dist * 0.4;
-    s.camera.position.z += dist * 0.8;
-    s.camera.lookAt(center);
     s.controls.target.copy(center);
+
+    if (s.configuredCamera) {
+      // Re-apply the saved camera relative to the correct (GLB) target.
+      // Skips the auto-fit pose entirely so there's no visible jump from
+      // the early-applied position to a wider auto-fit and back again.
+      const ic = s.configuredCamera;
+      const phi = (90 - ic.pitch) * DEG2RAD;
+      const theta = -ic.yaw * DEG2RAD;
+      const sph = new THREE.Spherical(ic.zoom, phi, theta);
+      sph.makeSafe();
+      const offset = new THREE.Vector3().setFromSpherical(sph);
+      s.camera.position.copy(s.controls.target).add(offset);
+      s.camera.lookAt(s.controls.target);
+    } else {
+      // Auto-fit fallback for scenes that don't have a configured initial.
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const fov = s.camera.fov * DEG2RAD;
+      let dist = maxDim / (2 * Math.tan(fov / 2));
+      dist *= 1.5;
+      s.camera.position.copy(center);
+      s.camera.position.x += dist * 0.6;
+      s.camera.position.y += dist * 0.4;
+      s.camera.position.z += dist * 0.8;
+      s.camera.lookAt(center);
+    }
+
     s.controls.update();
 
     // Re-apply pending orbit settings now that we have the GLB center

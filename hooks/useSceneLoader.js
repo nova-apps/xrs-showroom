@@ -65,6 +65,22 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         timing.startTime = timing.startTime || performance.now();
       }
 
+      // Apply the configured camera position BEFORE we start loading assets
+      // so the user doesn't see the floor at the default (3,2,5) zoom while
+      // the GLB streams in. fitCamera will still run when the GLB loads,
+      // and the final snap below will re-apply the saved position once
+      // glbCenter is known — this is just to keep the initial frames sane.
+      const isMobileEarly = typeof navigator !== 'undefined' && (
+        /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      );
+      const earlyCamera = (isMobileEarly && scene.orbit?.mobile?.initialCamera)
+        ? scene.orbit.mobile.initialCamera
+        : scene.orbit?.initialCamera;
+      if (earlyCamera) {
+        v.setInitialCameraPosition?.(earlyCamera, { animate: false });
+      }
+
       const allPromises = [];
 
       // ── Priority 1: Floor ──
