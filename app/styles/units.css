@@ -383,6 +383,8 @@
   border-top: 1px solid var(--border-color);
   background: rgba(255, 255, 255, 0.02);
   flex-shrink: 0;
+  display: flex;
+  gap: 8px;
 }
 
 .ucm-add-btn {
@@ -396,7 +398,8 @@
   font-family: var(--font-sans);
   cursor: pointer;
   transition: all var(--transition-fast);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .ucm-add-btn:hover {
