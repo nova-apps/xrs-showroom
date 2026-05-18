@@ -76,8 +76,10 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     suppressClick: false,
   });
 
-  // Canvas blackout timer ref (shared between snap-state effect and drag handlers).
-  // Adds .canvas-resizing to <html> to mask WebGL resize flicker.
+  // Canvas blackout timer ref — used only by the drag handlers below to
+  // mask WebGL resize flicker during a live resize gesture. Programmatic
+  // snap-state changes (tab tap, expand/collapse, collider tap) rely on
+  // the CSS transition alone, with no blackout flash.
   const _blackoutTimer = useRef(null);
   const blackoutCanvas = useCallback(({ hold = false } = {}) => {
     const root = document.documentElement;
@@ -200,15 +202,10 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     };
   }, [isMobile]);
 
-  // Mask the WebGL resize flicker whenever the snap state changes.
-  // (Drag-driven blackout is handled in the pointer handlers above.)
-  useEffect(() => {
-    if (!isMobile) return;
-    blackoutCanvas();
-    return () => {
-      if (_blackoutTimer.current) clearTimeout(_blackoutTimer.current);
-    };
-  }, [isMobile, snapState, blackoutCanvas]);
+  // Cleanup any pending drag-driven blackout timer on unmount.
+  useEffect(() => () => {
+    if (_blackoutTimer.current) clearTimeout(_blackoutTimer.current);
+  }, []);
 
   // Click-outside to collapse on mobile
   useEffect(() => {

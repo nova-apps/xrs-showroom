@@ -14,6 +14,7 @@ import { useHistory } from '@/hooks/useHistory';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { updateScene } from '@/lib/scenes';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
+import UnidadModal from '@/components/panels/UnidadModal';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
 import SceneEditorPanel from '@/components/panels/SceneEditorPanel';
 import PublishButton from '@/components/ui/PublishButton';
@@ -506,9 +507,6 @@ export default function ScenePage() {
                 unidades={scene?.unidades?.items || []}
                 onSelectUnit={handleSelectUnit}
                 selectedUnit={modalUnit}
-                onCloseModal={() => setModalUnit(null)}
-                whatsappNumber={scene?.whatsappNumber || ''}
-                projectName={scene?.name || ''}
               />
             )}
             {activeTab === 'amenities' && (
@@ -599,6 +597,15 @@ export default function ScenePage() {
           </>
         )}
       </RightPanelStack>}
+
+      {modalUnit && (
+        <UnidadModal
+          unit={modalUnit}
+          onClose={() => setModalUnit(null)}
+          whatsappNumber={scene?.whatsappNumber || ''}
+          projectName={scene?.name || ''}
+        />
+      )}
     </>
   );
 }

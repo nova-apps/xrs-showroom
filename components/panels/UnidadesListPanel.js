@@ -1,18 +1,17 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import UnidadModal from './UnidadModal';
 import LazyImage from '../ui/LazyImage';
 
 /**
  * UnidadesListPanel — left-side panel with filters + unit list.
  * Filters: Ambientes (circle buttons), Metraje (range slider).
  *
- * Standardized field names:
- *   id, piso, ambientes, superficie_cubierta, superficie_semicubierta,
- *   superficie_amenities, superficie_total, imagen_plano
+ * `selectedUnit` is purely the "currently highlighted" unit (drives the
+ * `.active` row + scroll-into-view). The detail modal is owned by the
+ * parent so collider-tap on mobile can highlight without opening it.
  */
-export default function UnidadesListPanel({ unidades = [], onSelectUnit, selectedUnit, onCloseModal, whatsappNumber, projectName }) {
+export default function UnidadesListPanel({ unidades = [], onSelectUnit, selectedUnit }) {
   const items = Array.isArray(unidades) ? unidades : [];
 
   // Filter state
@@ -292,60 +291,53 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
   );
 
   return (
-    <>
-      <div className="tab-content-body">
-        {items.length === 0 ? (
+    <div className="tab-content-body">
+      {items.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📊</div>
             <p>Sin datos.<br />Cargá unidades desde el panel Unidades en el editor.</p>
           </div>
-        ) : isMobile ? (
-          /* ─── Mobile layout: toggle between filters and list ─── */
-          <>
-            {mobileFiltersOpen ? (
-              <div className="mobile-filters-view">
+      ) : isMobile ? (
+        /* ─── Mobile layout: toggle between filters and list ─── */
+        <>
+          {mobileFiltersOpen ? (
+            <div className="mobile-filters-view">
+              <button
+                className="mobile-filters-back"
+                onClick={() => setMobileFiltersOpen(false)}
+              >
+                ← Volver a unidades
+              </button>
+              {renderSearch()}
+              {renderFilters()}
+            </div>
+          ) : (
+            <>
+              <div className="mobile-filters-toggle-row">
+                <span className="unidades-list-count">
+                  {filtered.length} unidades
+                </span>
                 <button
-                  className="mobile-filters-back"
-                  onClick={() => setMobileFiltersOpen(false)}
+                  className="mobile-filters-btn"
+                  onClick={() => setMobileFiltersOpen(true)}
                 >
-                  ← Volver a unidades
+                  <span className="mobile-filters-btn-icon">⚙</span>
+                  Filtros
+                  {hasActiveFilters && <span className="mobile-filters-badge" />}
                 </button>
-                {renderSearch()}
-                {renderFilters()}
               </div>
-            ) : (
-              <>
-                <div className="mobile-filters-toggle-row">
-                  <span className="unidades-list-count">
-                    {filtered.length} unidades
-                  </span>
-                  <button
-                    className="mobile-filters-btn"
-                    onClick={() => setMobileFiltersOpen(true)}
-                  >
-                    <span className="mobile-filters-btn-icon">⚙</span>
-                    Filtros
-                    {hasActiveFilters && <span className="mobile-filters-badge" />}
-                  </button>
-                </div>
-                {renderList()}
-              </>
-            )}
-          </>
-        ) : (
-          /* ─── Desktop layout: search + filters + list inline ─── */
-          <>
-            {renderSearch()}
-            {renderFilters()}
-            {renderList()}
-          </>
-        )}
-      </div>
-
-      {/* Unit detail modal */}
-      {selectedUnit && (
-        <UnidadModal unit={selectedUnit} onClose={onCloseModal} whatsappNumber={whatsappNumber} projectName={projectName} />
+              {renderList()}
+            </>
+          )}
+        </>
+      ) : (
+        /* ─── Desktop layout: search + filters + list inline ─── */
+        <>
+          {renderSearch()}
+          {renderFilters()}
+          {renderList()}
+        </>
       )}
-    </>
+    </div>
   );
 }

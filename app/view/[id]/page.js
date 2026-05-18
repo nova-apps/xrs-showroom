@@ -19,6 +19,7 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
+import UnidadModal from '@/components/panels/UnidadModal';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
 
 const Viewer3D = dynamic(() => import('@/components/viewer/Viewer3D'), { ssr: false });
@@ -32,6 +33,7 @@ export default function ViewPage() {
   const [viewerReady, setViewerReady] = useState(false);
 
   const [modalUnit, setModalUnit] = useState(null);
+  const [highlightedUnit, setHighlightedUnit] = useState(null);
   const [modalAmenity, setModalAmenity] = useState(null);
 
   const { scene: rawScene, loading, error } = useScene(sceneId);
@@ -67,17 +69,19 @@ export default function ViewPage() {
   }, [scene]);
 
   const handleSelectUnit = useCallback((unit) => {
+    // Row tap in the panel always opens detail (both desktop and mobile).
+    setHighlightedUnit(unit ?? null);
     setModalUnit((prev) => prev?.id === unit?.id ? null : unit);
     if (viewerRef.current && unit?.id) {
       viewerRef.current.focusOnCollider(String(unit.id));
     }
   }, []);
 
-  // Lock the collider for the currently-selected unit (modal open) so it
-  // stays visible until the modal closes.
+  // Keep the 3D collider tint in sync with whatever the user is currently
+  // pointing at — either via row tap or collider tap (mobile or desktop).
   useEffect(() => {
-    viewerRef.current?.setSelectedCollider?.(modalUnit?.id ?? null);
-  }, [modalUnit?.id]);
+    viewerRef.current?.setSelectedCollider?.(highlightedUnit?.id ?? null);
+  }, [highlightedUnit?.id]);
 
   const handleColliderClick = useCallback((name) => {
     // Match the same way focusCameraOnCollider does — collider mesh names
@@ -88,13 +92,20 @@ export default function ViewPage() {
     const unit = (scene?.unidades?.items || []).find(
       (u) => norm(u.id) === target,
     );
-    if (unit) {
+    if (!unit) return;
+
+    const isMobile = typeof window !== 'undefined'
+      && window.matchMedia('(max-width: 768px)').matches;
+
+    setHighlightedUnit(unit);
+    panelRef.current?.expand?.('unidades');
+    if (viewerRef.current && unit.id != null) {
+      viewerRef.current.focusOnCollider(String(unit.id));
+    }
+    // Mobile: defer opening the detail modal until the user taps the
+    // highlighted row in the panel. Keeps the 3D visible for context.
+    if (!isMobile) {
       setModalUnit(unit);
-      panelRef.current?.expand?.('unidades');
-      // Same camera animation as clicking the unit in the side panel.
-      if (viewerRef.current && unit.id != null) {
-        viewerRef.current.focusOnCollider(String(unit.id));
-      }
     }
   }, [scene]);
 
@@ -144,10 +155,7 @@ export default function ViewPage() {
               <UnidadesListPanel
                 unidades={scene?.unidades?.items || []}
                 onSelectUnit={handleSelectUnit}
-                selectedUnit={modalUnit}
-                onCloseModal={() => setModalUnit(null)}
-                whatsappNumber={scene?.whatsappNumber || ''}
-                projectName={scene?.name || ''}
+                selectedUnit={highlightedUnit}
               />
             )}
             {activeTab === 'amenities' && (
@@ -161,6 +169,15 @@ export default function ViewPage() {
           </>
         )}
         </LeftPanelStack>
+      )}
+
+      {modalUnit && (
+        <UnidadModal
+          unit={modalUnit}
+          onClose={() => setModalUnit(null)}
+          whatsappNumber={scene?.whatsappNumber || ''}
+          projectName={scene?.name || ''}
+        />
       )}
     </>
   );
