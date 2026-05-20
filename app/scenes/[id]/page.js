@@ -57,6 +57,8 @@ export default function ScenePage() {
     updateMaterials,
     updateUnidades,
     updateAmenities,
+    updateBarrios,
+    updateLotes,
     updateLighting,
     updateTint,
     updateSaturation,
@@ -591,6 +593,8 @@ export default function ScenePage() {
               sceneId={sceneId}
               onUnidadesChange={updateUnidades}
               onAmenitiesChange={updateAmenities}
+              onBarriosChange={updateBarrios}
+              onLotesChange={updateLotes}
               collapsed={activePanel !== 'unidades'}
               onToggle={() => toggle('unidades')}
             />

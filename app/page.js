@@ -11,6 +11,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 export default function HomePage() {
   const { scenes, loading, error } = useSceneList();
   const [newName, setNewName] = useState('');
+  const [newType, setNewType] = useState('edificio');
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -30,8 +31,9 @@ export default function HomePage() {
     if (!name || creating) return;
     setCreating(true);
     try {
-      const id = await createScene(name);
+      const id = await createScene(name, newType);
       setNewName('');
+      setNewType('edificio');
       router.push(`/scenes/${id}`);
     } catch (err) {
       console.error('Failed to create scene:', err);
@@ -188,6 +190,29 @@ export default function HomePage() {
               title="Crear escena"
             >
               +
+            </button>
+          </div>
+
+          <div className="create-scene-type" role="radiogroup" aria-label="Tipo de escena">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={newType === 'edificio'}
+              className={`scene-type-option${newType === 'edificio' ? ' active' : ''}`}
+              onClick={() => setNewType('edificio')}
+              disabled={creating}
+            >
+              Edificio
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={newType === 'terreno'}
+              className={`scene-type-option${newType === 'terreno' ? ' active' : ''}`}
+              onClick={() => setNewType('terreno')}
+              disabled={creating}
+            >
+              Terreno
             </button>
           </div>
         </div>

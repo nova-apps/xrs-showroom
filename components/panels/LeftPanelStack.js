@@ -317,8 +317,9 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
         </div>
       </div>
 
-      {/* ─── Tab bar ─── */}
-      {tabs.length > 1 && (
+      {/* ─── Tab bar ─── always rendered (even single-tab so it can act as
+          the tap-to-expand button on mobile, matching the multi-tab pattern). */}
+      {tabs.length > 0 && (
         <div className="sidebar-tabs">
           {tabs.map((tab) => (
             <button

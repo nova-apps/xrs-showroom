@@ -12,6 +12,8 @@ import {
   updateMaterials as dbUpdateMaterials,
   updateUnidades as dbUpdateUnidades,
   updateAmenities as dbUpdateAmenities,
+  updateBarrios as dbUpdateBarrios,
+  updateLotes as dbUpdateLotes,
   updateCollidersVisible as dbUpdateCollidersVisible,
   updateLighting as dbUpdateLighting,
   updateTint as dbUpdateTint,
@@ -37,7 +39,17 @@ export function useScene(sceneId) {
 
     try {
       const unsubscribe = subscribeScene(sceneId, (data) => {
-        setScene(data);
+        // Legacy scenes lack `type`; default to 'edificio' both at top-level
+        // and inside the published snapshot so consumers can always rely on it.
+        if (!data) {
+          setScene(null);
+        } else {
+          const normalized = { ...data, type: data.type ?? 'edificio' };
+          if (data.published) {
+            normalized.published = { ...data.published, type: data.published.type ?? 'edificio' };
+          }
+          setScene(normalized);
+        }
         setLoading(false);
       });
       return () => unsubscribe();
@@ -82,6 +94,8 @@ export function useScene(sceneId) {
   const updateMaterials = useMemo(() => makeDebouncedUpdate('materials', dbUpdateMaterials), [makeDebouncedUpdate]);
   const updateUnidades = useMemo(() => makeDebouncedUpdate('unidades', dbUpdateUnidades), [makeDebouncedUpdate]);
   const updateAmenities = useMemo(() => makeDebouncedUpdate('amenities', dbUpdateAmenities), [makeDebouncedUpdate]);
+  const updateBarrios = useMemo(() => makeDebouncedUpdate('barrios', dbUpdateBarrios), [makeDebouncedUpdate]);
+  const updateLotes = useMemo(() => makeDebouncedUpdate('lotes', dbUpdateLotes), [makeDebouncedUpdate]);
   const updateLighting = useMemo(() => makeDebouncedUpdate('lighting', dbUpdateLighting), [makeDebouncedUpdate]);
   const updateTint = useMemo(() => makeDebouncedUpdate('tint', dbUpdateTint), [makeDebouncedUpdate]);
   const updateSaturation = useMemo(() => makeDebouncedUpdate('saturation', dbUpdateSaturation), [makeDebouncedUpdate]);
@@ -207,6 +221,8 @@ export function useScene(sceneId) {
     updateMaterials,
     updateUnidades,
     updateAmenities,
+    updateBarrios,
+    updateLotes,
     updateLighting,
     updateTint,
     updateSaturation,

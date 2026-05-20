@@ -178,6 +178,45 @@
   color: var(--text-muted);
 }
 
+/* ─── Scene type segmented control (Edificio | Terreno) ─── */
+.create-scene-type {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+}
+
+.scene-type-option {
+  flex: 1;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.scene-type-option:hover:not(:disabled):not(.active) {
+  color: var(--text-primary);
+}
+
+.scene-type-option.active {
+  background: var(--accent-blue);
+  color: var(--text-on-accent, #fff);
+}
+
+.scene-type-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ═══════════════════════════════════════
    HOME PAGE
 /* ═══════════════════════════════════════

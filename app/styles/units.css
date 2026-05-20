@@ -1705,3 +1705,59 @@
     padding: 6px 12px;
   }
 }
+
+/* ─── Lotes (terreno) — barrio chips + estado tags ─── */
+.lote-barrio-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25) inset;
+}
+
+.lote-barrio-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lote-barrio-chips-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 4px 8px;
+  flex-shrink: 0;
+}
+
+.lote-barrio-chips-bar .unidad-pill {
+  height: auto;
+  padding: 6px 10px;
+}
+
+.lote-estado-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.lote-estado-disponible {
+  background: rgba(34, 197, 94, 0.18);
+  color: rgb(134, 239, 172);
+}
+
+.lote-estado-reservado {
+  background: rgba(252, 196, 25, 0.18);
+  color: rgb(252, 211, 77);
+}
+
+.lote-estado-vendido {
+  background: rgba(244, 63, 94, 0.18);
+  color: rgb(252, 165, 165);
+}

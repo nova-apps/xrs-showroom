@@ -21,6 +21,8 @@ import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import UnidadModal from '@/components/panels/UnidadModal';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
+import LotesListPanel from '@/components/panels/LotesListPanel';
+import LoteModal from '@/components/panels/LoteModal';
 
 const Viewer3D = dynamic(() => import('@/components/viewer/Viewer3D'), { ssr: false });
 const FpsCounter = dynamic(() => import('@/components/viewer/FpsCounter'), { ssr: false });
@@ -35,6 +37,8 @@ export default function ViewPage() {
   const [modalUnit, setModalUnit] = useState(null);
   const [highlightedUnit, setHighlightedUnit] = useState(null);
   const [modalAmenity, setModalAmenity] = useState(null);
+  const [modalLote, setModalLote] = useState(null);
+  const [highlightedLote, setHighlightedLote] = useState(null);
 
   const { scene: rawScene, loading, error } = useScene(sceneId);
 
@@ -62,16 +66,22 @@ export default function ViewPage() {
     setViewerReady(true);
   }, []);
 
+  const isTerreno = scene?.type === 'terreno';
+
   const handleSelectTab = useCallback((tabId, { isMobile }) => {
-    if (!isMobile || tabId !== 'unidades') return;
+    // Both the unidades and lotes lists pull the camera back to its initial
+    // mobile framing when their tab gets tapped on a small viewport.
+    if (!isMobile) return;
+    if (tabId !== 'unidades' && tabId !== 'lotes') return;
     const initial = scene?.orbit?.mobile?.initialCamera || scene?.orbit?.initialCamera;
     if (initial) viewerRef.current?.setInitialCameraPosition(initial);
   }, [scene]);
 
-  // Mobile-only: collapsing the panel back to the initial view drops the
+  // Mobile-only: collapsing the panel back to the initial view drops any
   // currently selected collider so the 3D goes back to a clean state.
   const handlePanelCollapse = useCallback(() => {
     setHighlightedUnit(null);
+    setHighlightedLote(null);
   }, []);
 
   const handleSelectUnit = useCallback((unit) => {
@@ -83,37 +93,62 @@ export default function ViewPage() {
     }
   }, []);
 
+  const handleSelectLote = useCallback((lote) => {
+    setHighlightedLote(lote ?? null);
+    setModalLote((prev) => prev?.id === lote?.id ? null : lote);
+    if (viewerRef.current && lote?.id) {
+      viewerRef.current.focusOnCollider(String(lote.id));
+    }
+  }, []);
+
   // Keep the 3D collider tint in sync with whatever the user is currently
   // pointing at — either via row tap or collider tap (mobile or desktop).
+  // The two highlight states are exclusive per scene type, so just OR them.
+  const highlightedColliderId = highlightedLote?.id ?? highlightedUnit?.id ?? null;
   useEffect(() => {
-    viewerRef.current?.setSelectedCollider?.(highlightedUnit?.id ?? null);
-  }, [highlightedUnit?.id]);
+    viewerRef.current?.setSelectedCollider?.(highlightedColliderId);
+  }, [highlightedColliderId]);
 
   const handleColliderClick = useCallback((name) => {
     // Match the same way focusCameraOnCollider does — collider mesh names
-    // often have hyphens / different casing than the unit IDs.
+    // often have hyphens / different casing than the item IDs.
     const norm = (v) => String(v ?? '').replace(/-/g, '').toLowerCase().trim();
     const target = norm(name);
     if (!target) return;
-    const unit = (scene?.unidades?.items || []).find(
-      (u) => norm(u.id) === target,
-    );
-    if (!unit) return;
 
     const isMobile = typeof window !== 'undefined'
       && window.matchMedia('(max-width: 768px)').matches;
 
+    if (isTerreno) {
+      const lote = (scene?.lotes?.items || []).find((l) => norm(l.id) === target);
+      if (!lote) return;
+      setHighlightedLote(lote);
+      panelRef.current?.expand?.('lotes');
+      if (viewerRef.current && lote.id != null) {
+        viewerRef.current.focusOnCollider(String(lote.id));
+      }
+      // Mobile: defer opening the modal until the user taps the highlighted row.
+      if (!isMobile) setModalLote(lote);
+      return;
+    }
+
+    const unit = (scene?.unidades?.items || []).find((u) => norm(u.id) === target);
+    if (!unit) return;
     setHighlightedUnit(unit);
     panelRef.current?.expand?.('unidades');
     if (viewerRef.current && unit.id != null) {
       viewerRef.current.focusOnCollider(String(unit.id));
     }
-    // Mobile: defer opening the detail modal until the user taps the
-    // highlighted row in the panel. Keeps the 3D visible for context.
-    if (!isMobile) {
-      setModalUnit(unit);
-    }
-  }, [scene]);
+    if (!isMobile) setModalUnit(unit);
+  }, [scene, isTerreno]);
+
+  const tabs = isTerreno
+    ? [{ id: 'lotes', label: 'Lotes' }]
+    : [{ id: 'unidades', label: 'Unidades' }, { id: 'amenities', label: 'Amenities' }];
+
+  const loteBarrio = modalLote?.barrioId
+    ? (scene?.barrios?.items || []).find((b) => b.id === modalLote.barrioId) || null
+    : null;
 
   // Error state — only show after Firebase has finished loading
 
@@ -143,7 +178,7 @@ export default function ViewPage() {
         <div className="canvas-curtain-half canvas-curtain-bottom" />
       </div>
 
-      {/* Left Sidebar — Units listing, always visible */}
+      {/* Left Sidebar — list panel; content swaps by scene.type */}
       {scene && (
         <LeftPanelStack
           ref={panelRef}
@@ -151,10 +186,7 @@ export default function ViewPage() {
           logoUrl={scene?.panelLogoUrl}
           onSelectTab={handleSelectTab}
           onCollapse={handlePanelCollapse}
-          tabs={[
-            { id: 'unidades', label: 'Unidades' },
-            { id: 'amenities', label: 'Amenities' },
-          ]}
+          tabs={tabs}
         >
         {({ activeTab }) => (
           <>
@@ -173,6 +205,14 @@ export default function ViewPage() {
                 onCloseModal={() => setModalAmenity(null)}
               />
             )}
+            {activeTab === 'lotes' && (
+              <LotesListPanel
+                lotes={scene?.lotes?.items || []}
+                barrios={scene?.barrios?.items || []}
+                onSelectLote={handleSelectLote}
+                selectedLote={highlightedLote}
+              />
+            )}
           </>
         )}
         </LeftPanelStack>
@@ -182,6 +222,16 @@ export default function ViewPage() {
         <UnidadModal
           unit={modalUnit}
           onClose={() => setModalUnit(null)}
+          whatsappNumber={scene?.whatsappNumber || ''}
+          projectName={scene?.name || ''}
+        />
+      )}
+
+      {modalLote && (
+        <LoteModal
+          lote={modalLote}
+          barrio={loteBarrio}
+          onClose={() => setModalLote(null)}
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
         />
