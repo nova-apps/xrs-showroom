@@ -22,7 +22,7 @@ import { useState, useCallback, useEffect, useImperativeHandle, useRef, forwardR
 const SNAP = { COLLAPSED: 'collapsed', COMPACT: 'compact', TALL: 'tall' };
 
 const LeftPanelStack = forwardRef(function LeftPanelStack(
-  { children, title, logoUrl, tabs = [], show = true, onSelectTab },
+  { children, title, logoUrl, tabs = [], show = true, onSelectTab, onCollapse },
   ref,
 ) {
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || null);
@@ -183,6 +183,19 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     return () => mql.removeEventListener('change', handler);
   }, []);
 
+  // Reset "tab chosen" flag whenever the panel collapses on mobile, so the
+  // tabs revert to the button-style first-run look every time. Also notifies
+  // parent so it can clear any state tied to the expanded view (e.g. the
+  // highlighted collider in 3D).
+  const onCollapseRef = useRef(onCollapse);
+  onCollapseRef.current = onCollapse;
+  useEffect(() => {
+    if (isMobile && snapState === SNAP.COLLAPSED) {
+      setMobileTabChosen(false);
+      onCollapseRef.current?.();
+    }
+  }, [isMobile, snapState]);
+
   // Track real panel height and expose as --mobile-panel-h CSS variable
   useEffect(() => {
     const el = panelRef.current;
@@ -255,6 +268,7 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     snapState === SNAP.COMPACT ? 'stack-expanded stack-compact' : '',
     snapState === SNAP.TALL    ? 'stack-expanded stack-tall' : '',
     isMobile && snapState === SNAP.COLLAPSED ? 'stack-tabs-only' : '',
+    isMobile && !mobileTabChosen ? 'tabs-untapped' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -278,7 +292,7 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
         </button>
       )}
 
-      {/* ─── Mobile logo (reordered via CSS to sit below the tabs; hidden when expanded) ─── */}
+      {/* ─── Mobile logo (sits above the tabs via CSS order; hidden when expanded) ─── */}
       {isMobile && logoUrl && (
         <button
           type="button"

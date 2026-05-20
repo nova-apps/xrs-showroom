@@ -68,6 +68,12 @@ export default function ViewPage() {
     if (initial) viewerRef.current?.setInitialCameraPosition(initial);
   }, [scene]);
 
+  // Mobile-only: collapsing the panel back to the initial view drops the
+  // currently selected collider so the 3D goes back to a clean state.
+  const handlePanelCollapse = useCallback(() => {
+    setHighlightedUnit(null);
+  }, []);
+
   const handleSelectUnit = useCallback((unit) => {
     // Row tap in the panel always opens detail (both desktop and mobile).
     setHighlightedUnit(unit ?? null);
@@ -144,6 +150,7 @@ export default function ViewPage() {
           title={scene.name}
           logoUrl={scene?.panelLogoUrl}
           onSelectTab={handleSelectTab}
+          onCollapse={handlePanelCollapse}
           tabs={[
             { id: 'unidades', label: 'Unidades' },
             { id: 'amenities', label: 'Amenities' },
