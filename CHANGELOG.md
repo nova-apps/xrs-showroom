@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.2] — 2026-05-20
+
+### 🐛 Fixes
+- don't delete amenity planos still referenced by the published snapshot
+
+### 📦 Chores
+- v0.13.1
+
+---
+
 ## [0.13.1] — 2026-05-20
 
 ### ✨ Features

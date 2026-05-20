@@ -1,11 +1,9 @@
 {
-  "version": "0.13.1",
+  "version": "0.13.2",
   "buildDate": "2026-05-20",
-  "commitHash": "a79dd57",
+  "commitHash": "c2a3156",
   "environment": "production",
   "features": [
-    "mobile panel — logo above tabs, button-style tabs when collapsed, clear collider on collapse",
-    "mobile collider tap selects unit without opening detail modal",
-    "staging-only floating panel with current build's changelog"
+    "Maintenance and stability improvements"
   ]
 }
