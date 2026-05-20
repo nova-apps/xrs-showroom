@@ -650,6 +650,31 @@ body {
   opacity: 0.5;
 }
 
+.pano-offset-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  padding: 0 12px 0 0;
+  margin-top: 4px;
+}
+
+.pano-offset-row:focus-within {
+  border-color: var(--accent-blue);
+}
+
+.pano-offset-row .whatsapp-input {
+  padding: 8px 0 8px 12px;
+}
+
+.pano-offset-suffix {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+
 .whatsapp-hint {
   font-size: 0.68rem;
   color: var(--text-muted);

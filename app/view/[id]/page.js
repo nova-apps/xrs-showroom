@@ -224,6 +224,11 @@ export default function ViewPage() {
           onClose={() => setModalUnit(null)}
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
+          panoramaNorthOffset={scene?.panoramaSettings?.northOffset ?? 0}
+          panoramaYawMin={scene?.panoramaSettings?.yawMin ?? null}
+          panoramaYawMax={scene?.panoramaSettings?.yawMax ?? null}
+          panoramaPitchMin={scene?.panoramaSettings?.pitchMin ?? -85}
+          panoramaPitchMax={scene?.panoramaSettings?.pitchMax ?? 85}
         />
       )}
 

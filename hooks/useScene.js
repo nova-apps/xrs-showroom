@@ -14,6 +14,7 @@ import {
   updateAmenities as dbUpdateAmenities,
   updateBarrios as dbUpdateBarrios,
   updateLotes as dbUpdateLotes,
+  updatePanoramaSettings as dbUpdatePanoramaSettings,
   updateCollidersVisible as dbUpdateCollidersVisible,
   updateLighting as dbUpdateLighting,
   updateTint as dbUpdateTint,
@@ -96,6 +97,7 @@ export function useScene(sceneId) {
   const updateAmenities = useMemo(() => makeDebouncedUpdate('amenities', dbUpdateAmenities), [makeDebouncedUpdate]);
   const updateBarrios = useMemo(() => makeDebouncedUpdate('barrios', dbUpdateBarrios), [makeDebouncedUpdate]);
   const updateLotes = useMemo(() => makeDebouncedUpdate('lotes', dbUpdateLotes), [makeDebouncedUpdate]);
+  const updatePanoramaSettings = useMemo(() => makeDebouncedUpdate('panoramaSettings', dbUpdatePanoramaSettings), [makeDebouncedUpdate]);
   const updateLighting = useMemo(() => makeDebouncedUpdate('lighting', dbUpdateLighting), [makeDebouncedUpdate]);
   const updateTint = useMemo(() => makeDebouncedUpdate('tint', dbUpdateTint), [makeDebouncedUpdate]);
   const updateSaturation = useMemo(() => makeDebouncedUpdate('saturation', dbUpdateSaturation), [makeDebouncedUpdate]);
@@ -223,6 +225,7 @@ export function useScene(sceneId) {
     updateAmenities,
     updateBarrios,
     updateLotes,
+    updatePanoramaSettings,
     updateLighting,
     updateTint,
     updateSaturation,

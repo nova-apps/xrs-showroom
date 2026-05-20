@@ -21,6 +21,7 @@ import PublishButton from '@/components/ui/PublishButton';
 
 import OrbitPanel from '@/components/panels/OrbitPanel';
 import UnidadesPanel from '@/components/panels/UnidadesPanel';
+import PanoramicasPanel from '@/components/panels/PanoramicasPanel';
 import PresetsPanel from '@/components/panels/PresetsPanel';
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import RightPanelStack from '@/components/panels/RightPanelStack';
@@ -59,6 +60,7 @@ export default function ScenePage() {
     updateAmenities,
     updateBarrios,
     updateLotes,
+    updatePanoramaSettings,
     updateLighting,
     updateTint,
     updateSaturation,
@@ -598,6 +600,15 @@ export default function ScenePage() {
               collapsed={activePanel !== 'unidades'}
               onToggle={() => toggle('unidades')}
             />
+
+            {scene?.type !== 'terreno' && (
+              <PanoramicasPanel
+                scene={scene}
+                onPanoramaSettingsChange={updatePanoramaSettings}
+                collapsed={activePanel !== 'panoramicas'}
+                onToggle={() => toggle('panoramicas')}
+              />
+            )}
           </>
         )}
       </RightPanelStack>}
@@ -608,6 +619,11 @@ export default function ScenePage() {
           onClose={() => setModalUnit(null)}
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
+          panoramaNorthOffset={scene?.panoramaSettings?.northOffset ?? 0}
+          panoramaYawMin={scene?.panoramaSettings?.yawMin ?? null}
+          panoramaYawMax={scene?.panoramaSettings?.yawMax ?? null}
+          panoramaPitchMin={scene?.panoramaSettings?.pitchMin ?? -85}
+          panoramaPitchMax={scene?.panoramaSettings?.pitchMax ?? 85}
         />
       )}
     </>

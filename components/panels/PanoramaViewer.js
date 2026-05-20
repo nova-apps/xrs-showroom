@@ -10,11 +10,27 @@ import * as THREE from 'three';
  * inside of a sphere. Supports mouse/touch drag to look around and
  * scroll/pinch to zoom.
  *
- * @param {string}   url      - URL of the equirectangular panorama image
- * @param {string}   unitId   - Unit identifier to display as label
- * @param {Function} onClose  - Callback to close the viewer
+ * @param {string}        url        - URL of the equirectangular panorama image
+ * @param {string}        unitId     - Unit identifier to display as label
+ * @param {number}        initialLon - Initial longitude in degrees (0 = center
+ *   of the equirectangular image). Used to start the camera pointed at the
+ *   unit's compass orientation (computed by the caller).
+ * @param {number|null}   yawMin     - Horizontal rotation min (degrees). null = no clamp.
+ * @param {number|null}   yawMax     - Horizontal rotation max (degrees). null = no clamp.
+ * @param {number}        pitchMin   - Vertical rotation min (degrees, default -85).
+ * @param {number}        pitchMax   - Vertical rotation max (degrees, default 85).
+ * @param {Function}      onClose    - Callback to close the viewer
  */
-export default function PanoramaViewer({ url, unitId, onClose }) {
+export default function PanoramaViewer({
+  url,
+  unitId,
+  initialLon = 0,
+  yawMin = null,
+  yawMax = null,
+  pitchMin = -85,
+  pitchMax = 85,
+  onClose,
+}) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -22,11 +38,22 @@ export default function PanoramaViewer({ url, unitId, onClose }) {
   const rafRef = useRef(null);
   const isDraggingRef = useRef(false);
   const prevMouseRef = useRef({ x: 0, y: 0 });
-  const lonRef = useRef(0);
+  const lonRef = useRef(initialLon);
   const latRef = useRef(0);
   const fovRef = useRef(75);
   const velocityRef = useRef({ lon: 0, lat: 0 });
   const touchDistRef = useRef(0);
+
+  // Mirror clamp props in refs so the animation loop (effect-scoped closure)
+  // picks up live setting changes from the editor without re-initializing.
+  const yawMinRef = useRef(yawMin);
+  const yawMaxRef = useRef(yawMax);
+  const pitchMinRef = useRef(pitchMin);
+  const pitchMaxRef = useRef(pitchMax);
+  yawMinRef.current = yawMin;
+  yawMaxRef.current = yawMax;
+  pitchMinRef.current = pitchMin;
+  pitchMaxRef.current = pitchMax;
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -93,8 +120,23 @@ export default function PanoramaViewer({ url, unitId, onClose }) {
         velocityRef.current.lat *= 0.95;
       }
 
-      // Clamp latitude
-      latRef.current = Math.max(-85, Math.min(85, latRef.current));
+      // Yaw clamp (optional) — normalize to [-180, 180] then clamp; kill
+      // horizontal velocity if we hit an edge so inertia doesn't fight it.
+      const ymin = yawMinRef.current;
+      const ymax = yawMaxRef.current;
+      if (ymin != null && ymax != null) {
+        const wrapped = ((lonRef.current + 180) % 360 + 360) % 360 - 180;
+        const clampedLon = Math.max(ymin, Math.min(ymax, wrapped));
+        if (clampedLon !== wrapped) velocityRef.current.lon = 0;
+        lonRef.current = clampedLon;
+      }
+
+      // Pitch clamp (always on; defaults are ±85).
+      const pmin = pitchMinRef.current ?? -85;
+      const pmax = pitchMaxRef.current ?? 85;
+      const prevLat = latRef.current;
+      latRef.current = Math.max(pmin, Math.min(pmax, latRef.current));
+      if (latRef.current !== prevLat) velocityRef.current.lat = 0;
 
       // Update camera
       const phi = THREE.MathUtils.degToRad(90 - latRef.current);
