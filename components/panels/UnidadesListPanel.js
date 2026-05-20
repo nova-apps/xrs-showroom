@@ -3,6 +3,8 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import LazyImage from '../ui/LazyImage';
 
+const ORIENTACIONES = ['N', 'S', 'E', 'O', 'NE', 'NO', 'SE', 'SO'];
+
 /**
  * UnidadesListPanel — left-side panel with filters + unit list.
  * Filters: Ambientes (circle buttons), Metraje (range slider).
@@ -16,8 +18,10 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
 
   // Filter state
   const [selectedAmb, setSelectedAmb] = useState(new Set()); // empty = all
+  const [selectedOrient, setSelectedOrient] = useState(new Set());
   const [metrajeRange, setMetrajeRange] = useState([0, 300]);
   const [showAmbientes, setShowAmbientes] = useState(false);
+  const [showOrient, setShowOrient] = useState(false);
   const [showMetraje, setShowMetraje] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -99,32 +103,44 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
         }
         if (!matches) return false;
       }
+      // Orientacion filter (multi-select — match ANY selected)
+      if (selectedOrient.size > 0) {
+        if (!selectedOrient.has(u.orientacion)) return false;
+      }
       // Metraje filter
       const sup = Number(u.superficie_total) || 0;
       if (sup < metrajeRange[0] || sup > metrajeRange[1]) return false;
       return true;
     });
-  }, [items, selectedAmb, metrajeRange, searchQuery]);
+  }, [items, selectedAmb, selectedOrient, metrajeRange, searchQuery]);
 
   const toggleAmb = useCallback((val) => {
     setSelectedAmb((prev) => {
       const next = new Set(prev);
-      if (next.has(val)) {
-        next.delete(val);
-      } else {
-        next.add(val);
-      }
+      if (next.has(val)) next.delete(val);
+      else next.add(val);
+      return next;
+    });
+  }, []);
+
+  const toggleOrient = useCallback((val) => {
+    setSelectedOrient((prev) => {
+      const next = new Set(prev);
+      if (next.has(val)) next.delete(val);
+      else next.add(val);
       return next;
     });
   }, []);
 
   const clearFilters = useCallback(() => {
     setSelectedAmb(new Set());
+    setSelectedOrient(new Set());
     setMetrajeRange(metrajeMinMax);
     setSearchQuery('');
   }, [metrajeMinMax]);
 
   const hasActiveFilters = selectedAmb.size > 0 ||
+    selectedOrient.size > 0 ||
     metrajeRange[0] !== metrajeMinMax[0] ||
     metrajeRange[1] !== metrajeMinMax[1] ||
     searchQuery.length > 0;
@@ -158,6 +174,30 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
             >
               +
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Orientacion */}
+      <div className="unidad-filter-section">
+        <div
+          className="unidad-filter-header"
+          onClick={() => setShowOrient(!showOrient)}
+        >
+          <span>Orientación</span>
+          <span className={`unidad-filter-chevron ${showOrient ? 'open' : ''}`}>▾</span>
+        </div>
+        {showOrient && (
+          <div className="unidad-filter-pills">
+            {ORIENTACIONES.map((o) => (
+              <button
+                key={o}
+                className={`unidad-pill ${selectedOrient.has(o) ? 'active' : ''}`}
+                onClick={() => toggleOrient(o)}
+              >
+                {o}
+              </button>
+            ))}
           </div>
         )}
       </div>

@@ -9,10 +9,23 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebas
  * Column definitions for the units table.
  * Each column maps to a standardized field name.
  */
+const ORIENTACION_OPTIONS = [
+  { value: '',   label: '—' },
+  { value: 'N',  label: 'N' },
+  { value: 'S',  label: 'S' },
+  { value: 'E',  label: 'E' },
+  { value: 'O',  label: 'O' },
+  { value: 'NE', label: 'NE' },
+  { value: 'NO', label: 'NO' },
+  { value: 'SE', label: 'SE' },
+  { value: 'SO', label: 'SO' },
+];
+
 const COLUMNS = [
   { key: 'id', label: 'ID', type: 'text', placeholder: 'Ej: A-101' },
   { key: 'piso', label: 'Piso', type: 'text', placeholder: 'Ej: 1' },
   { key: 'ambientes', label: 'Amb.', type: 'number', placeholder: '0' },
+  { key: 'orientacion', label: 'Orient.', type: 'select', options: ORIENTACION_OPTIONS },
   { key: 'superficie_cubierta', label: 'Sup. Cub.', type: 'number', placeholder: 'm²' },
   { key: 'superficie_semicubierta', label: 'Sup. Semi.', type: 'number', placeholder: 'm²' },
   { key: 'superficie_amenities', label: 'Sup. Amen.', type: 'number', placeholder: 'm²' },
@@ -20,6 +33,25 @@ const COLUMNS = [
   { key: 'imagen_plano', label: 'Imagen Plano', type: 'file', placeholder: 'Subir imagen...' },
   { key: 'imagen_panoramica', label: 'Panorama 360°', type: 'file', placeholder: 'Subir panorama...' },
 ];
+
+/** Normalize a free-form orientacion string into one of the enum values. */
+function normalizeOrientacion(raw) {
+  if (raw == null) return '';
+  const v = String(raw).trim().toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if (!v) return '';
+  const MAP = {
+    N: 'N', NORTE: 'N', NORTH: 'N',
+    S: 'S', SUR: 'S', SOUTH: 'S',
+    E: 'E', ESTE: 'E', EAST: 'E',
+    O: 'O', OESTE: 'O', W: 'O', WEST: 'O',
+    NE: 'NE', NORESTE: 'NE', NORTHEAST: 'NE',
+    NO: 'NO', NOROESTE: 'NO', NW: 'NO', NORTHWEST: 'NO',
+    SE: 'SE', SURESTE: 'SE', SOUTHEAST: 'SE',
+    SO: 'SO', SUROESTE: 'SO', SW: 'SO', SOUTHWEST: 'SO',
+  };
+  return MAP[v] || '';
+}
 
 /** Create an empty row with all fields */
 function emptyRow() {
@@ -45,6 +77,7 @@ function parseCSV(text) {
     id: ['id', 'unidad', 'unit', 'codigo', 'código'],
     piso: ['piso', 'floor', 'nivel', 'planta'],
     ambientes: ['ambientes', 'amb', 'ambientes', 'rooms', 'dormitorios'],
+    orientacion: ['orientacion', 'orientación', 'orient', 'orient.', 'orientation'],
     superficie_cubierta: ['superficie_cubierta', 'sup_cubierta', 'sup. cub.', 'sup cub', 'cubierta', 'covered'],
     superficie_semicubierta: ['superficie_semicubierta', 'sup_semicubierta', 'sup. semi.', 'sup semi', 'semicubierta', 'semi'],
     superficie_amenities: ['superficie_amenities', 'sup_amenities', 'sup. amen.', 'sup amen', 'amenities'],
@@ -92,6 +125,8 @@ function parseCSV(text) {
         if (cells[i] !== undefined) row[col.key] = cells[i].trim();
       });
     }
+
+    if (row.orientacion) row.orientacion = normalizeOrientacion(row.orientacion);
 
     return row;
   }).filter((row) =>
@@ -345,6 +380,7 @@ export default function UnidadesCargaModal({ items = [], sceneId, onSave, onClos
           row[col.key] = values[i].trim();
         }
       });
+      if (row.orientacion) row.orientacion = normalizeOrientacion(row.orientacion);
       return row;
     });
 
@@ -538,6 +574,16 @@ export default function UnidadesCargaModal({ items = [], sceneId, onSave, onClos
                             </button>
                           )}
                         </div>
+                      ) : col.type === 'select' ? (
+                        <select
+                          className="ucm-input"
+                          value={row[col.key] ?? ''}
+                          onChange={(e) => handleCellChange(ri, col.key, e.target.value)}
+                        >
+                          {col.options.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           type={col.type}

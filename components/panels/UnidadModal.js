@@ -82,6 +82,10 @@ export default function UnidadModal({ unit, onClose, whatsappNumber, projectName
                 <span className="unit-drawer-value">{unit.ambientes || '—'}</span>
               </div>
               <div className="unit-drawer-row">
+                <span className="unit-drawer-label">Orientación</span>
+                <span className="unit-drawer-value">{unit.orientacion || '—'}</span>
+              </div>
+              <div className="unit-drawer-row">
                 <span className="unit-drawer-label">Sup. cubierta</span>
                 <span className="unit-drawer-value">{unit.superficie_cubierta ?? '—'} m²</span>
               </div>
