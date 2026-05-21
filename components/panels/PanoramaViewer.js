@@ -14,9 +14,13 @@ import * as THREE from 'three';
  * @param {string}        unitId     - Unit identifier to display as label
  * @param {number}        initialLon - Initial longitude in degrees (0 = center
  *   of the equirectangular image). Used to start the camera pointed at the
- *   unit's compass orientation (computed by the caller).
- * @param {number|null}   yawMin     - Horizontal rotation min (degrees). null = no clamp.
- * @param {number|null}   yawMax     - Horizontal rotation max (degrees). null = no clamp.
+ *   unit's compass orientation (computed by the caller). Also serves as the
+ *   anchor for the yaw clamp range.
+ * @param {number|null}   yawMin     - Horizontal rotation min, in degrees
+ *   RELATIVE to initialLon. e.g. yawMin=-45 means the camera can rotate up to
+ *   45° left of the opening heading. null = no clamp.
+ * @param {number|null}   yawMax     - Horizontal rotation max, in degrees
+ *   relative to initialLon. null = no clamp.
  * @param {number}        pitchMin   - Vertical rotation min (degrees, default -85).
  * @param {number}        pitchMax   - Vertical rotation max (degrees, default 85).
  * @param {Function}      onClose    - Callback to close the viewer
@@ -43,6 +47,11 @@ export default function PanoramaViewer({
   const fovRef = useRef(75);
   const velocityRef = useRef({ lon: 0, lat: 0 });
   const touchDistRef = useRef(0);
+
+  // Anchor for the yaw clamp — captured at mount and never updated, so that
+  // changing northOffset live (from the editor) doesn't shift the clamp
+  // window out from under the user while they're panning.
+  const initialLonRef = useRef(initialLon);
 
   // Mirror clamp props in refs so the animation loop (effect-scoped closure)
   // picks up live setting changes from the editor without re-initializing.
@@ -120,15 +129,19 @@ export default function PanoramaViewer({
         velocityRef.current.lat *= 0.95;
       }
 
-      // Yaw clamp (optional) — normalize to [-180, 180] then clamp; kill
-      // horizontal velocity if we hit an edge so inertia doesn't fight it.
+      // Yaw clamp (optional) — clamps are RELATIVE to the opening heading
+      // (initialLonRef), so yawMin=-45 / yawMax=+45 means ±45° around wherever
+      // the camera started. Wrap (lon - initialLon) to [-180, 180] before
+      // clamping so the math works across the ±180 seam. Kill horizontal
+      // velocity if we hit an edge so inertia doesn't fight it.
       const ymin = yawMinRef.current;
       const ymax = yawMaxRef.current;
       if (ymin != null && ymax != null) {
-        const wrapped = ((lonRef.current + 180) % 360 + 360) % 360 - 180;
-        const clampedLon = Math.max(ymin, Math.min(ymax, wrapped));
-        if (clampedLon !== wrapped) velocityRef.current.lon = 0;
-        lonRef.current = clampedLon;
+        const initLon = initialLonRef.current;
+        const rel = ((lonRef.current - initLon + 180) % 360 + 360) % 360 - 180;
+        const clampedRel = Math.max(ymin, Math.min(ymax, rel));
+        if (clampedRel !== rel) velocityRef.current.lon = 0;
+        lonRef.current = initLon + clampedRel;
       }
 
       // Pitch clamp (always on; defaults are ±85).
