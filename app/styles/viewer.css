@@ -583,3 +583,114 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
+/* ─── Compass HUD ─── */
+.viewcube-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compass {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(20, 20, 30, 0.65);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  user-select: none;
+  pointer-events: auto;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.35);
+}
+
+.compass-rose {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.12s linear;
+}
+
+.compass-mark {
+  position: absolute;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1;
+  user-select: none;
+}
+
+.compass-mark-n {
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--accent-red);
+}
+
+.compass-mark-e {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+}
+
+.compass-mark-s {
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.compass-mark-o {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+}
+
+.compass-tick {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.compass-tick-n,
+.compass-tick-s {
+  width: 1px;
+  height: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.compass-tick-n {
+  top: 2px;
+  background: var(--accent-red);
+}
+
+.compass-tick-s {
+  bottom: 2px;
+}
+
+.compass-tick-e,
+.compass-tick-o {
+  height: 1px;
+  width: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.compass-tick-e {
+  right: 2px;
+}
+
+.compass-tick-o {
+  left: 2px;
+}
+
+.compass-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  transform: translate(-50%, -50%);
+}

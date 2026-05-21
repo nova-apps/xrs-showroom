@@ -26,6 +26,7 @@ import PresetsPanel from '@/components/panels/PresetsPanel';
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import RightPanelStack from '@/components/panels/RightPanelStack';
 import CameraSelector from '@/components/ui/CameraSelector';
+import Compass from '@/components/ui/Compass';
 
 // Dynamic import for client-only 3D components (no SSR)
 const Viewer3D = dynamic(() => import('@/components/viewer/Viewer3D'), { ssr: false });
@@ -485,7 +486,10 @@ export default function ScenePage() {
           viewerRef={viewerRef}
         />}
         <div className="bottom-right-stack">
-          <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
+          <div className="viewcube-row">
+            <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
+            <Compass yaw={cameraInfo.yaw} northOffset={scene?.panoramaSettings?.northOffset ?? 0} />
+          </div>
           <div className="camera-info-panel">
             <span className="camera-info-item"><span className="camera-info-label">Zoom</span>{cameraInfo.zoom}</span>
             <span className="camera-info-item"><span className="camera-info-label">Pitch</span>{cameraInfo.pitch}°</span>
