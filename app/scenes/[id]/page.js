@@ -434,6 +434,30 @@ export default function ScenePage() {
     }
   }, []);
 
+  // Keep the 3D collider tint in sync with the currently-open unit modal —
+  // selecting from the list or clicking a collider both run through modalUnit,
+  // so this one effect covers both entry points and clears on close.
+  useEffect(() => {
+    viewerRef.current?.setSelectedCollider?.(modalUnit?.id ?? null);
+  }, [modalUnit]);
+
+  // Handle a tap on a collider mesh in the 3D viewport — same flow as the
+  // unidades list row tap. Suppressed while a transform-gizmo is active so
+  // we don't open the detail modal during edits.
+  const handleColliderClick = useCallback((name) => {
+    if (gizmoMode !== 'select') return;
+    if (scene?.type === 'terreno') return; // editor has no lote modal yet
+    const norm = (v) => String(v ?? '').replace(/-/g, '').toLowerCase().trim();
+    const target = norm(name);
+    if (!target) return;
+    const unit = (scene?.unidades?.items || []).find((u) => norm(u.id) === target);
+    if (!unit) return;
+    setModalUnit(unit);
+    if (viewerRef.current && unit.id != null) {
+      viewerRef.current.focusOnCollider(String(unit.id));
+    }
+  }, [scene, gizmoMode]);
+
   const handleSelectTab = useCallback((tabId, { isMobile }) => {
     if (!isMobile || tabId !== 'unidades') return;
     const initial = scene?.orbit?.mobile?.initialCamera || scene?.orbit?.initialCamera;
@@ -459,7 +483,7 @@ export default function ScenePage() {
   return (
     <>
       {/* Fullscreen 3D Viewer */}
-      <Viewer3D ref={viewerRef} onReady={handleViewerReady} />
+      <Viewer3D ref={viewerRef} onReady={handleViewerReady} onColliderClick={handleColliderClick} />
 
       {/* Top-right: Publish / Discard buttons */}
       <div className="top-right-bar">
@@ -487,8 +511,8 @@ export default function ScenePage() {
         />}
         <div className="bottom-right-stack">
           <div className="viewcube-row">
-            <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
             <Compass yaw={cameraInfo.yaw} northOffset={scene?.panoramaSettings?.northOffset ?? 0} />
+            <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
           </div>
           <div className="camera-info-panel">
             <span className="camera-info-item"><span className="camera-info-label">Zoom</span>{cameraInfo.zoom}</span>
