@@ -6,6 +6,19 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.3] — 2026-05-21
+
+### ✨ Features
+- full-screen project library with search, filters, and side panel
+- panorama settings — initial heading from unit orientacion + yaw/pitch clamps
+- 'orientacion' field on unidades (enum N/S/E/O + diagonals)
+- scene type 'terreno' with barrios + lotes alongside the existing 'edificio' flow
+
+### 📦 Chores
+- v0.13.2
+
+---
+
 ## [0.13.2] — 2026-05-20
 
 ### 🐛 Fixes
