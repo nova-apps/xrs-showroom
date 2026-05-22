@@ -1354,102 +1354,156 @@
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── Top-right floating bar (Publish button) ───
- * Sits just to the left of .right-panel-stack (310px wide @ right:16px)
- * so it never overlaps the panel's close button.
- */
-.top-right-bar {
-  position: fixed;
-  top: 16px;
-  right: 338px;
-  z-index: 300;
+/* ─── Publish Panel (accordion section) ─── */
+.publish-panel {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  pointer-events: none;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0 2px;
 }
 
-@media (max-width: 768px) {
-  .top-right-bar {
-    right: 16px;
-  }
-}
-
-.top-right-bar > * {
-  pointer-events: auto;
-}
-
-.publish-button {
+.publish-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(20, 20, 28, 0.85);
-  backdrop-filter: blur(10px);
-  color: #fff;
-  font-size: 12px;
+  font-size: 0.74rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  align-self: flex-start;
 }
 
-.publish-button:hover:not(:disabled) {
-  background: rgba(30, 30, 42, 0.92);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+.publish-status-badge.publish-status-live {
+  background: rgba(0, 232, 123, 0.12);
+  color: #4ee9a3;
+  box-shadow: inset 0 0 0 1px rgba(0, 232, 123, 0.3);
 }
 
-.publish-button:disabled {
-  cursor: default;
-  opacity: 0.75;
+.publish-status-badge.publish-status-dirty {
+  background: rgba(252, 196, 25, 0.12);
+  color: var(--accent-yellow);
+  box-shadow: inset 0 0 0 1px rgba(252, 196, 25, 0.35);
 }
 
-.publish-button-dot {
+.publish-status-badge.publish-status-pending {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.publish-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #4ade80;
+  display: inline-block;
 }
 
-.publish-button-dirty .publish-button-dot {
-  background: #fbbf24;
+.publish-status-live .publish-status-dot,
+.publish-status-dot.publish-status-live {
+  background: var(--accent-green);
+}
+
+.publish-status-dirty .publish-status-dot,
+.publish-status-dot.publish-status-dirty {
+  background: var(--accent-yellow);
   animation: publishPulse 1.6s ease-in-out infinite;
 }
 
-.publish-button-loading .publish-button-dot {
-  background: #60a5fa;
-  animation: publishPulse 1s ease-in-out infinite;
+.publish-status-pending .publish-status-dot,
+.publish-status-dot.publish-status-pending {
+  background: var(--text-muted);
 }
 
-.publish-button-success {
-  border-color: rgba(74, 222, 128, 0.5);
+.publish-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
 }
 
-.discard-button {
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(20, 20, 28, 0.7);
-  backdrop-filter: blur(10px);
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 12px;
+.publish-meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.publish-meta-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.publish-meta-value {
+  font-size: 0.74rem;
   font-weight: 500;
+  color: var(--text-primary);
+}
+
+.publish-panel-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transition: all var(--transition-fast);
 }
 
-.discard-button:hover:not(:disabled) {
-  background: rgba(40, 25, 30, 0.9);
-  border-color: rgba(248, 113, 113, 0.45);
-  color: #fca5a5;
+.publish-panel-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-.discard-button:disabled {
-  cursor: default;
-  opacity: 0.5;
+.publish-panel-btn-primary {
+  background: linear-gradient(135deg, var(--accent-blue), #5a99ff);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(68, 136, 255, 0.25);
+}
+
+.publish-panel-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(68, 136, 255, 0.4);
+}
+
+.publish-panel-btn-primary.is-success {
+  background: linear-gradient(135deg, var(--accent-green), #4ee9a3);
+  box-shadow: 0 4px 12px rgba(0, 232, 123, 0.3);
+}
+
+.publish-panel-btn-danger {
+  background: var(--bg-input);
+  border-color: var(--border-input);
+  color: var(--text-secondary);
+}
+
+.publish-panel-btn-danger:hover:not(:disabled) {
+  background: rgba(255, 68, 102, 0.1);
+  border-color: rgba(255, 68, 102, 0.35);
+  color: var(--accent-red);
+}
+
+.publish-panel-btn-ghost {
+  background: var(--bg-input);
+  border-color: var(--border-input);
+  color: var(--text-secondary);
+}
+
+.publish-panel-btn-ghost:hover:not(:disabled) {
+  background: rgba(68, 136, 255, 0.1);
+  border-color: rgba(68, 136, 255, 0.35);
+  color: var(--accent-blue);
+}
+
+.publish-panel-hint {
+  margin: 4px 2px 0;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
 @keyframes publishPulse {

@@ -380,25 +380,17 @@
 /* ─── Bottom-right bar (ViewCube + camera info + perf) ─── */
 .bottom-right-bar {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  bottom: 22px;
+  right: 26px;
   z-index: 300;
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  gap: 14px;
   pointer-events: none;
 }
 
 .bottom-right-bar>* {
   pointer-events: auto;
-}
-
-.bottom-right-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 30px;
-  margin-right: 10px;
 }
 
 .camera-info-panel {
@@ -446,12 +438,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
 }
 
 .viewcube-scene {
-  width: 64px;
-  height: 64px;
-  perspective: 200px;
+  width: 40px;
+  height: 40px;
+  perspective: 140px;
   user-select: none;
   touch-action: none;
 }
@@ -466,8 +459,8 @@
 
 .viewcube-face {
   position: absolute;
-  width: 64px;
-  height: 64px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -497,27 +490,27 @@
 }
 
 .viewcube-front {
-  transform: translateZ(32px);
+  transform: translateZ(20px);
 }
 
 .viewcube-back {
-  transform: rotateY(180deg) translateZ(32px);
+  transform: rotateY(180deg) translateZ(20px);
 }
 
 .viewcube-right {
-  transform: rotateY(-90deg) translateZ(32px);
+  transform: rotateY(-90deg) translateZ(20px);
 }
 
 .viewcube-left {
-  transform: rotateY(90deg) translateZ(32px);
+  transform: rotateY(90deg) translateZ(20px);
 }
 
 .viewcube-top {
-  transform: rotateX(90deg) translateZ(32px);
+  transform: rotateX(90deg) translateZ(20px);
 }
 
 .viewcube-bottom {
-  transform: rotateX(-90deg) translateZ(32px);
+  transform: rotateX(-90deg) translateZ(20px);
 }
 
 .gizmo-btn {
@@ -584,16 +577,10 @@
 }
 
 /* ─── Compass HUD ─── */
-.viewcube-row {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-}
-
 .compass {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: rgba(20, 20, 30, 0.65);
   backdrop-filter: blur(16px) saturate(1.4);

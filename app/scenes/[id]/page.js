@@ -17,7 +17,7 @@ import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import UnidadModal from '@/components/panels/UnidadModal';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
 import SceneEditorPanel from '@/components/panels/SceneEditorPanel';
-import PublishButton from '@/components/ui/PublishButton';
+import PublishPanel from '@/components/panels/PublishPanel';
 
 import OrbitPanel from '@/components/panels/OrbitPanel';
 import UnidadesPanel from '@/components/panels/UnidadesPanel';
@@ -485,11 +485,6 @@ export default function ScenePage() {
       {/* Fullscreen 3D Viewer */}
       <Viewer3D ref={viewerRef} onReady={handleViewerReady} onColliderClick={handleColliderClick} />
 
-      {/* Top-right: Publish / Discard buttons */}
-      <div className="top-right-bar">
-        <PublishButton scene={scene} onPublish={publish} onDiscard={discardChanges} />
-      </div>
-
       {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
       <div className="canvas-blackout" aria-hidden="true" />
 
@@ -502,24 +497,20 @@ export default function ScenePage() {
       {/* Orbit center crosshair */}
       <div className="orbit-crosshair" />
 
-      {/* Bottom-right: ViewCube + camera info + compact performance */}
+      {/* Bottom-right: FPS + camera info + compass + view cube, single row */}
       <div className="bottom-right-bar">
         {scene && <PerformancePanel
           scene={scene}
           loadMetrics={loadMetrics}
           viewerRef={viewerRef}
         />}
-        <div className="bottom-right-stack">
-          <div className="viewcube-row">
-            <Compass yaw={cameraInfo.yaw} northOffset={scene?.panoramaSettings?.northOffset ?? 0} />
-            <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
-          </div>
-          <div className="camera-info-panel">
-            <span className="camera-info-item"><span className="camera-info-label">Zoom</span>{cameraInfo.zoom}</span>
-            <span className="camera-info-item"><span className="camera-info-label">Pitch</span>{cameraInfo.pitch}°</span>
-            <span className="camera-info-item"><span className="camera-info-label">Yaw</span>{cameraInfo.yaw}°</span>
-          </div>
+        <div className="camera-info-panel">
+          <span className="camera-info-item"><span className="camera-info-label">Zoom</span>{cameraInfo.zoom}</span>
+          <span className="camera-info-item"><span className="camera-info-label">Pitch</span>{cameraInfo.pitch}°</span>
+          <span className="camera-info-item"><span className="camera-info-label">Yaw</span>{cameraInfo.yaw}°</span>
         </div>
+        <Compass yaw={cameraInfo.yaw} northOffset={scene?.panoramaSettings?.northOffset ?? 0} />
+        <CameraSelector ref={cameraSelectorRef} onSelectView={handleCameraView} onDragRotate={handleCubeDragRotate} />
       </div>
 
       {/* Left Sidebar — Units listing only */}
@@ -557,85 +548,106 @@ export default function ScenePage() {
       {scene && <RightPanelStack
         sceneName={scene.name}
         sceneId={sceneId}
+        sections={[
+          { id: 'publish', label: 'Publicación', icon: '🚀' },
+          { id: 'assets', label: 'Escena y assets', icon: '🎬' },
+          { id: 'orbit', label: 'Cámara y órbita', icon: '🎥' },
+          { id: 'unidades', label: scene?.type === 'terreno' ? 'Barrios y lotes' : 'Unidades y amenities', icon: '📋' },
+          ...(scene?.type !== 'terreno' ? [{ id: 'panoramicas', label: 'Panorámicas', icon: '🌐' }] : []),
+        ]}
       >
-        {({ activePanel, toggle }) => (
+        {({ activePanel }) => (
           <>
-            <SceneEditorPanel
-              scene={scene}
-              uploadProgress={uploadProgress}
-              onUpload={handleUpload}
-              onRemove={handleRemove}
-              onTransformChange={handleTransformChange}
-              onApplyTransform={handleApplyTransform}
-              onVisibilityChange={handleVisibilityChange}
-              visibility={assetVisibility}
-              onLightingChange={handleLightingChange}
-              onApplyLighting={handleApplyLighting}
-              onActiveSectionChange={handleActiveSectionChange}
-              viewerRef={viewerRef}
-              viewerReady={viewerReady}
-              hdriFromSkybox={hdriFromSkybox}
-              onHdriFromSkybox={handleHdriFromSkybox}
-              gizmoMode={gizmoMode}
-              onGizmoMode={handleGizmoMode}
-              onSaveSatelliteUrl={handleSaveSatelliteUrl}
-              glbSettings={scene?.glbSettings || null}
-              onGlbSettingsChange={handleGlbSettingsChange}
-              splatSettings={scene?.splatSettings || null}
-              onSplatSettingsChange={handleSplatSettingsChange}
-              onTintChange={handleTintChange}
-              onApplyTint={handleApplyTint}
-              onSaturationChange={handleSaturationChange}
-              onApplySaturation={handleApplySaturation}
-              bgBlur={scene?.bgBlur ?? 0}
-              onBgBlurChange={handleBgBlurChange}
-              collapsed={activePanel !== 'assets'}
-              onToggle={() => toggle('assets')}
-              materialsContent={
-                <MaterialPanel
-                  viewerRef={viewerRef}
-                  viewerReady={viewerReady}
-                  savedMaterials={scene?.materials || null}
-                  onMaterialsChange={updateMaterials}
-                  collapsed={false}
-                  onToggle={() => {}}
-                  inline
-                />
-              }
-            />
+            <div className="rps-section" data-section="publish" data-active={activePanel === 'publish' || undefined}>
+              <PublishPanel
+                scene={scene}
+                sceneId={sceneId}
+                onPublish={publish}
+                onDiscard={discardChanges}
+                collapsed={false}
+                onToggle={() => {}}
+              />
+            </div>
 
-            <OrbitPanel
-              scene={scene}
-              onOrbitChange={handleOrbitChange}
-              onApplyOrbit={handleApplyOrbit}
-              viewerRef={viewerRef}
-              collapsed={activePanel !== 'orbit'}
-              onToggle={() => toggle('orbit')}
-            />
+            <div className="rps-section" data-section="assets" data-active={activePanel === 'assets' || undefined}>
+              <SceneEditorPanel
+                scene={scene}
+                uploadProgress={uploadProgress}
+                onUpload={handleUpload}
+                onRemove={handleRemove}
+                onTransformChange={handleTransformChange}
+                onApplyTransform={handleApplyTransform}
+                onVisibilityChange={handleVisibilityChange}
+                visibility={assetVisibility}
+                onLightingChange={handleLightingChange}
+                onApplyLighting={handleApplyLighting}
+                onActiveSectionChange={handleActiveSectionChange}
+                viewerRef={viewerRef}
+                viewerReady={viewerReady}
+                hdriFromSkybox={hdriFromSkybox}
+                onHdriFromSkybox={handleHdriFromSkybox}
+                gizmoMode={gizmoMode}
+                onGizmoMode={handleGizmoMode}
+                onSaveSatelliteUrl={handleSaveSatelliteUrl}
+                glbSettings={scene?.glbSettings || null}
+                onGlbSettingsChange={handleGlbSettingsChange}
+                splatSettings={scene?.splatSettings || null}
+                onSplatSettingsChange={handleSplatSettingsChange}
+                onTintChange={handleTintChange}
+                onApplyTint={handleApplyTint}
+                onSaturationChange={handleSaturationChange}
+                onApplySaturation={handleApplySaturation}
+                bgBlur={scene?.bgBlur ?? 0}
+                onBgBlurChange={handleBgBlurChange}
+                collapsed={false}
+                onToggle={() => {}}
+                materialsContent={
+                  <MaterialPanel
+                    viewerRef={viewerRef}
+                    viewerReady={viewerReady}
+                    savedMaterials={scene?.materials || null}
+                    onMaterialsChange={updateMaterials}
+                    collapsed={false}
+                    onToggle={() => {}}
+                    inline
+                  />
+                }
+              />
+            </div>
 
-            {/* <PresetsPanel
-              collapsed={activePanel !== 'presets'}
-              onToggle={() => toggle('presets')}
-            /> */}
+            <div className="rps-section" data-section="orbit" data-active={activePanel === 'orbit' || undefined}>
+              <OrbitPanel
+                scene={scene}
+                onOrbitChange={handleOrbitChange}
+                onApplyOrbit={handleApplyOrbit}
+                viewerRef={viewerRef}
+                collapsed={false}
+                onToggle={() => {}}
+              />
+            </div>
 
-            <UnidadesPanel
-              scene={scene}
-              sceneId={sceneId}
-              onUnidadesChange={updateUnidades}
-              onAmenitiesChange={updateAmenities}
-              onBarriosChange={updateBarrios}
-              onLotesChange={updateLotes}
-              collapsed={activePanel !== 'unidades'}
-              onToggle={() => toggle('unidades')}
-            />
+            <div className="rps-section" data-section="unidades" data-active={activePanel === 'unidades' || undefined}>
+              <UnidadesPanel
+                scene={scene}
+                sceneId={sceneId}
+                onUnidadesChange={updateUnidades}
+                onAmenitiesChange={updateAmenities}
+                onBarriosChange={updateBarrios}
+                onLotesChange={updateLotes}
+                collapsed={false}
+                onToggle={() => {}}
+              />
+            </div>
 
             {scene?.type !== 'terreno' && (
-              <PanoramicasPanel
-                scene={scene}
-                onPanoramaSettingsChange={updatePanoramaSettings}
-                collapsed={activePanel !== 'panoramicas'}
-                onToggle={() => toggle('panoramicas')}
-              />
+              <div className="rps-section" data-section="panoramicas" data-active={activePanel === 'panoramicas' || undefined}>
+                <PanoramicasPanel
+                  scene={scene}
+                  onPanoramaSettingsChange={updatePanoramaSettings}
+                  collapsed={false}
+                  onToggle={() => {}}
+                />
+              </div>
             )}
           </>
         )}
