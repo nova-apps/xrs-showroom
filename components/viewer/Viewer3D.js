@@ -2660,8 +2660,22 @@ uniform float uSaturation;`
         s.bgBlur.quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
       }
 
+      // Scales the bgBlur slider (0..15-ish) into Spark's internal
+      // blurAmount (added to each splat's 2D covariance, so the splat
+      // softens in-shader). Empirically chosen — tune if too soft / hard.
+      const SPARK_BLUR_SCALE = 6;
+
       function renderFrame() {
         const amount = s.bgBlur.amount;
+
+        // Drive Spark's per-splat blur from the same slider. The splat
+        // softens inside Spark's own shader — correctly z-tested against
+        // the GLB during the normal render — so we don't have to fight
+        // Spark's depth-write behaviour from outside.
+        if (s.sparkRenderer) {
+          s.sparkRenderer.blurAmount = amount * SPARK_BLUR_SCALE;
+        }
+
         if (amount <= 0.01) {
           renderer.render(scene, camera);
           return;
@@ -2676,20 +2690,36 @@ uniform float uSaturation;`
         }
 
         const origAutoClear = renderer.autoClear;
-        const tintVis = s.tintMesh?.visible;
 
-        // ── Pass 1: render the WHOLE scene (incl. GLB) → targetA ──
-        // Renders into the target without touching layer visibility — Spark's
-        // splat pipeline is fragile when we toggle parts off mid-frame, so we
-        // just blur everything and overdraw the sharp GLB on top later.
-        // Tint stays out of the blurred BG so it composites sharply on top.
+        // ── Pass 1: render ONLY the BG (skybox + floor) → targetA ──
+        // Everything that could appear "in front of" or "as part of" the
+        // model — GLB, colliders, splat, sparkRenderer, mask, tint — stays
+        // hidden in this pass so the blur source is just the pure backdrop.
+        const tintVis = s.tintMesh?.visible;
+        const glbVis = s.glbModel?.visible;
+        const collidersVis = s.collidersModel?.visible;
+        const splatVis = s.splatMesh?.visible;
+        const sparkVis = s.sparkRenderer?.visible;
+        const maskVis = s.maskHelper?.visible;
+
         if (s.tintMesh) s.tintMesh.visible = false;
+        if (s.glbModel) s.glbModel.visible = false;
+        if (s.collidersModel) s.collidersModel.visible = false;
+        if (s.splatMesh) s.splatMesh.visible = false;
+        if (s.sparkRenderer) s.sparkRenderer.visible = false;
+        if (s.maskHelper) s.maskHelper.visible = false;
 
         renderer.setRenderTarget(s.bgBlur.targetA);
         renderer.clear();
         renderer.render(scene, camera);
 
+        // Restore everything for pass 4
         if (s.tintMesh) s.tintMesh.visible = tintVis;
+        if (s.glbModel) s.glbModel.visible = glbVis;
+        if (s.collidersModel) s.collidersModel.visible = collidersVis;
+        if (s.splatMesh) s.splatMesh.visible = splatVis;
+        if (s.sparkRenderer) s.sparkRenderer.visible = sparkVis;
+        if (s.maskHelper) s.maskHelper.visible = maskVis;
 
         // ── Pass 2: horizontal blur → targetB ──
         s.bgBlur.blurMat.uniforms.uTex.value = s.bgBlur.targetA.texture;
@@ -2706,22 +2736,17 @@ uniform float uSaturation;`
         renderer.clear();
         renderer.render(s.bgBlur.quadScene, s.bgBlur.quadCamera);
 
-        // ── Pass 4: render only the GLB/colliders/tint on top of the
-        //           blurred canvas (everything else hidden). ──
-        // scene.background applies a clear-to-color at the start of every
-        // renderer.render call regardless of autoClear, which would wipe the
-        // blurred BG we just drew. Null it out for this pass only.
+        // ── Pass 4: render the FG (GLB + colliders + splat + spark + mask
+        //           + tint) on top of the blurred canvas. Sky/floor stay
+        //           hidden — they're already in the blurred BG. clearDepth
+        //           gives the FG a fresh depth buffer so the splat and the
+        //           GLB depth-test against each other naturally; the splat
+        //           wins where it's between the camera and the GLB.
         const skyVis = s.skyboxMesh?.visible;
         const floorVis = s.floorMesh?.visible;
-        const splatVis = s.splatMesh?.visible;
-        const sparkVis = s.sparkRenderer?.visible;
-        const maskVis = s.maskHelper?.visible;
         const origBackground = scene.background;
         if (s.skyboxMesh) s.skyboxMesh.visible = false;
         if (s.floorMesh) s.floorMesh.visible = false;
-        if (s.splatMesh) s.splatMesh.visible = false;
-        if (s.sparkRenderer) s.sparkRenderer.visible = false;
-        if (s.maskHelper) s.maskHelper.visible = false;
         scene.background = null;
 
         renderer.autoClear = false;
@@ -2731,9 +2756,6 @@ uniform float uSaturation;`
         scene.background = origBackground;
         if (s.skyboxMesh) s.skyboxMesh.visible = skyVis;
         if (s.floorMesh) s.floorMesh.visible = floorVis;
-        if (s.splatMesh) s.splatMesh.visible = splatVis;
-        if (s.sparkRenderer) s.sparkRenderer.visible = sparkVis;
-        if (s.maskHelper) s.maskHelper.visible = maskVis;
         renderer.autoClear = origAutoClear;
       }
 
