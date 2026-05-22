@@ -18,6 +18,12 @@ const nextConfig = {
   // Allow HMR connections from 127.0.0.1 and LAN IPs in dev
   // (Next 16 blocks cross-origin dev resource access by default).
   allowedDevOrigins: ['127.0.0.1', '192.168.1.6'],
+
+  // Ensure CHANGELOG.md ships with the function bundle so /api/changelog
+  // can read it at runtime in the deployed Cloud Function.
+  outputFileTracingIncludes: {
+    '/api/changelog': ['./CHANGELOG.md'],
+  },
 };
 
 export default nextConfig;
