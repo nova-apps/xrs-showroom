@@ -47,14 +47,33 @@ export function AssetAccordion({ title, icon, open, onToggle, children, visible,
 }
 
 /**
- * Inner sub-accordion for collapsible sections within an asset (e.g., Materials, Transform).
+ * Inner sub-accordion for collapsible sections within an asset.
+ *
+ * Two modes:
+ *   - Uncontrolled (default): manages its own open state, seeded by
+ *     `defaultOpen`. Use when each sub-accordion is independent.
+ *   - Controlled: pass `open` + `onToggle` and the parent decides which one
+ *     is open. Use this to get exclusive (radio-style) behavior across a
+ *     group of siblings.
  */
-export function SubAccordion({ title, icon, defaultOpen = false, children }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => { setOpen(defaultOpen); }, [defaultOpen]);
+export function SubAccordion({ title, icon, defaultOpen = false, open: controlledOpen, onToggle, children }) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  useEffect(() => { setInternalOpen(defaultOpen); }, [defaultOpen]);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const handleClick = () => {
+    if (isControlled) {
+      onToggle?.();
+    } else {
+      setInternalOpen((v) => !v);
+    }
+  };
+
   return (
     <div className={`sub-accordion ${open ? 'open' : ''}`}>
-      <div className="sub-accordion-header" onClick={() => setOpen(!open)}>
+      <div className="sub-accordion-header" onClick={handleClick}>
         <span className="sub-accordion-title">
           {icon && <span className="sub-accordion-icon">{icon}</span>}
           {title}

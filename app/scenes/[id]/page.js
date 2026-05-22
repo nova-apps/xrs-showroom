@@ -21,6 +21,8 @@ import PublishPanel from '@/components/panels/PublishPanel';
 
 import OrbitPanel from '@/components/panels/OrbitPanel';
 import UnidadesPanel from '@/components/panels/UnidadesPanel';
+import ProyectoPanel from '@/components/panels/ProyectoPanel';
+import RenderPanel from '@/components/panels/RenderPanel';
 import PanoramicasPanel from '@/components/panels/PanoramicasPanel';
 import PresetsPanel from '@/components/panels/PresetsPanel';
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
@@ -550,10 +552,12 @@ export default function ScenePage() {
         sceneId={sceneId}
         sections={[
           { id: 'publish', label: 'Publicación', icon: '🚀' },
-          { id: 'assets', label: 'Escena y assets', icon: '🎬' },
+          { id: 'assets', label: 'Assets', icon: '📁' },
+          { id: 'render', label: 'Render y visuales', icon: '🎨' },
           { id: 'orbit', label: 'Cámara y órbita', icon: '🎥' },
           { id: 'unidades', label: scene?.type === 'terreno' ? 'Barrios y lotes' : 'Unidades y amenities', icon: '📋' },
           ...(scene?.type !== 'terreno' ? [{ id: 'panoramicas', label: 'Panorámicas', icon: '🌐' }] : []),
+          { id: 'proyecto', label: 'Proyecto', icon: '🏷️' },
         ]}
       >
         {({ activePanel }) => (
@@ -579,8 +583,6 @@ export default function ScenePage() {
                 onApplyTransform={handleApplyTransform}
                 onVisibilityChange={handleVisibilityChange}
                 visibility={assetVisibility}
-                onLightingChange={handleLightingChange}
-                onApplyLighting={handleApplyLighting}
                 onActiveSectionChange={handleActiveSectionChange}
                 viewerRef={viewerRef}
                 viewerReady={viewerReady}
@@ -589,16 +591,8 @@ export default function ScenePage() {
                 gizmoMode={gizmoMode}
                 onGizmoMode={handleGizmoMode}
                 onSaveSatelliteUrl={handleSaveSatelliteUrl}
-                glbSettings={scene?.glbSettings || null}
-                onGlbSettingsChange={handleGlbSettingsChange}
                 splatSettings={scene?.splatSettings || null}
                 onSplatSettingsChange={handleSplatSettingsChange}
-                onTintChange={handleTintChange}
-                onApplyTint={handleApplyTint}
-                onSaturationChange={handleSaturationChange}
-                onApplySaturation={handleApplySaturation}
-                bgBlur={scene?.bgBlur ?? 0}
-                onBgBlurChange={handleBgBlurChange}
                 collapsed={false}
                 onToggle={() => {}}
                 materialsContent={
@@ -612,6 +606,26 @@ export default function ScenePage() {
                     inline
                   />
                 }
+              />
+            </div>
+
+            <div className="rps-section" data-section="render" data-active={activePanel === 'render' || undefined}>
+              <RenderPanel
+                scene={scene}
+                onLightingChange={handleLightingChange}
+                onApplyLighting={handleApplyLighting}
+                onTintChange={handleTintChange}
+                onApplyTint={handleApplyTint}
+                onSaturationChange={handleSaturationChange}
+                onApplySaturation={handleApplySaturation}
+                bgBlur={scene?.bgBlur ?? 0}
+                onBgBlurChange={handleBgBlurChange}
+                glbSettings={scene?.glbSettings || null}
+                onGlbSettingsChange={handleGlbSettingsChange}
+                splatSettings={scene?.splatSettings || null}
+                onSplatSettingsChange={handleSplatSettingsChange}
+                collapsed={false}
+                onToggle={() => {}}
               />
             </div>
 
@@ -649,6 +663,15 @@ export default function ScenePage() {
                 />
               </div>
             )}
+
+            <div className="rps-section" data-section="proyecto" data-active={activePanel === 'proyecto' || undefined}>
+              <ProyectoPanel
+                scene={scene}
+                sceneId={sceneId}
+                collapsed={false}
+                onToggle={() => {}}
+              />
+            </div>
           </>
         )}
       </RightPanelStack>}

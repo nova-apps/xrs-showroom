@@ -22,8 +22,6 @@ export default function SceneEditorPanel({
   collapsed,
   onToggle,
   materialsContent,
-  onLightingChange,
-  onApplyLighting,
   onActiveSectionChange,
   viewerRef,
   viewerReady,
@@ -32,16 +30,8 @@ export default function SceneEditorPanel({
   gizmoMode,
   onGizmoMode,
   onSaveSatelliteUrl,
-  glbSettings,
-  onGlbSettingsChange,
   splatSettings,
   onSplatSettingsChange,
-  onTintChange,
-  onApplyTint,
-  onSaturationChange,
-  bgBlur,
-  onBgBlurChange,
-  onApplySaturation,
 }) {
   // Pre-upload optimization state
   const [preUpload, setPreUpload] = useState(null); // { file, stats }
@@ -52,41 +42,11 @@ export default function SceneEditorPanel({
   // General asset stats state
   const [assetStats, setAssetStats] = useState({ glb: 0, colliders: 0, sog: 0 });
 
-  // Local GLB settings state
-  const DEFAULT_GLB = {
-    revealType: 'none',
-    revealDuration: 2,
-    revealEasing: 'easeOut',
-  };
-  const [localGlb, setLocalGlb] = useState(() => ({ ...DEFAULT_GLB, ...glbSettings }));
-
-  useEffect(() => {
-    if (glbSettings) {
-      setLocalGlb((prev) => ({ ...prev, ...glbSettings }));
-    }
-  }, [glbSettings]);
-
-  const updateGlbField = useCallback(
-    (field, value) => {
-      setLocalGlb((prev) => {
-        const next = { ...prev, [field]: value };
-        onGlbSettingsChange?.(next);
-        return next;
-      });
-    },
-    [onGlbSettingsChange]
-  );
-
-  // Local splat settings state
+  // Local splat settings state (only the loader-related fields are edited here;
+  // animation + radial mask live in RenderPanel).
   const DEFAULT_SPLAT = {
     lod: true,
     extSplats: true,
-    animationType: 'radialReveal',
-    animationDuration: 2.5,
-    animationEasing: 'easeOut',
-    radialClip: true,
-    radialClipDuration: 2.5,
-    radialClipEasing: 'easeOut',
   };
   const [localSplat, setLocalSplat] = useState(() => ({ ...DEFAULT_SPLAT, ...splatSettings }));
 
@@ -267,93 +227,6 @@ export default function SceneEditorPanel({
     [onTransformChange, onApplyTransform]
   );
 
-  // Local lighting state
-  const lighting = scene?.lighting;
-  const [localLighting, setLocalLighting] = useState({
-    ambientIntensity: 0.6,
-    ambientColor: '#ffffff',
-    envMapIntensity: 1.0,
-  });
-
-  useEffect(() => {
-    if (lighting) {
-      setLocalLighting({
-        ambientIntensity: lighting.ambientIntensity ?? 0.6,
-        ambientColor: lighting.ambientColor ?? '#ffffff',
-        envMapIntensity: lighting.envMapIntensity ?? 1.0,
-      });
-    }
-  }, [lighting]);
-
-  const updateLightingField = useCallback(
-    (field, value) => {
-      setLocalLighting((prev) => {
-        const next = { ...prev, [field]: value };
-        onLightingChange?.(next);
-        onApplyLighting?.(next);
-        return next;
-      });
-    },
-    [onLightingChange, onApplyLighting]
-  );
-
-  // Local tint state
-  const tint = scene?.tint;
-  const [localTint, setLocalTint] = useState({
-    enabled: false,
-    color: '#000000',
-    opacity: 0.3,
-    targetOpacity: 0,
-  });
-
-  useEffect(() => {
-    if (tint) {
-      setLocalTint({
-        enabled: tint.enabled !== false,
-        color: tint.color || '#000000',
-        opacity: tint.opacity ?? 0.3,
-        targetOpacity: tint.targetOpacity ?? 0,
-      });
-    }
-  }, [tint]);
-
-  const updateTintField = useCallback(
-    (field, value) => {
-      setLocalTint((prev) => {
-        const next = { ...prev, [field]: value };
-        onTintChange?.(next);
-        onApplyTint?.(next);
-        return next;
-      });
-    },
-    [onTintChange, onApplyTint]
-  );
-
-  // Local saturation state — desaturates skybox, floor and splat; preserves the GLB.
-  const saturation = scene?.saturation;
-  const [localSaturation, setLocalSaturation] = useState({ enabled: false, value: 0.3 });
-
-  useEffect(() => {
-    if (saturation) {
-      setLocalSaturation({
-        enabled: saturation.enabled === true,
-        value: saturation.value ?? 0.3,
-      });
-    }
-  }, [saturation]);
-
-  const updateSaturationField = useCallback(
-    (field, value) => {
-      setLocalSaturation((prev) => {
-        const next = { ...prev, [field]: value };
-        onSaturationChange?.(next);
-        onApplySaturation?.(next);
-        return next;
-      });
-    },
-    [onSaturationChange, onApplySaturation]
-  );
-
   if (!scene) return null;
 
   return (
@@ -479,52 +352,6 @@ export default function SceneEditorPanel({
           {materialsContent}
         </SubAccordion>
 
-        {/* ─── GLB Reveal Animation ─── */}
-        <div className="asset-transform-section">
-          <div className="asset-transform-title">Animación de entrada</div>
-          <div className="splat-setting-row">
-            <span className="splat-setting-label">Tipo</span>
-            <select
-              className="splat-select"
-              value={localGlb.revealType}
-              onChange={(e) => updateGlbField('revealType', e.target.value)}
-            >
-              <option value="none">Sin animación</option>
-              <option value="clip">Clipping Plane</option>
-              <option value="dissolve">Dissolve (ruido)</option>
-            </select>
-          </div>
-          {localGlb.revealType !== 'none' && (
-            <>
-              <TransformRow
-                label="Dur"
-                labelClass=""
-                value={localGlb.revealDuration}
-                min={0.5}
-                max={8}
-                step={0.1}
-                onChange={(v) => updateGlbField('revealDuration', v)}
-                help="Duración de la animación en segundos"
-              />
-              <div className="splat-setting-row">
-                <span className="splat-setting-label">Easing</span>
-                <select
-                  className="splat-select"
-                  value={localGlb.revealEasing}
-                  onChange={(e) => updateGlbField('revealEasing', e.target.value)}
-                >
-                  <option value="linear">Linear</option>
-                  <option value="easeIn">Ease In</option>
-                  <option value="easeOut">Ease Out</option>
-                  <option value="easeInOut">Ease In-Out</option>
-                  <option value="easeOutCubic">Ease Out Cubic</option>
-                  <option value="easeOutBack">Ease Out Back</option>
-                </select>
-              </div>
-            </>
-          )}
-        </div>
-
         {/* ─── Transform ─── */}
         {local && (
           <SubAccordion title="Transform" icon="📐">
@@ -646,85 +473,6 @@ export default function SceneEditorPanel({
             <HelpTooltip text="Duplica VRAM pero mejora la calidad visual. Desactivar en GPUs con poca memoria." />
           </div>
 
-          <div className="asset-transform-title">Animación de entrada</div>
-          <div className="splat-setting-row">
-            <span className="splat-setting-label">Tipo</span>
-            <select
-              className="splat-select"
-              value={localSplat.animationType}
-              onChange={(e) => updateSplatField('animationType', e.target.value)}
-            >
-              <option value="none">Sin animación</option>
-              <option value="radialReveal">Radial progresivo</option>
-            </select>
-          </div>
-          {localSplat.animationType !== 'none' && (
-            <>
-              <TransformRow
-                label="Dur"
-                labelClass=""
-                value={localSplat.animationDuration}
-                min={0.5}
-                max={8}
-                step={0.1}
-                onChange={(v) => updateSplatField('animationDuration', v)}
-                help="Duración de la animación punto → splat en segundos"
-              />
-              <div className="splat-setting-row">
-                <span className="splat-setting-label">Easing</span>
-                <select
-                  className="splat-select"
-                  value={localSplat.animationEasing}
-                  onChange={(e) => updateSplatField('animationEasing', e.target.value)}
-                >
-                  <option value="linear">Linear</option>
-                  <option value="easeIn">Ease In</option>
-                  <option value="easeOut">Ease Out</option>
-                  <option value="easeInOut">Ease In-Out</option>
-                  <option value="easeOutCubic">Ease Out Cubic</option>
-                  <option value="easeOutBack">Ease Out Back</option>
-                </select>
-              </div>
-            </>
-          )}
-
-          <div className="asset-transform-title">Máscara radial</div>
-          <div className="splat-setting-row">
-            <label className="splat-checkbox-label">
-              <input type="checkbox" checked={localSplat.radialClip === true} onChange={(e) => updateSplatField('radialClip', e.target.checked)} />
-              Activar recorte radial
-            </label>
-            <HelpTooltip text="Revela los splats desde el centro hacia afuera con una esfera de recorte animada." />
-          </div>
-          {localSplat.radialClip === true && (
-            <>
-              <TransformRow
-                label="Dur"
-                labelClass=""
-                value={localSplat.radialClipDuration}
-                min={0.5}
-                max={8}
-                step={0.1}
-                onChange={(v) => updateSplatField('radialClipDuration', v)}
-                help="Duración de la expansión radial en segundos"
-              />
-              <div className="splat-setting-row">
-                <span className="splat-setting-label">Easing</span>
-                <select
-                  className="splat-select"
-                  value={localSplat.radialClipEasing}
-                  onChange={(e) => updateSplatField('radialClipEasing', e.target.value)}
-                >
-                  <option value="linear">Linear</option>
-                  <option value="easeIn">Ease In</option>
-                  <option value="easeOut">Ease Out</option>
-                  <option value="easeInOut">Ease In-Out</option>
-                  <option value="easeOutCubic">Ease Out Cubic</option>
-                  <option value="easeOutBack">Ease Out Back</option>
-                </select>
-              </div>
-            </>
-          )}
         </div>
       </AssetAccordion>
 
@@ -825,116 +573,6 @@ export default function SceneEditorPanel({
       </AssetAccordion>
 
       {/* ─── Lighting ─── */}
-      <AssetAccordion
-        title="Iluminación"
-        icon="💡"
-        open={openSection === 'lighting'}
-        onToggle={() => toggleSection('lighting')}
-      >
-        <div className="asset-transform-section">
-          <TransformRow label="Int" labelClass="label-s" value={localLighting.ambientIntensity} min={0} max={5} step={0.05} onChange={(v) => updateLightingField('ambientIntensity', v)} help="Intensidad de la luz ambiental" />
-          <TransformRow label="Env" labelClass="label-s" value={localLighting.envMapIntensity} min={0} max={10} step={0.1} onChange={(v) => updateLightingField('envMapIntensity', v)} help="Intensidad del mapa de entorno (reflejos HDRI)" />
-          <div className="transform-row">
-            <span className="transform-label label-s">Color</span>
-            <HelpTooltip text="Color de la luz ambiental" />
-            <input
-              type="color"
-              value={localLighting.ambientColor}
-              onChange={(e) => updateLightingField('ambientColor', e.target.value)}
-              style={{ flex: 1, height: 24, border: 'none', background: 'transparent', cursor: 'pointer' }}
-            />
-          </div>
-        </div>
-
-        {/* ─── Tint Overlay ─── */}
-        <div className="asset-transform-section">
-          <div className="asset-transform-title">Tint del entorno</div>
-          <label className="hdri-checkbox-row">
-            <input
-              type="checkbox"
-              checked={localTint.enabled}
-              onChange={(e) => updateTintField('enabled', e.target.checked)}
-            />
-            <span>Activar tint</span>
-            <HelpTooltip text="Capa de color semitransparente sobre el entorno (skybox, floor, splat). No afecta la maqueta 3D." />
-          </label>
-          {localTint.enabled && (
-            <>
-              <div className="transform-row">
-                <span className="transform-label label-s">Color</span>
-                <HelpTooltip text="Color del tint del entorno" />
-                <input
-                  type="color"
-                  value={localTint.color}
-                  onChange={(e) => updateTintField('color', e.target.value)}
-                  style={{ flex: 1, height: 24, border: 'none', background: 'transparent', cursor: 'pointer' }}
-                />
-              </div>
-              <TransformRow
-                label="Op"
-                labelClass="label-s"
-                value={localTint.opacity}
-                min={0}
-                max={1}
-                step={0.01}
-                onChange={(v) => updateTintField('opacity', v)}
-                help="Opacidad del tint (0 = transparente, 1 = sólido)"
-              />
-              <TransformRow
-                label="Post"
-                labelClass="label-s"
-                value={localTint.targetOpacity}
-                min={0}
-                max={1}
-                step={0.01}
-                onChange={(v) => updateTintField('targetOpacity', v)}
-                help="Opacidad objetivo del tint después de la animación de entrada del SOG"
-              />
-            </>
-          )}
-        </div>
-
-        {/* ─── Saturación del entorno ─── */}
-        <div className="asset-transform-section">
-          <div className="asset-transform-title">Saturación del entorno</div>
-          <label className="hdri-checkbox-row">
-            <input
-              type="checkbox"
-              checked={localSaturation.enabled}
-              onChange={(e) => updateSaturationField('enabled', e.target.checked)}
-            />
-            <span>Desaturar entorno</span>
-            <HelpTooltip text="Baja la saturación del skybox, floor y splat. La maqueta 3D queda con su color original." />
-          </label>
-          {localSaturation.enabled && (
-            <TransformRow
-              label="Sat"
-              labelClass="label-s"
-              value={localSaturation.value}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={(v) => updateSaturationField('value', v)}
-              help="0 = blanco y negro, 1 = color original"
-            />
-          )}
-        </div>
-
-        {/* ─── Blur del entorno (post-proceso, no afecta la maqueta) ─── */}
-        <div className="asset-transform-section">
-          <div className="asset-transform-title">Blur del entorno</div>
-          <TransformRow
-            label="Blur"
-            labelClass=""
-            value={bgBlur ?? 0}
-            min={0}
-            max={15}
-            step={0.1}
-            onChange={(v) => onBgBlurChange?.(v)}
-            help="Desenfoca skybox, floor y splat con un blur post-proceso. La maqueta 3D queda nítida. 0 desactiva todo el post-proceso (sin costo extra)."
-          />
-        </div>
-      </AssetAccordion>
     </FloatingPanel>
   );
 }
