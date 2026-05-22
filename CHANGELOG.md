@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.5] — 2026-05-22
+
+### ✨ Features
+- staging banner shows full changelog from a centered top pill
+
+### 📦 Chores
+- v0.13.4
+
+---
+
 ## [0.13.4] — 2026-05-22
 
 ### ✨ Features

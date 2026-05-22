@@ -1,11 +1,9 @@
 {
-  "version": "0.13.4",
+  "version": "0.13.5",
   "buildDate": "2026-05-22",
-  "commitHash": "1f98228",
+  "commitHash": "7ea14c2",
   "environment": "production",
   "features": [
-    "editor sidebar overhaul + bottom-right HUD reorg",
-    "editor collider parity with /view/ + compass placement tweak",
-    "north compass HUD in the editor"
+    "staging banner shows full changelog from a centered top pill"
   ]
 }
