@@ -6,6 +6,21 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.4] — 2026-05-22
+
+### ✨ Features
+- editor sidebar overhaul + bottom-right HUD reorg
+- editor collider parity with /view/ + compass placement tweak
+- north compass HUD in the editor
+
+### 🐛 Fixes
+- panorama yaw clamps anchored to the opening heading
+
+### 📦 Chores
+- v0.13.3
+
+---
+
 ## [0.13.3] — 2026-05-21
 
 ### ✨ Features

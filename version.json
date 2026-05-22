@@ -1,12 +1,11 @@
 {
-  "version": "0.13.3",
-  "buildDate": "2026-05-21",
-  "commitHash": "25b845c",
+  "version": "0.13.4",
+  "buildDate": "2026-05-22",
+  "commitHash": "1f98228",
   "environment": "production",
   "features": [
-    "full-screen project library with search, filters, and side panel",
-    "panorama settings — initial heading from unit orientacion + yaw/pitch clamps",
-    "'orientacion' field on unidades (enum N/S/E/O + diagonals)",
-    "scene type 'terreno' with barrios + lotes alongside the existing 'edificio' flow"
+    "editor sidebar overhaul + bottom-right HUD reorg",
+    "editor collider parity with /view/ + compass placement tweak",
+    "north compass HUD in the editor"
   ]
 }
