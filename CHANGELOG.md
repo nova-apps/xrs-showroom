@@ -6,6 +6,19 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.6] — 2026-05-22
+
+### ✨ Features
+- reorganize editor sidebar into focused, drill-in sections
+
+### 🐛 Fixes
+- splat sits in front of the GLB when in front of it, even with bg blur
+
+### 📦 Chores
+- v0.13.5
+
+---
+
 ## [0.13.5] — 2026-05-22
 
 ### ✨ Features
