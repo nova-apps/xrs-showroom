@@ -61,7 +61,7 @@ test.describe('Authentication', () => {
     await page.waitForURL('/', { timeout: 15_000 });
 
     // Home page should show the title
-    await expect(page.locator('h1')).toContainText('XRS Showroom');
+    await expect(page.locator('h1')).toHaveText('Showroom');
   });
 
   test('/scenes/* routes are protected', async ({ page }) => {
