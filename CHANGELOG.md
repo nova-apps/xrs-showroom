@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.7] — 2026-05-26
+
+### ✨ Features
+- panorama walkthrough route for edificio scenes
+
+### 📦 Chores
+- v0.13.6
+
+---
+
 ## [0.13.6] — 2026-05-22
 
 ### ✨ Features

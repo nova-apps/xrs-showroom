@@ -1,9 +1,9 @@
 {
-  "version": "0.13.6",
-  "buildDate": "2026-05-22",
-  "commitHash": "72480be",
+  "version": "0.13.7",
+  "buildDate": "2026-05-26",
+  "commitHash": "74bc72e",
   "environment": "production",
   "features": [
-    "reorganize editor sidebar into focused, drill-in sections"
+    "panorama walkthrough route for edificio scenes"
   ]
 }
