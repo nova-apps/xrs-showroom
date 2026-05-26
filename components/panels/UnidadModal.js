@@ -31,6 +31,10 @@ export default function UnidadModal({
   panoramaYawMax = null,
   panoramaPitchMin = -85,
   panoramaPitchMax = 85,
+  // Hide the "Panorámica" CTA — used in contexts where the panorama is
+  // already the main view (e.g. the /view/[id]/panoramas route), so the
+  // button would be redundant.
+  hidePanoramaButton = false,
 }) {
   const [mounted, setMounted] = useState(false);
   const [showPanorama, setShowPanorama] = useState(false);
@@ -137,14 +141,16 @@ export default function UnidadModal({
 
           {/* Actions — row on mobile */}
           <div className="unit-drawer-actions">
-            <button
-              className={`unit-drawer-btn unit-drawer-btn-panorama${!hasPanorama ? ' disabled' : ''}`}
-              onClick={() => hasPanorama && setShowPanorama(true)}
-              disabled={!hasPanorama}
-              title={hasPanorama ? 'Ver vista panorámica 360°' : 'Sin panorama disponible'}
-            >
-              🌐 Panorámica
-            </button>
+            {!hidePanoramaButton && (
+              <button
+                className={`unit-drawer-btn unit-drawer-btn-panorama${!hasPanorama ? ' disabled' : ''}`}
+                onClick={() => hasPanorama && setShowPanorama(true)}
+                disabled={!hasPanorama}
+                title={hasPanorama ? 'Ver vista panorámica 360°' : 'Sin panorama disponible'}
+              >
+                🌐 Panorámica
+              </button>
+            )}
             <button
               className={`unit-drawer-btn unit-drawer-btn-whatsapp${!whatsappUrl ? ' disabled' : ''}`}
               onClick={handleWhatsappClick}

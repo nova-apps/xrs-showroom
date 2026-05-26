@@ -33,6 +33,7 @@ const FIELDS = [
 
 export default function PanoramicasPanel({
   scene,
+  sceneId,
   onPanoramaSettingsChange,
   collapsed,
   onToggle,
@@ -80,6 +81,24 @@ export default function PanoramicasPanel({
       collapsed={collapsed}
       onToggle={onToggle}
     >
+      {sceneId && (
+        <div className="transform-section">
+          <a
+            href={`/view/${sceneId}/panoramas`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pano-open-btn"
+          >
+            <span>🌐</span>
+            <span>Abrir vista panorámica</span>
+            <span className="pano-open-btn-ext">↗</span>
+          </a>
+          <span className="whatsapp-hint">
+            Recorrido por unidades en panorámica 360°. Se abre en una pestaña nueva.
+          </span>
+        </div>
+      )}
+
       {FIELDS.map((field) => (
         <div key={field.key} className="transform-section">
           <div className="transform-section-title">{field.label}</div>

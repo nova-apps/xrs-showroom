@@ -657,6 +657,7 @@ export default function ScenePage() {
               <div className="rps-section" data-section="panoramicas" data-active={activePanel === 'panoramicas' || undefined}>
                 <PanoramicasPanel
                   scene={scene}
+                  sceneId={sceneId}
                   onPanoramaSettingsChange={updatePanoramaSettings}
                   collapsed={false}
                   onToggle={() => {}}

@@ -24,6 +24,10 @@ import * as THREE from 'three';
  * @param {number}        pitchMin   - Vertical rotation min (degrees, default -85).
  * @param {number}        pitchMax   - Vertical rotation max (degrees, default 85).
  * @param {Function}      onClose    - Callback to close the viewer
+ * @param {boolean}       inline     - If true, renders inline (no portal, no
+ *   overlay, no header, no ESC handler). The container positions itself like
+ *   the 3D viewer canvas — fixed, behind UI panels. Used by the /panoramas
+ *   route where the panorama IS the main view, not a modal.
  */
 export default function PanoramaViewer({
   url,
@@ -34,6 +38,7 @@ export default function PanoramaViewer({
   pitchMin = -85,
   pitchMax = 85,
   onClose,
+  inline = false,
 }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
@@ -170,18 +175,24 @@ export default function PanoramaViewer({
     }
     animate();
 
-    // Resize handler
+    // Resize handler — tracks window resize AND container resize. The latter
+    // matters in inline mode, where the side panel can collapse/expand and
+    // change the canvas area without firing a window resize event.
     function handleResize() {
       const w = container.clientWidth;
       const h = container.clientHeight;
+      if (!w || !h) return;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     }
     window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       renderer.dispose();
       geometry.dispose();
@@ -278,28 +289,21 @@ export default function PanoramaViewer({
   }, [onClose]);
 
   // ─── Keyboard: Escape to close ───
+  // Only wired up in modal mode — inline panoramas have no close action.
   useEffect(() => {
+    if (inline) return;
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  }, [onClose, inline]);
 
   if (!mounted) return null;
 
-  return createPortal(
-    <div className="pano-overlay" onMouseDown={handleOverlayMouseDown} onMouseUp={handleOverlayMouseUp} onClick={(e) => e.stopPropagation()}>
-      {/* Header bar */}
-      <div className="pano-header">
-        <div className="pano-label">
-          <span className="pano-label-icon">🌐</span>
-          <span className="pano-label-text">Unidad {unitId || '—'}</span>
-        </div>
-        <button className="pano-close" onClick={onClose} title="Cerrar (Esc)">✕</button>
-      </div>
-
-      {/* Canvas container */}
+  // Inner content — the canvas + loading/error states. Shared by both modes.
+  const canvasArea = (
+    <>
       <div
         className="pano-canvas"
         ref={containerRef}
@@ -314,7 +318,6 @@ export default function PanoramaViewer({
         style={{ cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
       />
 
-      {/* Loading state */}
       {loading && (
         <div className="pano-loading">
           <div className="pano-spinner" />
@@ -322,17 +325,37 @@ export default function PanoramaViewer({
         </div>
       )}
 
-      {/* Error state */}
       {error && (
         <div className="pano-loading">
           <span>❌ {error}</span>
         </div>
       )}
 
-      {/* Hint */}
       {!loading && !error && (
         <div className="pano-hint">Arrastrá para explorar · Scroll para zoom</div>
       )}
+    </>
+  );
+
+  // Inline mode — no portal, no overlay chrome, no header/close.
+  // The container sits at z-index 0 (matching .viewer-canvas-container) so
+  // side panels render on top of it.
+  if (inline) {
+    return <div className="pano-inline-container">{canvasArea}</div>;
+  }
+
+  return createPortal(
+    <div className="pano-overlay" onMouseDown={handleOverlayMouseDown} onMouseUp={handleOverlayMouseUp} onClick={(e) => e.stopPropagation()}>
+      {/* Header bar */}
+      <div className="pano-header">
+        <div className="pano-label">
+          <span className="pano-label-icon">🌐</span>
+          <span className="pano-label-text">Unidad {unitId || '—'}</span>
+        </div>
+        <button className="pano-close" onClick={onClose} title="Cerrar (Esc)">✕</button>
+      </div>
+
+      {canvasArea}
     </div>,
     document.body
   );

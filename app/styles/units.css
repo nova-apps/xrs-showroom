@@ -1542,6 +1542,51 @@
   animation: panoFadeIn 0.3s ease;
 }
 
+/* Inline mode — the panorama is the main view (not a modal). Positioning
+   mirrors .viewer-canvas-container so the left panel + mobile bottom panel
+   reserve their space the same way they do for the 3D viewer. */
+.pano-inline-container {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+@media (min-width: 769px) {
+  .pano-inline-container {
+    left: 340px;
+    width: calc(100% - 340px);
+  }
+}
+
+@media (max-width: 768px) {
+  .pano-inline-container {
+    bottom: auto;
+    height: calc(100dvh - var(--mobile-panel-h, 0px));
+  }
+}
+
+.pano-inline-container.pano-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  padding: 24px;
+}
+
+.pano-empty-content {
+  max-width: 360px;
+}
+
+.pano-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
 @keyframes panoFadeIn {
   from {
     opacity: 0;
