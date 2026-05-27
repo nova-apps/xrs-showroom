@@ -80,6 +80,12 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     return Array.from(set).sort((a, b) => a - b);
   }, [items]);
 
+  // Only the orientaciones actually present in the data, in canonical order.
+  const orientOptions = useMemo(() => {
+    const present = new Set(items.map((u) => u.orientacion).filter(Boolean));
+    return ORIENTACIONES.filter((o) => present.has(o));
+  }, [items]);
+
   // Filter items
   const filtered = useMemo(() => {
     return items.filter((u) => {
@@ -178,29 +184,31 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
         )}
       </div>
 
-      {/* Orientacion */}
-      <div className="unidad-filter-section">
-        <div
-          className="unidad-filter-header"
-          onClick={() => setShowOrient(!showOrient)}
-        >
-          <span>Orientación</span>
-          <span className={`unidad-filter-chevron ${showOrient ? 'open' : ''}`}>▾</span>
-        </div>
-        {showOrient && (
-          <div className="unidad-filter-pills">
-            {ORIENTACIONES.map((o) => (
-              <button
-                key={o}
-                className={`unidad-pill ${selectedOrient.has(o) ? 'active' : ''}`}
-                onClick={() => toggleOrient(o)}
-              >
-                {o}
-              </button>
-            ))}
+      {/* Orientacion — only the values that actually appear in the data */}
+      {orientOptions.length > 0 && (
+        <div className="unidad-filter-section">
+          <div
+            className="unidad-filter-header"
+            onClick={() => setShowOrient(!showOrient)}
+          >
+            <span>Orientación</span>
+            <span className={`unidad-filter-chevron ${showOrient ? 'open' : ''}`}>▾</span>
           </div>
-        )}
-      </div>
+          {showOrient && (
+            <div className="unidad-filter-pills">
+              {orientOptions.map((o) => (
+                <button
+                  key={o}
+                  className={`unidad-pill ${selectedOrient.has(o) ? 'active' : ''}`}
+                  onClick={() => toggleOrient(o)}
+                >
+                  {o}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Metraje */}
       <div className="unidad-filter-section">
