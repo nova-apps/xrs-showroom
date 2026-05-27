@@ -1728,10 +1728,79 @@
   }
 }
 
+/* Editor-only "save orientation" control — sits above the (fading) hint. */
+.pano-calibrate-btn {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: rgba(37, 99, 235, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 22px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.pano-calibrate-btn:hover {
+  background: rgba(37, 99, 235, 1);
+}
+
+.pano-calibrate-btn:active {
+  transform: translateX(-50%) scale(0.97);
+}
+
+.pano-calibrate-btn.is-saved {
+  background: rgba(22, 163, 74, 0.95);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Calibration summary in the Panorámicas panel */
+.pano-calib-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pano-calib-reset {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pano-calib-reset:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .pano-header {
     padding: 12px 14px;
+  }
+
+  .pano-calibrate-btn {
+    bottom: 56px;
+    font-size: 0.8rem;
+    padding: 9px 15px;
   }
 
   .pano-label-text {

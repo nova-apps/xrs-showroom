@@ -18,14 +18,9 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import UnidadModal from '@/components/panels/UnidadModal';
+import { getInitialLon } from '@/lib/panorama';
 
 const PanoramaViewer = dynamic(() => import('@/components/panels/PanoramaViewer'), { ssr: false });
-
-// Compass bearing per orientacion enum. Mirrors the table in UnidadModal so
-// the panorama's initial heading lines up with the unit's facing direction.
-const ORIENTACION_DEG = {
-  N: 0, NE: 45, E: 90, SE: 135, S: 180, SO: 225, O: 270, NO: 315,
-};
 
 export default function PanoramasPage() {
   const params = useParams();
@@ -104,17 +99,14 @@ export default function PanoramasPage() {
     );
   }
 
-  const panoNorthOffset = scene?.panoramaSettings?.northOffset ?? 0;
   const panoYawMin = scene?.panoramaSettings?.yawMin ?? null;
   const panoYawMax = scene?.panoramaSettings?.yawMax ?? null;
   const panoPitchMin = scene?.panoramaSettings?.pitchMin ?? -85;
   const panoPitchMax = scene?.panoramaSettings?.pitchMax ?? 85;
 
-  // initialLon reproduces the formula from UnidadModal so the heading lines
-  // up with the unit's compass orientation in the equirectangular image.
-  const initialLon = selectedUnit
-    ? panoNorthOffset - (ORIENTACION_DEG[selectedUnit.orientacion] ?? 0)
-    : 0;
+  // Initial heading uses the unit's orientacion and the per-image offset
+  // (falling back to the scene-wide northOffset) — see lib/panorama.
+  const initialLon = getInitialLon(selectedUnit, scene?.panoramaSettings);
 
   return (
     <>
@@ -169,6 +161,7 @@ export default function PanoramasPage() {
           onClose={() => setModalUnit(null)}
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
+          panoramaSettings={scene?.panoramaSettings}
           // The panorama is already on screen in this route, so the modal's
           // "Panorámica" CTA would duplicate what the user is already seeing.
           hidePanoramaButton

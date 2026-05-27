@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import LazyImage from '../ui/LazyImage';
+import { getInitialLon } from '@/lib/panorama';
 
 const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), { ssr: false });
 
@@ -16,25 +17,23 @@ const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), { ssr: false })
  *   id, piso, ambientes, superficie_cubierta, superficie_semicubierta,
  *   superficie_amenities, superficie_total, imagen_plano, imagen_panoramica
  */
-// Compass bearing (degrees, N=0, E=90, S=180, O=270) per orientacion enum.
-const ORIENTACION_DEG = {
-  N: 0, NE: 45, E: 90, SE: 135, S: 180, SO: 225, O: 270, NO: 315,
-};
 
 export default function UnidadModal({
   unit,
   onClose,
   whatsappNumber,
   projectName,
-  panoramaNorthOffset = 0,
-  panoramaYawMin = null,
-  panoramaYawMax = null,
-  panoramaPitchMin = -85,
-  panoramaPitchMax = 85,
+  // Whole panoramaSettings node — the viewer's initial heading, yaw/pitch
+  // clamps and per-image offsets are all derived from it via lib/panorama.
+  panoramaSettings = null,
   // Hide the "Panorámica" CTA — used in contexts where the panorama is
   // already the main view (e.g. the /view/[id]/panoramas route), so the
   // button would be redundant.
   hidePanoramaButton = false,
+  // Editor-only: enables the panorama viewer's "save orientation" control.
+  // Called with (unit, lon) when the operator saves a calibration.
+  calibrationEnabled = false,
+  onSaveCalibration,
 }) {
   const [mounted, setMounted] = useState(false);
   const [showPanorama, setShowPanorama] = useState(false);
@@ -168,11 +167,15 @@ export default function UnidadModal({
         <PanoramaViewer
           url={unit.imagen_panoramica}
           unitId={unit.id}
-          initialLon={(panoramaNorthOffset ?? 0) - (ORIENTACION_DEG[unit.orientacion] ?? 0)}
-          yawMin={panoramaYawMin}
-          yawMax={panoramaYawMax}
-          pitchMin={panoramaPitchMin ?? -85}
-          pitchMax={panoramaPitchMax ?? 85}
+          initialLon={getInitialLon(unit, panoramaSettings)}
+          // While calibrating, ignore the yaw clamp so the operator can rotate
+          // freely to correct even a badly-misoriented image.
+          yawMin={calibrationEnabled ? null : (panoramaSettings?.yawMin ?? null)}
+          yawMax={calibrationEnabled ? null : (panoramaSettings?.yawMax ?? null)}
+          pitchMin={panoramaSettings?.pitchMin ?? -85}
+          pitchMax={panoramaSettings?.pitchMax ?? 85}
+          calibrationEnabled={calibrationEnabled}
+          onSaveCalibration={(lon) => onSaveCalibration?.(unit, lon)}
           onClose={() => setShowPanorama(false)}
         />
       )}

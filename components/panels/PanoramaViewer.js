@@ -28,6 +28,12 @@ import * as THREE from 'three';
  *   overlay, no header, no ESC handler). The container positions itself like
  *   the 3D viewer canvas — fixed, behind UI panels. Used by the /panoramas
  *   route where the panorama IS the main view, not a modal.
+ * @param {boolean}       calibrationEnabled - Editor-only. Shows a "save
+ *   orientation" control: the operator drags the image to the correct heading
+ *   and saves the current longitude as this image's offset.
+ * @param {Function}      onSaveCalibration  - Called with the current longitude
+ *   (degrees) when the operator saves. The caller turns it into a per-image
+ *   offset (see lib/panorama imageOffsetFromLon).
  */
 export default function PanoramaViewer({
   url,
@@ -39,6 +45,8 @@ export default function PanoramaViewer({
   pitchMax = 85,
   onClose,
   inline = false,
+  calibrationEnabled = false,
+  onSaveCalibration,
 }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
@@ -72,8 +80,20 @@ export default function PanoramaViewer({
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Calibration save — hands the current heading to the caller, who persists
+  // it as this image's offset. Brief visual ack so the operator knows it took.
+  const savedFlashTimer = useRef(null);
+  const handleSaveCalibration = useCallback(() => {
+    onSaveCalibration?.(lonRef.current);
+    setSavedFlash(true);
+    if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
+    savedFlashTimer.current = setTimeout(() => setSavedFlash(false), 1600);
+  }, [onSaveCalibration]);
+  useEffect(() => () => { if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current); }, []);
 
   // ─── Three.js setup ───
   useEffect(() => {
@@ -332,7 +352,22 @@ export default function PanoramaViewer({
       )}
 
       {!loading && !error && (
-        <div className="pano-hint">Arrastrá para explorar · Scroll para zoom</div>
+        <div className="pano-hint">
+          {calibrationEnabled
+            ? 'Arrastrá hasta dejar la unidad bien orientada, después guardá'
+            : 'Arrastrá para explorar · Scroll para zoom'}
+        </div>
+      )}
+
+      {calibrationEnabled && !loading && !error && (
+        <button
+          type="button"
+          className={`pano-calibrate-btn${savedFlash ? ' is-saved' : ''}`}
+          onClick={handleSaveCalibration}
+          title="Guardar la orientación actual para esta imagen"
+        >
+          {savedFlash ? '✓ Orientación guardada' : '📍 Guardar orientación'}
+        </button>
       )}
     </>
   );

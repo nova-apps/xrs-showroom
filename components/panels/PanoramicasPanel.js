@@ -69,9 +69,20 @@ export default function PanoramicasPanel({
     setValues(next);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
-      onPanoramaSettingsChange?.(next);
+      // Merge over the current settings — `next` only holds the scalar FIELDS,
+      // and the DB write replaces the whole node, so spreading preserves the
+      // per-image calibration map (imageOffsets) and any other keys.
+      onPanoramaSettingsChange?.({ ...(scene?.panoramaSettings || {}), ...next });
     }, 400);
-  }, [values, onPanoramaSettingsChange]);
+  }, [values, onPanoramaSettingsChange, scene?.panoramaSettings]);
+
+  // Per-image calibrations (set from the unit panorama viewer in the editor).
+  const calibratedCount = Object.keys(scene?.panoramaSettings?.imageOffsets || {}).length;
+  const handleResetCalibrations = useCallback(() => {
+    if (calibratedCount === 0) return;
+    if (!window.confirm(`¿Borrar la orientación guardada de ${calibratedCount} imagen(es)? Volverán a usar el offset al norte.`)) return;
+    onPanoramaSettingsChange?.({ ...(scene?.panoramaSettings || {}), imageOffsets: {} });
+  }, [calibratedCount, onPanoramaSettingsChange, scene?.panoramaSettings]);
 
   return (
     <FloatingPanel
@@ -120,6 +131,26 @@ export default function PanoramicasPanel({
           </div>
         </div>
       ))}
+
+      <div className="transform-section">
+        <div className="transform-section-title">Calibración por imagen</div>
+        <div className="whatsapp-config">
+          <span className="whatsapp-hint">
+            El offset al norte es el valor por defecto. Si una imagen aparece girada,
+            abrí una unidad que la use → <strong>Panorámica</strong> → arrastrá hasta
+            dejarla bien y tocá <strong>Guardar orientación</strong>. Se corrige por
+            imagen, así que todas las unidades que la comparten quedan iguales.
+          </span>
+          <div className="pano-calib-summary">
+            <span>{calibratedCount} imagen{calibratedCount === 1 ? '' : 'es'} calibrada{calibratedCount === 1 ? '' : 's'}</span>
+            {calibratedCount > 0 && (
+              <button type="button" className="pano-calib-reset" onClick={handleResetCalibrations}>
+                Restablecer
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     </FloatingPanel>
   );
 }

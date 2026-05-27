@@ -13,6 +13,7 @@ import { useSceneLoader } from '@/hooks/useSceneLoader';
 import { useHistory } from '@/hooks/useHistory';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { updateScene } from '@/lib/scenes';
+import { panoramaImageKey, imageOffsetFromLon } from '@/lib/panorama';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import UnidadModal from '@/components/panels/UnidadModal';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
@@ -77,6 +78,23 @@ export default function ScenePage() {
   } = useScene(sceneId);
 
   useDocumentMeta(scene?.name, scene?.panelLogoUrl);
+
+  // ─── Panorama calibration ───
+  // The operator drags a unit's panorama to the correct heading and saves. We
+  // turn that longitude into the IMAGE's north offset (lon + orientacionDeg)
+  // and store it under panoramaSettings.imageOffsets, keyed by the image. Units
+  // that share the same image inherit the correction. updatePanoramaSettings
+  // replaces the whole node, so we merge into the current settings.
+  const handleSaveCalibration = useCallback((unit, lon) => {
+    const key = panoramaImageKey(unit?.imagen_panoramica);
+    if (!key) return;
+    const offset = imageOffsetFromLon(lon, unit?.orientacion);
+    const prev = scene?.panoramaSettings || {};
+    updatePanoramaSettings({
+      ...prev,
+      imageOffsets: { ...(prev.imageOffsets || {}), [key]: offset },
+    });
+  }, [scene?.panoramaSettings, updatePanoramaSettings]);
 
   // ─── Shared scene loader (assets + transforms + orbit + lighting + materials) ───
   const {
@@ -683,11 +701,9 @@ export default function ScenePage() {
           onClose={() => setModalUnit(null)}
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
-          panoramaNorthOffset={scene?.panoramaSettings?.northOffset ?? 0}
-          panoramaYawMin={scene?.panoramaSettings?.yawMin ?? null}
-          panoramaYawMax={scene?.panoramaSettings?.yawMax ?? null}
-          panoramaPitchMin={scene?.panoramaSettings?.pitchMin ?? -85}
-          panoramaPitchMax={scene?.panoramaSettings?.pitchMax ?? 85}
+          panoramaSettings={scene?.panoramaSettings}
+          calibrationEnabled
+          onSaveCalibration={handleSaveCalibration}
         />
       )}
     </>
