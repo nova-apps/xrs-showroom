@@ -1,9 +1,10 @@
 {
-  "version": "0.13.7",
-  "buildDate": "2026-05-26",
-  "commitHash": "74bc72e",
+  "version": "0.13.8",
+  "buildDate": "2026-05-27",
+  "commitHash": "3253625",
   "environment": "production",
   "features": [
-    "panorama walkthrough route for edificio scenes"
+    "orientation filter only lists values present in the data",
+    "per-image panorama orientation calibration"
   ]
 }

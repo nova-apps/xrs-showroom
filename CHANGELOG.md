@@ -6,6 +6,17 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.8] — 2026-05-27
+
+### ✨ Features
+- orientation filter only lists values present in the data
+- per-image panorama orientation calibration
+
+### 📦 Chores
+- v0.13.7
+
+---
+
 ## [0.13.7] — 2026-05-26
 
 ### ✨ Features
