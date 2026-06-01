@@ -27,16 +27,21 @@ export default function AmenitiesListPanel({
         ) : (
           <div className="unidades-list">
             <div className="unidades-list-items amenities-grid-list">
-              {items.map((amenity, index) => (
+              {items.map((amenity, index) => {
+                // Prefer the dedicated thumbnail, then the cover image, then
+                // the first gallery image. Old amenities only have `plano`.
+                const gallery = Array.isArray(amenity.imagenes) ? amenity.imagenes : [];
+                const cover = amenity.thumbnail || amenity.plano || gallery[0] || '';
+                return (
                 <div
                   key={amenity.nombre || index}
                   className="unidad-card amenity-card"
                   onClick={() => onSelectAmenity?.(amenity)}
                 >
                   <div className="unidad-thumb amenity-card-thumb">
-                    {amenity.plano ? (
+                    {cover ? (
                       <Image
-                        src={amenity.plano}
+                        src={cover}
                         alt={amenity.nombre || ''}
                         fill
                         sizes="(max-width: 768px) 50vw, 96px"
@@ -53,7 +58,8 @@ export default function AmenitiesListPanel({
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

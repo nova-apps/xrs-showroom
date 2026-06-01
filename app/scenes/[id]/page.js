@@ -45,7 +45,9 @@ export default function ScenePage() {
 
   const [modalUnit, setModalUnit] = useState(null);
   const [modalAmenity, setModalAmenity] = useState(null);
-  const [assetVisibility, setAssetVisibility] = useState({ glb: true, colliders: true, sog: true, skybox: true, floor: true });
+  // Colliders default to hidden: they only surface on hover/select (matching
+  // the published view). The eye toggle force-shows all of them while editing.
+  const [assetVisibility, setAssetVisibility] = useState({ glb: true, colliders: false, sog: true, skybox: true, floor: true });
   const [gizmoMode, setGizmoMode] = useState('select');
   const [gizmoAsset, setGizmoAsset] = useState('glb');
   const [hdriFromSkybox, setHdriFromSkybox] = useState(false);

@@ -147,8 +147,10 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
           if (isEditor) {
             allPromises.push((async () => {
               await v.loadColliders(collidersUrl);
-              const vis = scene.collidersVisible;
-              if (vis === false) v.setCollidersVisible(false);
+              // Editor mirrors the published view: colliders stay hidden by
+              // default (so the imported GLB material never shows) and only
+              // surface on hover/select. The eye toggle can force-show them.
+              v.setCollidersVisible(false);
               v.setCollidersHoverEnabled?.(true);
             })());
           } else {

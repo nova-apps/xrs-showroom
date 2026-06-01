@@ -140,12 +140,11 @@ export default function UnidadModal({
 
           {/* Actions — row on mobile */}
           <div className="unit-drawer-actions">
-            {!hidePanoramaButton && (
+            {!hidePanoramaButton && hasPanorama && (
               <button
-                className={`unit-drawer-btn unit-drawer-btn-panorama${!hasPanorama ? ' disabled' : ''}`}
-                onClick={() => hasPanorama && setShowPanorama(true)}
-                disabled={!hasPanorama}
-                title={hasPanorama ? 'Ver vista panorámica 360°' : 'Sin panorama disponible'}
+                className="unit-drawer-btn unit-drawer-btn-panorama"
+                onClick={() => setShowPanorama(true)}
+                title="Ver vista panorámica 360°"
               >
                 🌐 Panorámica
               </button>

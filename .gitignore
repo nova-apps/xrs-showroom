@@ -43,3 +43,6 @@ yarn-error.log*
 next-env.d.ts
 
 /.firebase
+
+# data import/export files (kept out of the repo)
+*.csv

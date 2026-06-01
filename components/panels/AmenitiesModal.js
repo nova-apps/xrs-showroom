@@ -6,19 +6,31 @@ import { db, storage } from '@/lib/firebase';
 import { ref as dbRef, get } from 'firebase/database';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
-/**
- * Column definitions for the amenities table.
- */
-const COLUMNS = [
-  { key: 'nombre',      label: 'Nombre',      type: 'text',     placeholder: 'Ej: Piscina' },
-  { key: 'descripcion', label: 'Descripción',  type: 'text',     placeholder: 'Descripción...' },
-  { key: 'plano',       label: 'Plano',        type: 'file',     placeholder: 'Subir imagen...' },
+/** Free-text columns rendered as plain inputs. */
+const TEXT_COLUMNS = [
+  { key: 'nombre',      label: 'Nombre',      placeholder: 'Ej: Piscina' },
+  { key: 'descripcion', label: 'Descripción', placeholder: 'Descripción...' },
 ];
 
+/** A fresh, fully-formed amenity row. */
 function emptyRow() {
-  const row = {};
-  COLUMNS.forEach((col) => { row[col.key] = ''; });
-  return row;
+  return { nombre: '', descripcion: '', plano: '', imagenes: [], thumbnail: '' };
+}
+
+/** Coerce a possibly-RTDB-shaped value into a clean array of URLs. */
+function toImageArray(v) {
+  if (Array.isArray(v)) return v.filter(Boolean);
+  if (v && typeof v === 'object') return Object.values(v).filter(Boolean);
+  return [];
+}
+
+/** Normalize an incoming item (from Firebase) into the editor row shape. */
+function normalizeRow(it) {
+  return {
+    ...emptyRow(),
+    ...it,
+    imagenes: toImageArray(it?.imagenes),
+  };
 }
 
 const MAX_DIM = 1600;
@@ -50,20 +62,119 @@ async function compressImage(input, originalName = 'image') {
   return { blob, name: `${baseName}.webp` };
 }
 
+/* ─── CSV parsing (shared shape with UnidadesCargaModal) ─── */
+
+/** Split CSV text into lines, respecting quoted fields that span newlines. */
+function splitCSVLines(text) {
+  const lines = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      current += ch;
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (current.trim()) lines.push(current);
+      current = '';
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) lines.push(current);
+  return lines;
+}
+
+/** Split a CSV line into cells, respecting quoted fields. */
+function splitCSVRow(line) {
+  const cells = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if ((ch === ',' || ch === ';') && !inQuotes) {
+      cells.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  cells.push(current);
+  return cells;
+}
+
+const normHeader = (s) =>
+  (s || '').toLowerCase().trim()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, ' ');
+
+/** Collapse stray tabs / repeated whitespace a spreadsheet may leave behind. */
+const cleanText = (s) => (s || '').replace(/\s+/g, ' ').trim();
+
+/**
+ * Parse an amenities CSV into editor rows.
+ * Recognised headers (accent/case-insensitive):
+ *   Amenity → nombre, Descripción → descripcion, Imagen → plano (cover),
+ *   "Imagen 1".."Imagen N" → imagenes[] (gallery), Thumbnail → thumbnail.
+ * Unknown columns are ignored.
+ */
+function parseAmenitiesCSV(text) {
+  const lines = splitCSVLines(text);
+  if (lines.length === 0) return [];
+
+  const header = splitCSVRow(lines[0]).map(normHeader);
+  const col = {};               // field → cell index
+  const galleryIdx = [];        // ordered list of gallery cell indices
+  header.forEach((h, i) => {
+    if (h === 'amenity' || h === 'nombre' || h === 'name') col.nombre = i;
+    else if (h === 'descripcion' || h === 'description') col.descripcion = i;
+    else if (h === 'imagen' || h === 'imagen principal' || h === 'plano') col.plano = i;
+    else if (h === 'thumbnail' || h === 'miniatura') col.thumbnail = i;
+    else if (/^imagen \d+$/.test(h)) galleryIdx.push(i);
+  });
+
+  return lines.slice(1).map((line) => {
+    const cells = splitCSVRow(line);
+    const at = (i) => (i == null ? '' : (cells[i] ?? '').trim());
+    const cover = at(col.plano);
+    const gallery = galleryIdx.map((i) => at(i)).filter(Boolean);
+    return {
+      ...emptyRow(),
+      nombre: cleanText(at(col.nombre)),
+      descripcion: cleanText(at(col.descripcion)),
+      plano: cover,
+      imagenes: gallery,
+      thumbnail: at(col.thumbnail),
+    };
+  }).filter((r) => r.nombre || r.descripcion || r.plano || r.thumbnail || r.imagenes.length);
+}
+
 export default function AmenitiesModal({ items = [], sceneId, onSave, onClose }) {
   const [rows, setRows] = useState(() =>
-    items.length > 0 ? items.map((it) => ({ ...emptyRow(), ...it })) : [emptyRow()]
+    items.length > 0 ? items.map(normalizeRow) : [emptyRow()]
   );
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [uploadingCell, setUploadingCell] = useState(null); // { idx, mode }
+  const [uploadingCell, setUploadingCell] = useState(null); // { idx, mode, field }
   const [uploadProgress, setUploadProgress] = useState(0);
   const [bulkRecompress, setBulkRecompress] = useState(null); // { done, total } | null
+  const [csvStatus, setCsvStatus] = useState(null); // null | { type, msg }
   const tableRef = useRef(null);
+  const importInputRef = useRef(null);
+  const replaceInputRef = useRef(null);
   const pendingDeletesRef = useRef([]);
 
   useEffect(() => { setMounted(true); }, []);
+
+  const flashStatus = useCallback((type, msg, ms = 4000) => {
+    setCsvStatus({ type, msg });
+    setTimeout(() => setCsvStatus(null), ms);
+  }, []);
 
   // ─── Cell editing ───
   const handleChange = useCallback((rowIdx, colKey, value) => {
@@ -80,9 +191,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
     setRows((prev) => [...prev, emptyRow()]);
     setHasChanges(true);
     setTimeout(() => {
-      if (tableRef.current) {
-        tableRef.current.scrollTop = tableRef.current.scrollHeight;
-      }
+      if (tableRef.current) tableRef.current.scrollTop = tableRef.current.scrollHeight;
     }, 50);
   }, []);
 
@@ -96,7 +205,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
 
   const duplicateRow = useCallback((idx) => {
     setRows((prev) => {
-      const copy = { ...prev[idx] };
+      const copy = { ...prev[idx], imagenes: [...(prev[idx].imagenes || [])] };
       const updated = [...prev];
       updated.splice(idx + 1, 0, copy);
       return updated;
@@ -104,13 +213,8 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
     setHasChanges(true);
   }, []);
 
-  // ─── File upload ───
-  const handleFileUpload = useCallback(async (idx, file) => {
-    if (!file || !sceneId) return;
-
-    setUploadingCell({ idx, mode: 'upload' });
-    setUploadProgress(0);
-
+  // ─── Core upload: compress → upload → resolve URL ───
+  const doUpload = useCallback(async (file) => {
     let blob = file;
     let name = file.name;
     try {
@@ -128,40 +232,79 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
       cacheControl: 'public, max-age=2592000, immutable',
     });
 
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        setUploadProgress(pct);
-      },
-      (error) => {
-        console.error('[Amenity Upload] Error:', error);
-        setUploadingCell(null);
-        setUploadProgress(0);
-      },
-      async () => {
-        try {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          setRows((prev) => {
-            const updated = [...prev];
-            updated[idx] = { ...updated[idx], plano: url };
-            return updated;
-          });
-          setHasChanges(true);
-        } catch (err) {
-          console.error('[Amenity Upload] getDownloadURL error:', err);
+    return await new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snap) => setUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+        reject,
+        async () => {
+          try { resolve(await getDownloadURL(uploadTask.snapshot.ref)); }
+          catch (err) { reject(err); }
         }
-        setUploadingCell(null);
-        setUploadProgress(0);
-      }
-    );
+      );
+    });
   }, [sceneId]);
 
-  // ─── Recompress existing plano ───
+  // ─── Single-image upload (plano cover or thumbnail) ───
+  const handleFileUpload = useCallback(async (idx, file, field) => {
+    if (!file || !sceneId) return;
+    setUploadingCell({ idx, mode: 'upload', field });
+    setUploadProgress(0);
+    try {
+      const url = await doUpload(file);
+      setRows((prev) => {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], [field]: url };
+        return updated;
+      });
+      setHasChanges(true);
+    } catch (err) {
+      console.error('[Amenity Upload] Error:', err);
+    } finally {
+      setUploadingCell(null);
+      setUploadProgress(0);
+    }
+  }, [sceneId, doUpload]);
+
+  // ─── Gallery: append one or more images sequentially ───
+  const handleGalleryAdd = useCallback(async (idx, fileList) => {
+    if (!sceneId || !fileList?.length) return;
+    const files = Array.from(fileList);
+    for (const file of files) {
+      setUploadingCell({ idx, mode: 'upload', field: 'imagenes' });
+      setUploadProgress(0);
+      try {
+        const url = await doUpload(file);
+        setRows((prev) => {
+          const updated = [...prev];
+          const arr = Array.isArray(updated[idx].imagenes) ? updated[idx].imagenes : [];
+          updated[idx] = { ...updated[idx], imagenes: [...arr, url] };
+          return updated;
+        });
+        setHasChanges(true);
+      } catch (err) {
+        console.error('[Amenity Gallery] Upload error:', err);
+      }
+    }
+    setUploadingCell(null);
+    setUploadProgress(0);
+  }, [sceneId, doUpload]);
+
+  const removeGalleryImage = useCallback((idx, imgIdx) => {
+    setRows((prev) => {
+      const updated = [...prev];
+      const arr = (updated[idx].imagenes || []).filter((_, i) => i !== imgIdx);
+      updated[idx] = { ...updated[idx], imagenes: arr };
+      return updated;
+    });
+    setHasChanges(true);
+  }, []);
+
+  // ─── Recompress existing cover (plano) ───
   const recompressUrl = useCallback(async (idx, url) => {
     if (!url || !sceneId) return { skipped: true, reason: 'no-url' };
 
-    setUploadingCell({ idx, mode: 'recompress' });
+    setUploadingCell({ idx, mode: 'recompress', field: 'plano' });
     setUploadProgress(0);
 
     try {
@@ -169,17 +312,13 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
       if (!resp.ok) throw new Error(`fetch ${resp.status}`);
       const original = await resp.blob();
 
-      if (!original.type.startsWith('image/')) {
-        return { skipped: true, reason: 'not-image' };
-      }
+      if (!original.type.startsWith('image/')) return { skipped: true, reason: 'not-image' };
       if (original.type === 'image/webp' && original.size < ALREADY_OPTIMIZED_BYTES) {
         return { skipped: true, reason: 'already-optimized' };
       }
 
       const { blob, name } = await compressImage(original, 'amenity.jpg');
-      if (blob.size >= original.size) {
-        return { skipped: true, reason: 'compression-not-helpful' };
-      }
+      if (blob.size >= original.size) return { skipped: true, reason: 'compression-not-helpful' };
 
       const path = `scenes/${sceneId}/amenities/${Date.now()}_${name}`;
       const fileRef = storageRef(storage, path);
@@ -220,11 +359,8 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
     if (!url) return;
     try {
       const result = await recompressUrl(idx, url);
-      if (result.skipped) {
-        console.log('[Amenity Recompress] Skipped:', result.reason);
-      } else {
-        console.log(`[Amenity Recompress] Saved ${(result.savedBytes / 1024).toFixed(0)} KB`);
-      }
+      if (result.skipped) console.log('[Amenity Recompress] Skipped:', result.reason);
+      else console.log(`[Amenity Recompress] Saved ${(result.savedBytes / 1024).toFixed(0)} KB`);
     } catch (err) {
       console.error('[Amenity Recompress] Error:', err);
       window.alert('Error al comprimir. Revisá la consola.');
@@ -233,9 +369,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
 
   const handleRecompressAll = useCallback(async () => {
     if (uploadingCell || bulkRecompress) return;
-    const jobs = rows
-      .map((r, i) => ({ idx: i, url: r.plano }))
-      .filter((j) => j.url);
+    const jobs = rows.map((r, i) => ({ idx: i, url: r.plano })).filter((j) => j.url);
     if (jobs.length === 0) return;
 
     setBulkRecompress({ done: 0, total: jobs.length });
@@ -250,39 +384,102 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
       setBulkRecompress({ done: i + 1, total: jobs.length });
     }
     setBulkRecompress(null);
-    if (totalSaved > 0) {
-      console.log(`[Amenity Recompress] Total saved: ${(totalSaved / 1024).toFixed(0)} KB`);
-    }
+    if (totalSaved > 0) console.log(`[Amenity Recompress] Total saved: ${(totalSaved / 1024).toFixed(0)} KB`);
   }, [rows, uploadingCell, bulkRecompress, recompressUrl]);
+
+  // ─── CSV import / replace ───
+  const importCSV = useCallback((file, mode) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const parsed = parseAmenitiesCSV(evt.target.result);
+        if (parsed.length === 0) {
+          flashStatus('error', 'El CSV está vacío o no tiene datos válidos.');
+          return;
+        }
+        setRows((prev) => {
+          if (mode === 'replace') return parsed;
+          const isEmpty = prev.length === 1 &&
+            !prev[0].nombre && !prev[0].descripcion && !prev[0].plano &&
+            !prev[0].thumbnail && !(prev[0].imagenes || []).length;
+          return isEmpty ? parsed : [...prev, ...parsed];
+        });
+        setHasChanges(true);
+        flashStatus('ok', mode === 'replace'
+          ? `🔄 ${parsed.length} amenities reemplazadas desde CSV.`
+          : `✅ ${parsed.length} amenities agregadas desde CSV.`);
+      } catch (err) {
+        console.error('[Amenity CSV] Parse error:', err);
+        flashStatus('error', `Error al leer CSV: ${err.message}`, 5000);
+      }
+    };
+    reader.readAsText(file);
+  }, [flashStatus]);
+
+  // ─── CSV export ───
+  const handleCSVExport = useCallback(() => {
+    const maxGallery = rows.reduce((m, r) => Math.max(m, (r.imagenes || []).length), 0);
+    const header = ['Amenity', 'Descripción', 'Imagen',
+      ...Array.from({ length: maxGallery }, (_, i) => `Imagen ${i + 1}`), 'Thumbnail'];
+    const esc = (v) => {
+      const s = String(v ?? '');
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = rows.map((r) => {
+      const gallery = r.imagenes || [];
+      const cells = [r.nombre, r.descripcion, r.plano,
+        ...Array.from({ length: maxGallery }, (_, i) => gallery[i] || ''), r.thumbnail];
+      return cells.map(esc).join(',');
+    });
+    const csv = [header.map(esc).join(','), ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'amenities.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [rows]);
 
   // ─── Save ───
   const handleSave = useCallback(async () => {
     if (saving) return;
     setSaving(true);
     try {
-      const cleaned = rows.filter(
-        (r) => COLUMNS.some((col) => (r[col.key] || '').toString().trim())
-      );
+      // Normalize + drop empty rows. `plano` mirrors the first available image
+      // so older readers (list panel, published view) keep working.
+      const cleaned = rows
+        .map((r) => {
+          const imagenes = toImageArray(r.imagenes);
+          const plano = (r.plano || '').trim() || imagenes[0] || '';
+          return {
+            nombre: (r.nombre || '').trim(),
+            descripcion: (r.descripcion || '').trim(),
+            plano,
+            imagenes,
+            thumbnail: (r.thumbnail || '').trim(),
+          };
+        })
+        .filter((r) => r.nombre || r.descripcion || r.plano || r.thumbnail || r.imagenes.length);
+
       await onSave?.(cleaned);
       setHasChanges(false);
 
-      // Flush pending deletes only after a successful save — if the save
-      // fails (or user never saves), the old URLs remain valid in Firestore.
-      //
-      // Skip any URL still referenced by the published snapshot: /view/{id}
-      // reads from `published.amenities` until the next publish, so deleting
-      // those files now would 404 the live site. They stay orphaned on
-      // Storage until a future cleanup pass.
+      // Flush pending deletes only after a successful save, and never delete a
+      // URL still referenced by the published snapshot (the live /view reads it).
       const toDelete = pendingDeletesRef.current.splice(0);
       let publishedUrls = new Set();
       try {
         const snap = await get(dbRef(db, `scenes/${sceneId}/published/amenities/items`));
         for (const item of Object.values(snap.val() || {})) {
           if (item?.plano) publishedUrls.add(item.plano);
+          for (const u of toImageArray(item?.imagenes)) publishedUrls.add(u);
+          if (item?.thumbnail) publishedUrls.add(item.thumbnail);
         }
       } catch (err) {
         console.warn('[AmenitiesModal] Could not read published amenities; skipping deletes to be safe:', err);
-        publishedUrls = new Set(toDelete); // skip everything
+        publishedUrls = new Set(toDelete);
       }
       for (const url of toDelete) {
         if (publishedUrls.has(url)) {
@@ -292,7 +489,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
         try {
           await deleteObject(storageRef(storage, url));
         } catch (err) {
-          console.warn('[AmenitiesModal] Failed to delete old plano:', err);
+          console.warn('[AmenitiesModal] Failed to delete old image:', err);
         }
       }
     } catch (err) {
@@ -310,6 +507,8 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
 
   if (!mounted) return null;
 
+  const busy = uploadingCell !== null || bulkRecompress !== null;
+
   return createPortal(
     <div className="ucm-overlay" onClick={handleClose}>
       <div className="ucm-modal amenities-modal" onClick={(e) => e.stopPropagation()}>
@@ -322,6 +521,41 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
             </span>
           </div>
           <div className="ucm-header-right">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              style={{ display: 'none' }}
+              onChange={(e) => { importCSV(e.target.files?.[0], 'append'); e.target.value = ''; }}
+            />
+            <input
+              ref={replaceInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              style={{ display: 'none' }}
+              onChange={(e) => { importCSV(e.target.files?.[0], 'replace'); e.target.value = ''; }}
+            />
+            <button className="ucm-csv-btn" onClick={handleCSVExport} title="Descargar CSV con todas las amenities">
+              ⬇ Descargar CSV
+            </button>
+            <button
+              className="ucm-csv-btn"
+              onClick={() => importInputRef.current?.click()}
+              title="Agregar amenities desde CSV (se suman a las existentes)"
+            >
+              📄 Importar CSV
+            </button>
+            <button
+              className="ucm-csv-btn ucm-csv-btn-replace"
+              onClick={() => {
+                const hasData = rows.length > 1 || rows[0]?.nombre || rows[0]?.plano || (rows[0]?.imagenes || []).length;
+                if (hasData && !window.confirm('Esto reemplazará TODAS las amenities actuales con el contenido del CSV. ¿Continuar?')) return;
+                replaceInputRef.current?.click();
+              }}
+              title="Reemplazar todas las amenities con un nuevo CSV"
+            >
+              🔄 Reemplazar CSV
+            </button>
             <button
               className={`ucm-save-btn ${saving ? 'saving' : ''} ${!hasChanges ? 'disabled' : ''}`}
               onClick={handleSave}
@@ -329,10 +563,16 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
             >
               {saving ? '⏳ Guardando…' : '💾 Guardar'}
             </button>
-            <button className="ucm-close-btn" onClick={handleClose} title="Cerrar">
-              ✕
-            </button>
+            <button className="ucm-close-btn" onClick={handleClose} title="Cerrar">✕</button>
           </div>
+        </div>
+
+        {/* Hint + CSV status */}
+        <div className="ucm-hint">
+          Importá un CSV (Amenity, Descripción, Imagen, Imagen 1…N, Thumbnail) o cargá amenities a mano.
+          {csvStatus && (
+            <span className={`ucm-csv-status ucm-csv-status-${csvStatus.type}`}>{csvStatus.msg}</span>
+          )}
         </div>
 
         {/* Table */}
@@ -341,117 +581,150 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
             <thead>
               <tr>
                 <th className="ucm-th ucm-th-idx">#</th>
-                {COLUMNS.map((col) => (
+                {TEXT_COLUMNS.map((col) => (
                   <th key={col.key} className="ucm-th">{col.label}</th>
                 ))}
+                <th className="ucm-th">Imagen principal</th>
+                <th className="ucm-th">Galería</th>
+                <th className="ucm-th">Thumbnail</th>
                 <th className="ucm-th ucm-th-actions">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, rowIdx) => (
+              {rows.map((row, rowIdx) => {
+                const cellUploading = uploadingCell?.idx === rowIdx;
+                return (
                 <tr key={rowIdx} className="ucm-row">
                   <td className="ucm-td ucm-td-idx">{rowIdx + 1}</td>
 
-                  {COLUMNS.map((col) => (
+                  {TEXT_COLUMNS.map((col) => (
                     <td key={col.key} className="ucm-td">
-                      {col.type === 'file' ? (
-                        <div className="amenity-plano-cell">
-                          {row[col.key] ? (
-                            <a
-                              href={row[col.key]}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="amenity-plano-link"
-                              title="Ver plano"
-                            >
-                              <img
-                                src={row[col.key]}
-                                alt="plano"
-                                className="amenity-plano-thumb-sm"
-                              />
-                            </a>
-                          ) : null}
-                          <label className="amenity-upload-btn-sm">
-                            {uploadingCell?.idx === rowIdx
-                              ? uploadingCell.mode === 'recompress'
-                                ? (uploadProgress > 0 ? `🗜️ ${uploadProgress}%` : '🗜️ …')
-                                : `${uploadProgress}%`
-                              : row[col.key]
-                                ? '🔄'
-                                : '📁 Subir'}
-                            <input
-                              type="file"
-                              accept="image/*,.pdf"
-                              style={{ display: 'none' }}
-                              disabled={uploadingCell !== null || bulkRecompress !== null}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleFileUpload(rowIdx, file);
-                                e.target.value = '';
-                              }}
-                            />
-                          </label>
-                          {row[col.key] && (
-                            <>
-                              <button
-                                className="amenity-clear-plano"
-                                onClick={() => handleRecompress(rowIdx)}
-                                disabled={uploadingCell !== null || bulkRecompress !== null}
-                                title="Comprimir plano existente"
-                              >
-                                🗜️
-                              </button>
-                              <button
-                                className="amenity-clear-plano"
-                                onClick={() => handleChange(rowIdx, col.key, '')}
-                                disabled={uploadingCell !== null || bulkRecompress !== null}
-                                title="Quitar"
-                              >
-                                ✕
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      ) : (
-                        <input
-                          className="ucm-input"
-                          type={col.type}
-                          value={row[col.key] || ''}
-                          onChange={(e) => handleChange(rowIdx, col.key, e.target.value)}
-                          placeholder={col.placeholder}
-                        />
-                      )}
+                      <input
+                        className="ucm-input"
+                        type="text"
+                        value={row[col.key] || ''}
+                        onChange={(e) => handleChange(rowIdx, col.key, e.target.value)}
+                        placeholder={col.placeholder}
+                      />
                     </td>
                   ))}
 
+                  {/* Imagen principal (cover) */}
+                  <td className="ucm-td">
+                    <div className="amenity-plano-cell">
+                      {row.plano ? (
+                        <a href={row.plano} target="_blank" rel="noopener noreferrer" className="amenity-plano-link" title="Ver imagen">
+                          <img src={row.plano} alt="cover" className="amenity-plano-thumb-sm" />
+                        </a>
+                      ) : null}
+                      <label className="amenity-upload-btn-sm">
+                        {cellUploading && uploadingCell.field === 'plano'
+                          ? (uploadingCell.mode === 'recompress'
+                              ? (uploadProgress > 0 ? `🗜️ ${uploadProgress}%` : '🗜️ …')
+                              : `${uploadProgress}%`)
+                          : row.plano ? '🔄' : '📁 Subir'}
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          style={{ display: 'none' }}
+                          disabled={busy}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(rowIdx, file, 'plano');
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                      {row.plano && (
+                        <>
+                          <button className="amenity-clear-plano" onClick={() => handleRecompress(rowIdx)} disabled={busy} title="Comprimir imagen existente">🗜️</button>
+                          <button className="amenity-clear-plano" onClick={() => handleChange(rowIdx, 'plano', '')} disabled={busy} title="Quitar">✕</button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Galería (imagenes[]) */}
+                  <td className="ucm-td">
+                    <div className="amenity-gallery-cell">
+                      {(row.imagenes || []).map((url, imgIdx) => (
+                        <div key={`${url}-${imgIdx}`} className="amenity-gallery-thumb-wrap">
+                          <a href={url} target="_blank" rel="noopener noreferrer" title="Ver imagen">
+                            <img src={url} alt={`img-${imgIdx + 1}`} className="amenity-plano-thumb-sm" />
+                          </a>
+                          <button
+                            className="amenity-gallery-thumb-remove"
+                            onClick={() => removeGalleryImage(rowIdx, imgIdx)}
+                            disabled={busy}
+                            title="Quitar"
+                          >✕</button>
+                        </div>
+                      ))}
+                      <label className="amenity-upload-btn-sm">
+                        {cellUploading && uploadingCell.field === 'imagenes' ? `${uploadProgress}%` : '➕ Imágenes'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          style={{ display: 'none' }}
+                          disabled={busy}
+                          onChange={(e) => {
+                            const files = e.target.files;
+                            if (files?.length) handleGalleryAdd(rowIdx, files);
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </td>
+
+                  {/* Thumbnail */}
+                  <td className="ucm-td">
+                    <div className="amenity-plano-cell">
+                      {row.thumbnail ? (
+                        <a href={row.thumbnail} target="_blank" rel="noopener noreferrer" className="amenity-plano-link" title="Ver thumbnail">
+                          <img src={row.thumbnail} alt="thumb" className="amenity-plano-thumb-sm" />
+                        </a>
+                      ) : null}
+                      <label className="amenity-upload-btn-sm">
+                        {cellUploading && uploadingCell.field === 'thumbnail' ? `${uploadProgress}%` : row.thumbnail ? '🔄' : '📁 Subir'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          disabled={busy}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(rowIdx, file, 'thumbnail');
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                      {row.thumbnail && (
+                        <button className="amenity-clear-plano" onClick={() => handleChange(rowIdx, 'thumbnail', '')} disabled={busy} title="Quitar">✕</button>
+                      )}
+                    </div>
+                  </td>
+
                   <td className="ucm-td ucm-td-actions">
-                    <button
-                      className="ucm-action-btn"
-                      onClick={() => duplicateRow(rowIdx)}
-                      title="Duplicar"
-                    >📋</button>
-                    <button
-                      className="ucm-action-btn ucm-action-btn-delete"
-                      onClick={() => removeRow(rowIdx)}
-                      title="Eliminar"
-                    >🗑️</button>
+                    <button className="ucm-action-btn" onClick={() => duplicateRow(rowIdx)} title="Duplicar">📋</button>
+                    <button className="ucm-action-btn ucm-action-btn-delete" onClick={() => removeRow(rowIdx)} title="Eliminar">🗑️</button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* Add row */}
+        {/* Footer */}
         <div className="ucm-footer">
-          <button className="ucm-add-btn" onClick={addRow}>
-            ➕ Agregar Amenity
-          </button>
+          <button className="ucm-add-btn" onClick={addRow}>➕ Agregar Amenity</button>
           <button
             className="ucm-add-btn"
             onClick={handleRecompressAll}
-            disabled={uploadingCell !== null || bulkRecompress !== null || !rows.some((r) => r.plano)}
-            title="Recomprime todos los planos existentes que no estén ya optimizados"
+            disabled={busy || !rows.some((r) => r.plano)}
+            title="Recomprime las imágenes principales que no estén ya optimizadas"
           >
             {bulkRecompress
               ? `🗜️ Comprimiendo ${bulkRecompress.done}/${bulkRecompress.total}…`

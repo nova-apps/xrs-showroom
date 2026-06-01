@@ -838,7 +838,13 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
           if (s.glbModel) s.glbModel.visible = visible;
           break;
         case 'colliders':
-          if (s.collidersModel) s.collidersModel.visible = visible;
+          // Toggle the child meshes, not the wrapper: the hover-highlight
+          // system keeps the wrapper rendered and surfaces individual meshes
+          // on demand. Hiding the wrapper would break hover/select; hiding the
+          // children returns the colliders to their hover-only default.
+          if (s.collidersModel) {
+            s.collidersModel.traverse((c) => { if (c.isMesh) c.visible = visible; });
+          }
           break;
         case 'sog':
           if (s.splatMesh) s.splatMesh.visible = visible;
