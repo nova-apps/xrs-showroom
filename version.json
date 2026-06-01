@@ -1,10 +1,9 @@
 {
-  "version": "0.13.8",
-  "buildDate": "2026-05-27",
-  "commitHash": "3253625",
+  "version": "0.13.9",
+  "buildDate": "2026-06-01",
+  "commitHash": "00c84e3",
   "environment": "production",
   "features": [
-    "orientation filter only lists values present in the data",
-    "per-image panorama orientation calibration"
+    "galería de imágenes, thumbnail e importación por CSV"
   ]
 }
