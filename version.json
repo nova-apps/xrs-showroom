@@ -1,9 +1,9 @@
 {
-  "version": "0.13.9",
+  "version": "0.13.10",
   "buildDate": "2026-06-01",
-  "commitHash": "00c84e3",
+  "commitHash": "e24562f",
   "environment": "production",
   "features": [
-    "galería de imágenes, thumbnail e importación por CSV"
+    "Maintenance and stability improvements"
   ]
 }
