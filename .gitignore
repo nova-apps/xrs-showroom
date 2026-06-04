@@ -46,3 +46,5 @@ next-env.d.ts
 
 # data import/export files (kept out of the repo)
 *.csv
+# local 3D model artifacts
+/*.glb
