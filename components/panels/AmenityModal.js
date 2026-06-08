@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
+import { tourHasNodes } from '@/lib/tour';
+import TourViewer from './TourViewer';
 
 /**
  * Build the ordered, de-duplicated image list for an amenity.
@@ -28,9 +30,12 @@ export function amenityGallery(amenity) {
 export default function AmenityModal({ amenity, onClose }) {
   const [mounted, setMounted] = useState(false);
   const [index, setIndex] = useState(0);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const gallery = useMemo(() => amenityGallery(amenity), [amenity]);
   const hasMultiple = gallery.length > 1;
+  const hasTour = useMemo(() => tourHasNodes(amenity?.tour), [amenity]);
 
   useEffect(() => {
     setMounted(true);
@@ -39,9 +44,12 @@ export default function AmenityModal({ amenity, onClose }) {
   // Reset to the first image whenever the amenity changes.
   useEffect(() => {
     setIndex(0);
+    setTourOpen(false);
+    setImgLoaded(false);
   }, [amenity]);
 
   const go = useCallback((delta) => {
+    setImgLoaded(false);
     setIndex((i) => {
       const n = gallery.length;
       if (n === 0) return 0;
@@ -49,9 +57,10 @@ export default function AmenityModal({ amenity, onClose }) {
     });
   }, [gallery.length]);
 
-  // Arrow-key navigation while the modal is open.
+  // Arrow-key navigation while the modal is open. Suspended while the 360°
+  // tour is open on top — the tour viewer owns the keyboard (Esc closes IT).
   useEffect(() => {
-    if (!amenity) return;
+    if (!amenity || tourOpen) return;
     const onKey = (e) => {
       if (e.key === 'ArrowLeft') go(-1);
       else if (e.key === 'ArrowRight') go(1);
@@ -59,11 +68,13 @@ export default function AmenityModal({ amenity, onClose }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [amenity, go, onClose]);
+  }, [amenity, tourOpen, go, onClose]);
 
   if (!amenity || !mounted) return null;
 
   const currentSrc = gallery[Math.min(index, gallery.length - 1)] || null;
+  // key={currentSrc} remounts the Image on every slide change, so a fresh
+  // onLoad always fires — imgLoaded just needs to reset alongside it.
 
   return createPortal(
     <div className="unidad-modal-overlay" onClick={onClose}>
@@ -73,9 +84,12 @@ export default function AmenityModal({ amenity, onClose }) {
           ✕
         </button>
 
-        {/* Name */}
+        {/* Name + description */}
         <div className="amenity-modal-header">
           <h2 className="unidad-modal-title">{amenity.nombre || 'Amenity'}</h2>
+          {amenity.descripcion && (
+            <p className="amenity-modal-desc">{amenity.descripcion}</p>
+          )}
         </div>
 
         {/* Image / gallery */}
@@ -91,8 +105,12 @@ export default function AmenityModal({ amenity, onClose }) {
                 sizes="(max-width: 768px) 96vw, 800px"
                 quality={90}
                 loading="lazy"
-                className="amenity-modal-img"
+                className={`amenity-modal-img${imgLoaded ? ' is-loaded' : ''}`}
+                onLoad={() => setImgLoaded(true)}
               />
+
+              {/* Skeleton shimmer while the slide loads */}
+              {!imgLoaded && <div className="amenity-gallery-skeleton" />}
 
               {hasMultiple && (
                 <>
@@ -125,13 +143,23 @@ export default function AmenityModal({ amenity, onClose }) {
               <p>Sin imagen disponible</p>
             </div>
           )}
-        </div>
 
-        {/* Description */}
-        {amenity.descripcion && (
-          <p className="amenity-modal-desc">{amenity.descripcion}</p>
-        )}
+          {/* 360° tour CTA — floats over the gallery, Matterport-style */}
+          {hasTour && (
+            <button className="amenity-tour-btn" onClick={() => setTourOpen(true)}>
+              🌐 Recorrer en 360°
+            </button>
+          )}
+        </div>
       </div>
+
+      {tourOpen && (
+        <TourViewer
+          tour={amenity.tour}
+          amenityName={amenity.nombre}
+          onClose={() => setTourOpen(false)}
+        />
+      )}
     </div>,
     document.body
   );

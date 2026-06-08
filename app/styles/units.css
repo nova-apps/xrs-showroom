@@ -549,22 +549,52 @@
   border-color: var(--accent-red);
 }
 
-/* Amenity detail modal description */
+/* Amenity detail modal description — lives in the header, under the title,
+   so all the text reads as one block instead of dangling below the image. */
 .amenity-modal-desc {
-  margin: 0;
-  padding: 16px 28px 24px;
-  font-size: 0.82rem;
+  margin: 8px 0 0;
+  padding: 0;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.55;
-  border-top: 1px solid var(--border-color);
-  flex-shrink: 0;
-  max-height: 28vh;
+  max-height: 18vh;
   overflow-y: auto;
 }
 
 /* ─── Amenity gallery carousel (detail modal) ─── */
 .amenity-gallery {
   position: relative;
+}
+
+/* Lazy-load treatment: slide fades in once decoded; until then a shimmering
+   skeleton holds the space so navigation never flashes empty. */
+.amenity-gallery .amenity-modal-img {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.amenity-gallery .amenity-modal-img.is-loaded {
+  opacity: 1;
+}
+
+.amenity-gallery-skeleton {
+  position: absolute;
+  inset: 24px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 60%
+  );
+  background-size: 200% 100%;
+  animation: amenitySkeletonShimmer 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes amenitySkeletonShimmer {
+  0% { background-position: 120% 0; }
+  100% { background-position: -80% 0; }
 }
 
 .amenity-gallery-arrow {
@@ -2008,4 +2038,553 @@
 .lote-estado-vendido {
   background: rgba(244, 63, 94, 0.18);
   color: rgb(252, 165, 165);
+}
+/* ═══════════════ Amenity 360° tours ═══════════════ */
+
+/* "Recorrer en 360°" CTA — floats over the gallery image like a tour badge,
+   instead of dangling at the bottom of the modal. */
+.amenity-tour-btn {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(8, 8, 14, 0.65);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.amenity-tour-btn:hover {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  transform: translateX(-50%) scale(1.04);
+}
+
+/* ─── Tour viewer: minimap ─── */
+.tour-minimap {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  z-index: 5;
+}
+
+.tour-minimap-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0.9;
+  user-select: none;
+}
+
+.tour-minimap-pin {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(68, 136, 255, 0.65);
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--transition-fast);
+}
+
+.tour-minimap-pin:hover {
+  background: var(--accent-blue);
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.tour-minimap-pin.is-current {
+  background: #fff;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 4px rgba(68, 136, 255, 0.35);
+}
+
+/* ─── Tour viewer: calibration panel (editor preview only) ─── */
+
+/* Crosshair pinned to the exact center of the view — the reference the
+   operator aims at a neighbor before confirming. */
+.tour-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 6;
+}
+
+.tour-crosshair::before,
+.tour-crosshair::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+}
+
+.tour-crosshair::before {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.tour-crosshair::after {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.tour-calibrate {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 18, 24, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 6;
+}
+
+.tour-calibrate-title {
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tour-calibrate-steps {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.tour-calibrate-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tour-calibrate-label {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tour-calibrate .pano-calibrate-btn {
+  position: static;
+  transform: none;
+}
+
+.tour-calibrate-select {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.tour-calibrate-empty {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.75rem;
+}
+
+/* ─── Tour editor modal ─── */
+.tour-editor-modal {
+  max-width: 1200px;
+}
+
+.tour-editor-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 14px;
+  padding: 14px 24px;
+  overflow: hidden;
+}
+
+/* Node list (left) */
+.tour-node-list {
+  width: 290px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tour-node-empty {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.tour-node-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tour-node-item:hover {
+  border-color: rgba(68, 136, 255, 0.4);
+}
+
+.tour-node-item.is-selected {
+  border-color: var(--accent-blue);
+  background: rgba(68, 136, 255, 0.08);
+}
+
+.tour-node-thumb {
+  width: 52px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.tour-node-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tour-node-meta {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.tour-node-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+/* Star / delete on each node card — the table's .ucm-action-btn is too small
+   and fades out outside row hover, which reads as broken here. */
+.tour-node-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tour-node-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.tour-node-btn-delete:hover {
+  background: rgba(255, 80, 80, 0.15);
+  border-color: rgba(255, 80, 80, 0.5);
+}
+
+.tour-start-active {
+  color: #ffd24a !important;
+  border-color: rgba(255, 210, 74, 0.5) !important;
+  background: rgba(255, 210, 74, 0.1) !important;
+}
+
+/* Plan editor (right) */
+.tour-plan {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.tour-plan-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.tour-plan-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.tour-plan-links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.tour-plan-links line {
+  stroke: rgba(68, 136, 255, 0.7);
+  stroke-dasharray: 1.4 1;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 2px;
+}
+
+/* Fat invisible twin of each link — comfortable click target for deleting. */
+.tour-plan-links .tour-link-hit {
+  stroke: transparent;
+  stroke-width: 16px;
+  stroke-dasharray: none;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+/* While connecting, hovering a link telegraphs that clicking deletes it. */
+.tour-plan-links g.is-deletable:hover .tour-link-visible {
+  stroke: rgba(255, 90, 90, 0.95);
+  stroke-width: 3px;
+}
+
+/* Rubber band from the origin pin to the cursor. */
+.tour-plan-links .tour-link-rubber {
+  stroke: rgba(80, 220, 120, 0.9);
+  stroke-dasharray: 2 1.4;
+  stroke-width: 2px;
+}
+
+/* Step-by-step guidance chip while in connect mode. */
+.tour-plan-status {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 8px 14px;
+  border: 1px solid rgba(80, 220, 120, 0.4);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 18, 24, 0.88);
+  backdrop-filter: blur(6px);
+  color: #50dc78;
+  font-size: 0.72rem;
+  font-weight: 600;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.tour-plan-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(68, 136, 255, 0.75);
+  cursor: grab;
+  z-index: 2;
+  transition: box-shadow var(--transition-fast);
+}
+
+.tour-plan-pin:active {
+  cursor: grabbing;
+}
+
+.tour-plan-pin.is-selected {
+  background: #fff;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 5px rgba(68, 136, 255, 0.35);
+}
+
+.tour-plan-pin.is-start::after {
+  content: '★';
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #ffd24a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Connect mode: pins become click targets, the origin pulses green. */
+.tour-plan.is-connecting .tour-plan-pin {
+  cursor: crosshair;
+}
+
+.tour-plan-pin.is-connect-origin {
+  background: #50dc78;
+  border-color: #fff;
+  animation: tourPinPulse 1.1s ease-in-out infinite;
+}
+
+.tour-plan-pin.is-connectable {
+  box-shadow: 0 0 0 4px rgba(80, 220, 120, 0.45);
+}
+
+@keyframes tourPinPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(80, 220, 120, 0.5); }
+  50% { box-shadow: 0 0 0 9px rgba(80, 220, 120, 0.15); }
+}
+
+.tour-plan-pin-label {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+/* Header action extras */
+.tour-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.tour-connect-active {
+  border-color: rgba(80, 220, 120, 0.7) !important;
+  color: #50dc78 !important;
+  background: rgba(80, 220, 120, 0.12) !important;
+}
+
+@media (max-width: 768px) {
+  .tour-editor-body {
+    flex-direction: column;
+  }
+
+  .tour-node-list {
+    width: 100%;
+    max-height: 180px;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .tour-node-item {
+    min-width: 230px;
+  }
+
+  .tour-minimap {
+    width: 150px;
+    right: 10px;
+    bottom: 64px;
+  }
+}
+
+/* Floor-plan upload controls inside the tour plan editor */
+.tour-plan-upload-cta {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 22px;
+  border: 1px dashed rgba(68, 136, 255, 0.55);
+  border-radius: var(--radius-sm);
+  background: rgba(68, 136, 255, 0.1);
+  color: var(--accent-blue);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 3;
+}
+
+.tour-plan-upload-cta:hover {
+  background: rgba(68, 136, 255, 0.2);
+  border-color: var(--accent-blue);
+}
+
+.tour-plan-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 3;
+}
+
+/* Chips floating over the plan image — need a solid backdrop to stay legible
+   regardless of what's underneath. */
+.tour-plan-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 18, 24, 0.85);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.tour-plan-ctrl-btn:hover {
+  background: rgba(40, 48, 60, 0.95);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.tour-plan-ctrl-danger:hover {
+  background: rgba(120, 30, 30, 0.92);
+  border-color: rgba(255, 100, 100, 0.6);
 }

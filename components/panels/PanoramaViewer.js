@@ -129,6 +129,9 @@ export default function PanoramaViewer({
       url,
       (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace;
+        // Anisotropic filtering — without it the texture smears at grazing
+        // angles on the sphere (floor/ceiling look pixelated/blurry).
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
         const material = new THREE.MeshBasicMaterial({ map: texture });
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);

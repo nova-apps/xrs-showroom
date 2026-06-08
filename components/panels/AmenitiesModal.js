@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom';
 import { db, storage } from '@/lib/firebase';
 import { ref as dbRef, get } from 'firebase/database';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { normalizeTour, tourNodeList } from '@/lib/tour';
+import TourEditorModal from './TourEditorModal';
 
 /** Free-text columns rendered as plain inputs. */
 const TEXT_COLUMNS = [
@@ -14,7 +16,7 @@ const TEXT_COLUMNS = [
 
 /** A fresh, fully-formed amenity row. */
 function emptyRow() {
-  return { nombre: '', descripcion: '', plano: '', imagenes: [], thumbnail: '' };
+  return { nombre: '', descripcion: '', plano: '', imagenes: [], thumbnail: '', tour: null };
 }
 
 /** Coerce a possibly-RTDB-shaped value into a clean array of URLs. */
@@ -164,6 +166,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
   const [uploadProgress, setUploadProgress] = useState(0);
   const [bulkRecompress, setBulkRecompress] = useState(null); // { done, total } | null
   const [csvStatus, setCsvStatus] = useState(null); // null | { type, msg }
+  const [tourEditorIdx, setTourEditorIdx] = useState(null); // row index | null
   const tableRef = useRef(null);
   const importInputRef = useRef(null);
   const replaceInputRef = useRef(null);
@@ -298,6 +301,22 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
       return updated;
     });
     setHasChanges(true);
+  }, []);
+
+  // ─── 360° tour editor ───
+  const handleTourSave = useCallback((idx, tour) => {
+    setRows((prev) => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], tour: tour || null };
+      return updated;
+    });
+    setHasChanges(true);
+  }, []);
+
+  // Images of tour nodes deleted in the editor — flushed with the other
+  // pending deletes after a successful save.
+  const queueTourDelete = useCallback((url) => {
+    if (url) pendingDeletesRef.current.push(url);
   }, []);
 
   // ─── Recompress existing cover (plano) ───
@@ -453,15 +472,17 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
         .map((r) => {
           const imagenes = toImageArray(r.imagenes);
           const plano = (r.plano || '').trim() || imagenes[0] || '';
+          const tour = normalizeTour(r.tour);
           return {
             nombre: (r.nombre || '').trim(),
             descripcion: (r.descripcion || '').trim(),
             plano,
             imagenes,
             thumbnail: (r.thumbnail || '').trim(),
+            ...(tour ? { tour } : {}),
           };
         })
-        .filter((r) => r.nombre || r.descripcion || r.plano || r.thumbnail || r.imagenes.length);
+        .filter((r) => r.nombre || r.descripcion || r.plano || r.thumbnail || r.imagenes.length || r.tour);
 
       await onSave?.(cleaned);
       setHasChanges(false);
@@ -476,6 +497,11 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
           if (item?.plano) publishedUrls.add(item.plano);
           for (const u of toImageArray(item?.imagenes)) publishedUrls.add(u);
           if (item?.thumbnail) publishedUrls.add(item.thumbnail);
+          const tour = normalizeTour(item?.tour);
+          if (tour?.plano) publishedUrls.add(tour.plano);
+          for (const node of Object.values(tour?.nodes || {})) {
+            if (node.url) publishedUrls.add(node.url);
+          }
         }
       } catch (err) {
         console.warn('[AmenitiesModal] Could not read published amenities; skipping deletes to be safe:', err);
@@ -587,6 +613,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                 <th className="ucm-th">Imagen principal</th>
                 <th className="ucm-th">Galería</th>
                 <th className="ucm-th">Thumbnail</th>
+                <th className="ucm-th">360°</th>
                 <th className="ucm-th ucm-th-actions">Acciones</th>
               </tr>
             </thead>
@@ -706,6 +733,23 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                     </div>
                   </td>
 
+                  {/* Recorrido 360° */}
+                  <td className="ucm-td">
+                    {(() => {
+                      const nodeCount = tourNodeList(row.tour).length;
+                      return (
+                        <button
+                          className="amenity-upload-btn-sm"
+                          onClick={() => setTourEditorIdx(rowIdx)}
+                          disabled={busy}
+                          title="Editar recorrido 360° (imágenes equirectangulares)"
+                        >
+                          {nodeCount > 0 ? `🌐 ${nodeCount}` : '🌐 Crear'}
+                        </button>
+                      );
+                    })()}
+                  </td>
+
                   <td className="ucm-td ucm-td-actions">
                     <button className="ucm-action-btn" onClick={() => duplicateRow(rowIdx)} title="Duplicar">📋</button>
                     <button className="ucm-action-btn ucm-action-btn-delete" onClick={() => removeRow(rowIdx)} title="Eliminar">🗑️</button>
@@ -732,6 +776,17 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
           </button>
         </div>
       </div>
+
+      {/* 360° tour editor for one amenity row */}
+      {tourEditorIdx !== null && rows[tourEditorIdx] && (
+        <TourEditorModal
+          amenity={rows[tourEditorIdx]}
+          sceneId={sceneId}
+          onSave={(tour) => handleTourSave(tourEditorIdx, tour)}
+          onClose={() => setTourEditorIdx(null)}
+          onQueueDelete={queueTourDelete}
+        />
+      )}
     </div>,
     document.body
   );
