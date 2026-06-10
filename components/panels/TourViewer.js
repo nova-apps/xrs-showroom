@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import * as THREE from 'three';
-import { normalizeTour, hotspotLon, arrivalLon, northOffsetFromLon } from '@/lib/tour';
+import { normalizeTour, hotspotLon, arrivalLon, hotspotLonFromCam, isHotspotCalibrated } from '@/lib/tour';
 
 /**
  * TourViewer — fullscreen multi-node 360° tour (Matterport-style).
@@ -24,9 +24,9 @@ import { normalizeTour, hotspotLon, arrivalLon, northOffsetFromLon } from '@/lib
  * @param {Function} onClose     - close the viewer
  * @param {string}   initialNodeId - node to open with (default: tour.startNode)
  * @param {boolean}  calibrationEnabled - editor-only. Shows the "point at
- *   neighbor" control used to solve each node's northOffset.
- * @param {Function} onCalibrate - (nodeId, northOffsetDeg) when the operator
- *   calibrates. The caller persists it into the tour being edited.
+ *   neighbor" control used to calibrate one arrow at a time.
+ * @param {Function} onCalibrate - (nodeId, targetId, lonDeg) when the operator
+ *   calibrates an arrow. The caller persists it into the tour being edited.
  * @param {boolean}  embedded - render inline inside a container (e.g. the
  *   amenity modal) instead of as a fullscreen portal. In this mode the close
  *   button is swapped for an "expand" button that uses the native Fullscreen
@@ -40,6 +40,7 @@ export default function TourViewer({
   calibrationEnabled = false,
   onCalibrate,
   embedded = false,
+  onReady,
 }) {
   const normalized = useMemo(() => normalizeTour(tour), [tour]);
   const [currentId, setCurrentId] = useState(() =>
@@ -281,6 +282,11 @@ export default function TourViewer({
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
 
+  // Fired once the first node's image is ready (or failed) — lets the host
+  // modal drop its own "loading" overlay.
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
   // ─── Three.js setup (once) ───
   useEffect(() => {
     if (!mounted || !containerRef.current || !currentNode?.url) return;
@@ -334,11 +340,13 @@ export default function TourViewer({
         baseMesh.visible = true;
         setLoading(false);
         buildHotspots();
+        onReadyRef.current?.();
       })
       .catch((err) => {
         console.error('[TourViewer] Texture load error:', err);
         setError('No se pudo cargar la imagen panorámica');
         setLoading(false);
+        onReadyRef.current?.();
       });
 
     function animate() {
@@ -558,7 +566,7 @@ export default function TourViewer({
     const node = t?.nodes?.[currentIdRef.current];
     const target = t?.nodes?.[calibTarget];
     if (!node || !target) return;
-    onCalibrate?.(node.id, northOffsetFromLon(lonRef.current, node, target));
+    onCalibrate?.(node.id, target.id, hotspotLonFromCam(lonRef.current));
     setSavedFlash(true);
     if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
     savedFlashTimer.current = setTimeout(() => setSavedFlash(false), 1600);
@@ -591,6 +599,7 @@ export default function TourViewer({
   const calibOptions = currentNode.links
     .map((id) => normalized.nodes[id])
     .filter(Boolean);
+  const calibratedCount = calibOptions.filter((n) => isHotspotCalibrated(currentNode, n.id)).length;
 
   const content = (
     <div
@@ -638,7 +647,8 @@ export default function TourViewer({
         style={{ cursor: 'grab' }}
       />
 
-      {loading && (
+      {/* Embedded: the host modal shows its own first-load overlay (onReady). */}
+      {loading && !embedded && (
         <div className="pano-loading">
           <div className="pano-spinner" />
           <span>Cargando recorrido…</span>
@@ -682,8 +692,8 @@ export default function TourViewer({
         </div>
       )}
 
-      {/* Calibration (editor only): aim the crosshair at a neighbor and save.
-          One reference per node orients every arrow in it. */}
+      {/* Calibration (editor only): aim the crosshair at one neighbor and save.
+          Each arrow is calibrated independently. */}
       {calibrationEnabled && !loading && !error && (
         <>
           {/* Crosshair marking the exact center of the view */}
@@ -693,11 +703,13 @@ export default function TourViewer({
             {calibOptions.length > 0 ? (
               <>
                 <div className="tour-calibrate-title">
-                  Calibrar orientación de «{currentNode.nombre || 'esta posición'}»
+                  Calibrar flechas de «{currentNode.nombre || 'esta posición'}»
+                  {' '}· {calibratedCount}/{calibOptions.length}
                 </div>
                 <div className="tour-calibrate-steps">
-                  Elegí una posición vecina y arrastrá la vista hasta que la cruz
-                  del centro quede mirando hacia donde está ese lugar en la foto.
+                  Elegí UNA flecha, arrastrá la vista hasta que la cruz del centro
+                  apunte a donde está ese lugar en la foto, y confirmá. Repetí con
+                  cada flecha — se calibran de a una, sin afectar a las demás.
                 </div>
                 <div className="tour-calibrate-row">
                   <span className="tour-calibrate-label">La cruz mira hacia:</span>
@@ -707,7 +719,10 @@ export default function TourViewer({
                     onChange={(e) => setCalibTarget(e.target.value)}
                   >
                     {calibOptions.map((n) => (
-                      <option key={n.id} value={n.id}>{n.nombre || n.id}</option>
+                      <option key={n.id} value={n.id}>
+                        {isHotspotCalibrated(currentNode, n.id) ? '✓ ' : '• '}
+                        {n.nombre || n.id}
+                      </option>
                     ))}
                   </select>
                   <button
@@ -715,7 +730,7 @@ export default function TourViewer({
                     className={`pano-calibrate-btn${savedFlash ? ' is-saved' : ''}`}
                     onClick={handleCalibrate}
                   >
-                    {savedFlash ? '✓ Guardado — flechas actualizadas' : '✓ Confirmar'}
+                    {savedFlash ? '✓ Flecha calibrada' : '✓ Confirmar esta flecha'}
                   </button>
                 </div>
               </>

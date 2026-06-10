@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { storage } from '@/lib/firebase';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { normalizeTour, emptyNode } from '@/lib/tour';
+import { normalizeTour, emptyNode, isHotspotCalibrated } from '@/lib/tour';
 import TourViewer from './TourViewer';
 
 /**
@@ -43,7 +43,9 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
   const [cursorPos, setCursorPos] = useState(null);     // rubber-band end while connecting
   const [uploading, setUploading] = useState(null); // { progress, name } | null
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Mutations still flip this (it marks the working tour dirty); the value
+  // itself is no longer read — autosave reacts to `workingTour` directly.
+  const [, setHasChanges] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const planRef = useRef(null);
@@ -61,6 +63,23 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
     if (!ids.length && !plano) return null;
     return { startNode: startNode || ids[0] || null, plano, nodes };
   }, [nodes, startNode, plano]);
+
+  // Calibration coverage across every arrow (each link is one arrow, calibrated
+  // independently). `pending` drives the "flechas sin calibrar" warning.
+  const calib = useMemo(() => {
+    let total = 0;
+    let done = 0;
+    const perNode = {};
+    for (const n of Object.values(nodes)) {
+      let nd = 0;
+      for (const t of n.links) {
+        total += 1;
+        if (isHotspotCalibrated(n, t)) { done += 1; nd += 1; }
+      }
+      perNode[n.id] = { total: n.links.length, done: nd };
+    }
+    return { total, done, pending: total - done, perNode };
+  }, [nodes]);
 
   const mutateNode = useCallback((id, patch) => {
     setNodes((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], ...patch } } : prev));
@@ -315,21 +334,47 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
     setCursorPos(null);
   }, []);
 
-  // ─── Save / close ───
-  const handleSave = useCallback(() => {
-    const cleaned = normalizeTour(workingTour);
-    onSave?.(cleaned);
-    setHasChanges(false);
-  }, [workingTour, onSave]);
+  // ─── Auto-save ───
+  // Every change applies to the parent automatically (debounced), which
+  // persists it to the draft — no manual "Aplicar"/"Guardar" step. `saved`
+  // drives the little status pill in the header.
+  const [saved, setSaved] = useState(true);
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const workingTourRef = useRef(workingTour);
+  workingTourRef.current = workingTour;
+  const didMountRef = useRef(false);
+
+  useEffect(() => {
+    if (!didMountRef.current) { didMountRef.current = true; return; }
+    setSaved(false);
+    const id = setTimeout(() => {
+      onSaveRef.current?.(normalizeTour(workingTourRef.current));
+      setHasChanges(false);
+      setSaved(true);
+    }, 400);
+    return () => clearTimeout(id);
+  }, [workingTour]);
 
   const handleClose = useCallback(() => {
-    if (hasChanges && !window.confirm('Tenés cambios sin guardar en el recorrido. ¿Cerrar de todos modos?')) return;
+    // Flush the latest immediately in case a debounced apply is still pending.
+    onSaveRef.current?.(normalizeTour(workingTourRef.current));
     onClose?.();
-  }, [hasChanges, onClose]);
+  }, [onClose]);
 
-  const handleCalibrate = useCallback((nodeId, northOffset) => {
-    mutateNode(nodeId, { northOffset });
-  }, [mutateNode]);
+  // Per-arrow calibration: store the explicit longitude for the (nodeId →
+  // targetId) arrow, merging into the node's hotspots map.
+  const handleCalibrate = useCallback((nodeId, targetId, lon) => {
+    setNodes((prev) => {
+      const node = prev[nodeId];
+      if (!node) return prev;
+      return {
+        ...prev,
+        [nodeId]: { ...node, hotspots: { ...(node.hotspots || {}), [targetId]: lon } },
+      };
+    });
+    setHasChanges(true);
+  }, []);
 
   if (!mounted) return null;
 
@@ -351,6 +396,20 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
             <span className="ucm-count">
               {nodeList.length} {nodeList.length === 1 ? 'posición' : 'posiciones'}
             </span>
+            {calib.total > 0 && (
+              calib.pending > 0 ? (
+                <span
+                  className="tour-calib-badge is-pending"
+                  title="Abrí «Vista previa / Calibrar» y orientá cada flecha pendiente"
+                >
+                  ⚠ {calib.pending} {calib.pending === 1 ? 'flecha sin calibrar' : 'flechas sin calibrar'}
+                </span>
+              ) : (
+                <span className="tour-calib-badge is-done" title="Todas las flechas están calibradas">
+                  ✓ Flechas calibradas
+                </span>
+              )
+            )}
           </div>
           <div className="ucm-header-right">
             <label className="ucm-csv-btn tour-upload-btn" title="Subir imágenes equirectangulares (una por posición)">
@@ -382,13 +441,9 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
             >
               👁 Vista previa / Calibrar
             </button>
-            <button
-              className={`ucm-save-btn ${!hasChanges ? 'disabled' : ''}`}
-              onClick={handleSave}
-              disabled={!hasChanges}
-            >
-              💾 Aplicar
-            </button>
+            <span className="tour-autosave" title="Los cambios se guardan automáticamente">
+              {saved ? '✓ Guardado' : '⏳ Guardando…'}
+            </span>
             <button className="ucm-close-btn" onClick={handleClose} title="Cerrar">✕</button>
           </div>
         </div>
@@ -426,7 +481,16 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div className="tour-node-meta">
-                    {n.links.length} {n.links.length === 1 ? 'conexión' : 'conexiones'}
+                    <span>{n.links.length} {n.links.length === 1 ? 'conexión' : 'conexiones'}</span>
+                    {n.links.length > 0 && (
+                      <span
+                        className={`tour-node-calib${calib.perNode[n.id]?.done < n.links.length ? ' is-pending' : ' is-done'}`}
+                        title="Flechas calibradas en esta posición"
+                      >
+                        {calib.perNode[n.id]?.done < n.links.length ? '⚠' : '✓'}{' '}
+                        {calib.perNode[n.id]?.done ?? 0}/{n.links.length} calibradas
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="tour-node-actions">

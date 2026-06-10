@@ -2091,6 +2091,22 @@
   background: #000;
 }
 
+/* First-load overlay for the embedded tour — shown the moment the modal opens
+   (covers the mount tick + the first 360 image download) until onReady fires. */
+.amenity-tour-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: #000;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
+}
+
 /* The viewer wrapper in inline mode — anchored to its host box, not the
    viewport (that's .pano-overlay). On fullscreen the browser lifts this same
    element into the top layer; the UA sizing then makes it fill the screen. */
@@ -2273,6 +2289,10 @@
 /* ─── Tour editor modal ─── */
 .tour-editor-modal {
   max-width: 1200px;
+  /* Fixed height (not just max-height) so adding nodes never resizes the modal
+     — otherwise the plan area would grow and the pins would visibly shift. The
+     node list scrolls within its fixed-height column instead. */
+  height: 90vh;
 }
 
 .tour-editor-body {
@@ -2343,6 +2363,9 @@
 .tour-node-meta {
   font-size: 0.62rem;
   color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .tour-node-actions {
@@ -2553,6 +2576,50 @@
   border-color: rgba(80, 220, 120, 0.7) !important;
   color: #50dc78 !important;
   background: rgba(80, 220, 120, 0.12) !important;
+}
+
+/* Calibration coverage badges — header (global) + per-node meta. */
+.tour-calib-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tour-calib-badge.is-pending {
+  color: #ffce5a;
+  background: rgba(255, 206, 90, 0.12);
+  border: 1px solid rgba(255, 206, 90, 0.4);
+}
+
+.tour-calib-badge.is-done {
+  color: #50dc78;
+  background: rgba(80, 220, 120, 0.12);
+  border: 1px solid rgba(80, 220, 120, 0.35);
+}
+
+.tour-node-calib {
+  font-weight: 600;
+}
+
+.tour-node-calib.is-pending { color: #ffce5a; }
+.tour-node-calib.is-done { color: #50dc78; }
+
+/* Autosave status pill — replaces the old manual "Aplicar" button. */
+.tour-autosave {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  user-select: none;
 }
 
 @media (max-width: 768px) {

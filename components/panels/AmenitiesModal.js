@@ -171,6 +171,11 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
   const importInputRef = useRef(null);
   const replaceInputRef = useRef(null);
   const pendingDeletesRef = useRef([]);
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+  // Bridge to persistRows (declared later) so the tour auto-save can call it
+  // without a definition-order dependency.
+  const persistRowsRef = useRef(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -315,13 +320,16 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
   }, []);
 
   // ─── 360° tour editor ───
+  // Tour changes auto-save: the TourEditorModal applies continuously, and we
+  // persist the whole table to the draft right away (no manual "Guardar" step
+  // for recorridos). Storage deletes still defer to save/close.
   const handleTourSave = useCallback((idx, tour) => {
-    setRows((prev) => {
-      const updated = [...prev];
-      updated[idx] = { ...updated[idx], tour: tour || null };
-      return updated;
-    });
-    setHasChanges(true);
+    const updated = rowsRef.current.map((r, i) => (
+      i === idx ? { ...r, tour: tour || null } : r
+    ));
+    setRows(updated);
+    persistRowsRef.current?.(updated);
+    setHasChanges(false);
   }, []);
 
   // Images of tour nodes deleted in the editor — flushed with the other
@@ -473,76 +481,91 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
   }, [rows]);
 
   // ─── Save ───
+  // Normalize + drop empty rows. `plano` mirrors the first available image so
+  // older readers (list panel, published view) keep working.
+  const buildCleanedItems = useCallback((rowsArg) => rowsArg
+    .map((r) => {
+      const imagenes = toImageArray(r.imagenes);
+      const plano = (r.plano || '').trim() || imagenes[0] || '';
+      const tour = normalizeTour(r.tour);
+      return {
+        nombre: (r.nombre || '').trim(),
+        descripcion: (r.descripcion || '').trim(),
+        plano,
+        imagenes,
+        thumbnail: (r.thumbnail || '').trim(),
+        ...(tour ? { tour } : {}),
+        // Persist only when hidden — keeps existing rows clean by default.
+        ...(r.oculto ? { oculto: true } : {}),
+      };
+    })
+    .filter((r) => r.nombre || r.descripcion || r.plano || r.thumbnail || r.imagenes.length || r.tour),
+  []);
+
+  // Persist the given rows to the draft (debounced upstream in useScene). Does
+  // NOT flush Storage deletes — those are deferred to an explicit save / close.
+  const persistRows = useCallback((rowsArg) => {
+    onSave?.(buildCleanedItems(rowsArg));
+  }, [onSave, buildCleanedItems]);
+  persistRowsRef.current = persistRows;
+
+  // Delete queued (replaced/removed) images, but never one still referenced by
+  // the published snapshot (the live /view reads it). Safe to fire-and-forget.
+  const flushPendingDeletes = useCallback(async () => {
+    const toDelete = pendingDeletesRef.current.splice(0);
+    if (!toDelete.length) return;
+    let publishedUrls = new Set();
+    try {
+      const snap = await get(dbRef(db, `scenes/${sceneId}/published/amenities/items`));
+      for (const item of Object.values(snap.val() || {})) {
+        if (item?.plano) publishedUrls.add(item.plano);
+        for (const u of toImageArray(item?.imagenes)) publishedUrls.add(u);
+        if (item?.thumbnail) publishedUrls.add(item.thumbnail);
+        const tour = normalizeTour(item?.tour);
+        if (tour?.plano) publishedUrls.add(tour.plano);
+        for (const node of Object.values(tour?.nodes || {})) {
+          if (node.url) publishedUrls.add(node.url);
+        }
+      }
+    } catch (err) {
+      console.warn('[AmenitiesModal] Could not read published amenities; skipping deletes to be safe:', err);
+      publishedUrls = new Set(toDelete);
+    }
+    for (const url of toDelete) {
+      if (publishedUrls.has(url)) {
+        console.log('[AmenitiesModal] Skipping delete — URL still referenced by published snapshot');
+        continue;
+      }
+      try {
+        await deleteObject(storageRef(storage, url));
+      } catch (err) {
+        console.warn('[AmenitiesModal] Failed to delete old image:', err);
+      }
+    }
+  }, [sceneId]);
+
   const handleSave = useCallback(async () => {
     if (saving) return;
     setSaving(true);
     try {
-      // Normalize + drop empty rows. `plano` mirrors the first available image
-      // so older readers (list panel, published view) keep working.
-      const cleaned = rows
-        .map((r) => {
-          const imagenes = toImageArray(r.imagenes);
-          const plano = (r.plano || '').trim() || imagenes[0] || '';
-          const tour = normalizeTour(r.tour);
-          return {
-            nombre: (r.nombre || '').trim(),
-            descripcion: (r.descripcion || '').trim(),
-            plano,
-            imagenes,
-            thumbnail: (r.thumbnail || '').trim(),
-            ...(tour ? { tour } : {}),
-            // Persist only when hidden — keeps existing rows clean by default.
-            ...(r.oculto ? { oculto: true } : {}),
-          };
-        })
-        .filter((r) => r.nombre || r.descripcion || r.plano || r.thumbnail || r.imagenes.length || r.tour);
-
-      await onSave?.(cleaned);
+      await onSave?.(buildCleanedItems(rows));
       setHasChanges(false);
-
-      // Flush pending deletes only after a successful save, and never delete a
-      // URL still referenced by the published snapshot (the live /view reads it).
-      const toDelete = pendingDeletesRef.current.splice(0);
-      let publishedUrls = new Set();
-      try {
-        const snap = await get(dbRef(db, `scenes/${sceneId}/published/amenities/items`));
-        for (const item of Object.values(snap.val() || {})) {
-          if (item?.plano) publishedUrls.add(item.plano);
-          for (const u of toImageArray(item?.imagenes)) publishedUrls.add(u);
-          if (item?.thumbnail) publishedUrls.add(item.thumbnail);
-          const tour = normalizeTour(item?.tour);
-          if (tour?.plano) publishedUrls.add(tour.plano);
-          for (const node of Object.values(tour?.nodes || {})) {
-            if (node.url) publishedUrls.add(node.url);
-          }
-        }
-      } catch (err) {
-        console.warn('[AmenitiesModal] Could not read published amenities; skipping deletes to be safe:', err);
-        publishedUrls = new Set(toDelete);
-      }
-      for (const url of toDelete) {
-        if (publishedUrls.has(url)) {
-          console.log('[AmenitiesModal] Skipping delete — URL still referenced by published snapshot');
-          continue;
-        }
-        try {
-          await deleteObject(storageRef(storage, url));
-        } catch (err) {
-          console.warn('[AmenitiesModal] Failed to delete old image:', err);
-        }
-      }
+      await flushPendingDeletes();
     } catch (err) {
       console.error('[AmenitiesModal] Save error:', err);
     }
     setSaving(false);
-  }, [rows, onSave, saving, sceneId]);
+  }, [rows, onSave, saving, buildCleanedItems, flushPendingDeletes]);
 
   const handleClose = useCallback(() => {
     if (hasChanges) {
       if (!window.confirm('Tenés cambios sin guardar. ¿Cerrar de todos modos?')) return;
     }
+    // Clean up images replaced/removed in the tour editor (auto-saved rows
+    // never ran the delete flush). Fire-and-forget so close stays instant.
+    flushPendingDeletes();
     onClose();
-  }, [hasChanges, onClose]);
+  }, [hasChanges, onClose, flushPendingDeletes]);
 
   if (!mounted) return null;
 

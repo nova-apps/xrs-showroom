@@ -31,6 +31,7 @@ export default function AmenityModal({ amenity, onClose }) {
   const [mounted, setMounted] = useState(false);
   const [index, setIndex] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [tourReady, setTourReady] = useState(false);
 
   const gallery = useMemo(() => amenityGallery(amenity), [amenity]);
   const hasMultiple = gallery.length > 1;
@@ -44,6 +45,7 @@ export default function AmenityModal({ amenity, onClose }) {
   useEffect(() => {
     setIndex(0);
     setImgLoaded(false);
+    setTourReady(false);
   }, [amenity]);
 
   const go = useCallback((delta) => {
@@ -104,7 +106,18 @@ export default function AmenityModal({ amenity, onClose }) {
             with its own button to expand to fullscreen. Otherwise: gallery. */}
         {hasTour ? (
           <div className="amenity-modal-image amenity-tour-embed">
-            <TourViewer tour={amenity.tour} amenityName={amenity.nombre} embedded />
+            <TourViewer
+              tour={amenity.tour}
+              amenityName={amenity.nombre}
+              embedded
+              onReady={() => setTourReady(true)}
+            />
+            {!tourReady && (
+              <div className="amenity-tour-loading">
+                <div className="pano-spinner" />
+                <span>Cargando recorrido 360°…</span>
+              </div>
+            )}
           </div>
         ) : (
         <div className="amenity-modal-image amenity-gallery">
