@@ -27,6 +27,10 @@ import { normalizeTour, hotspotLon, arrivalLon, northOffsetFromLon } from '@/lib
  *   neighbor" control used to solve each node's northOffset.
  * @param {Function} onCalibrate - (nodeId, northOffsetDeg) when the operator
  *   calibrates. The caller persists it into the tour being edited.
+ * @param {boolean}  embedded - render inline inside a container (e.g. the
+ *   amenity modal) instead of as a fullscreen portal. In this mode the close
+ *   button is swapped for an "expand" button that uses the native Fullscreen
+ *   API on the viewer's own element.
  */
 export default function TourViewer({
   tour,
@@ -35,12 +39,14 @@ export default function TourViewer({
   initialNodeId,
   calibrationEnabled = false,
   onCalibrate,
+  embedded = false,
 }) {
   const normalized = useMemo(() => normalizeTour(tour), [tour]);
   const [currentId, setCurrentId] = useState(() =>
     normalized?.nodes?.[initialNodeId] ? initialNodeId : normalized?.startNode
   );
 
+  const rootRef = useRef(null);      // viewer wrapper — target of requestFullscreen
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -78,8 +84,44 @@ export default function TourViewer({
   const [error, setError] = useState(null);
   const [calibTarget, setCalibTarget] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  // True while a click-to-navigate is waiting on a texture that wasn't
+  // preloaded yet — drives the spinner so the click never feels dead.
+  const [navLoading, setNavLoading] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // ─── Native fullscreen (embedded mode) ───
+  // Promote just the viewer element to the browser's top layer — no portal
+  // remount, so the WebGL context and texture cache survive the toggle. The
+  // ResizeObserver below already resizes the canvas when the box changes.
+  const toggleFullscreen = useCallback(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl) {
+      (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+    } else {
+      (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onChange = () => {
+      const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      setIsFullscreen(fsEl === rootRef.current);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    document.addEventListener('webkitfullscreenchange', onChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      document.removeEventListener('webkitfullscreenchange', onChange);
+    };
+  }, []);
+  const fullscreenSupported =
+    mounted &&
+    typeof document !== 'undefined' &&
+    (document.fullscreenEnabled || document.webkitFullscreenEnabled);
 
   const currentNode = normalized?.nodes?.[currentId] || null;
 
@@ -208,8 +250,14 @@ export default function TourViewer({
     if (!to || navigatingRef.current || targetId === currentIdRef.current) return;
     navigatingRef.current = true;
 
+    // Spinner only when the target isn't already decoded (preloaded neighbor).
+    // Cached → instant jump, no flicker; not cached → immediate feedback.
+    const ready = textureCacheRef.current.get(to.url) instanceof THREE.Texture;
+    if (!ready) setNavLoading(true);
+
     try {
       const texture = await loadTexture(to.url);
+      setNavLoading(false);
       const fadeMesh = fadeMeshRef.current;
       if (!fadeMesh) return; // unmounted while loading
 
@@ -225,6 +273,7 @@ export default function TourViewer({
       setCurrentId(targetId);
     } catch (err) {
       console.error('[TourViewer] Failed to load node image:', err);
+      setNavLoading(false);
       navigatingRef.current = false;
     }
   }, [loadTexture]);
@@ -525,13 +574,16 @@ export default function TourViewer({
   }, [calibrationEnabled, currentNode]);
 
   // ─── Escape to close ───
+  // Embedded: the host modal owns Escape, and exiting fullscreen is native —
+  // so we stay out of the way entirely.
   useEffect(() => {
+    if (embedded) return;
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  }, [onClose, embedded]);
 
   if (!mounted || !normalized || !currentNode) return null;
 
@@ -540,8 +592,12 @@ export default function TourViewer({
     .map((id) => normalized.nodes[id])
     .filter(Boolean);
 
-  return createPortal(
-    <div className="pano-overlay" onClick={(e) => e.stopPropagation()}>
+  const content = (
+    <div
+      ref={rootRef}
+      className={embedded ? 'pano-overlay pano-embedded' : 'pano-overlay'}
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Header */}
       <div className="pano-header">
         <div className="pano-label">
@@ -551,7 +607,20 @@ export default function TourViewer({
             {currentNode.nombre ? ` · ${currentNode.nombre}` : ''}
           </span>
         </div>
-        <button className="pano-close" onClick={onClose} title="Cerrar (Esc)">✕</button>
+        {embedded ? (
+          fullscreenSupported && (
+            <button
+              className="pano-close"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+              aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            >
+              {isFullscreen ? '⤡' : '⤢'}
+            </button>
+          )
+        ) : (
+          <button className="pano-close" onClick={onClose} title="Cerrar (Esc)">✕</button>
+        )}
       </div>
 
       {/* Canvas */}
@@ -579,6 +648,14 @@ export default function TourViewer({
       {error && (
         <div className="pano-loading">
           <span>❌ {error}</span>
+        </div>
+      )}
+
+      {/* Per-navigation spinner — shows only when the destination image
+          wasn't preloaded yet, so a click never feels unresponsive. */}
+      {navLoading && (
+        <div className="pano-nav-loading" aria-live="polite">
+          <div className="pano-spinner" />
         </div>
       )}
 
@@ -650,7 +727,10 @@ export default function TourViewer({
           </div>
         </>
       )}
-    </div>,
-    document.body
+    </div>
   );
+
+  // Embedded: render inline in the host (the modal). Fullscreen: render as a
+  // top-level portal so it sits above everything.
+  return embedded ? content : createPortal(content, document.body);
 }

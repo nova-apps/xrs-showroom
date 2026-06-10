@@ -16,7 +16,7 @@ const TEXT_COLUMNS = [
 
 /** A fresh, fully-formed amenity row. */
 function emptyRow() {
-  return { nombre: '', descripcion: '', plano: '', imagenes: [], thumbnail: '', tour: null };
+  return { nombre: '', descripcion: '', plano: '', imagenes: [], thumbnail: '', tour: null, oculto: false };
 }
 
 /** Coerce a possibly-RTDB-shaped value into a clean array of URLs. */
@@ -211,6 +211,17 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
       const copy = { ...prev[idx], imagenes: [...(prev[idx].imagenes || [])] };
       const updated = [...prev];
       updated.splice(idx + 1, 0, copy);
+      return updated;
+    });
+    setHasChanges(true);
+  }, []);
+
+  // Hide an amenity from the public list without deleting it (keeps all its
+  // data — images, gallery, tour). Toggled back on the same button.
+  const toggleHidden = useCallback((idx) => {
+    setRows((prev) => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], oculto: !updated[idx].oculto };
       return updated;
     });
     setHasChanges(true);
@@ -480,6 +491,8 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
             imagenes,
             thumbnail: (r.thumbnail || '').trim(),
             ...(tour ? { tour } : {}),
+            // Persist only when hidden — keeps existing rows clean by default.
+            ...(r.oculto ? { oculto: true } : {}),
           };
         })
         .filter((r) => r.nombre || r.descripcion || r.plano || r.thumbnail || r.imagenes.length || r.tour);
@@ -613,7 +626,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                 <th className="ucm-th">Imagen principal</th>
                 <th className="ucm-th">Galería</th>
                 <th className="ucm-th">Thumbnail</th>
-                <th className="ucm-th">360°</th>
+                <th className="ucm-th ucm-th-tour">360°</th>
                 <th className="ucm-th ucm-th-actions">Acciones</th>
               </tr>
             </thead>
@@ -621,7 +634,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
               {rows.map((row, rowIdx) => {
                 const cellUploading = uploadingCell?.idx === rowIdx;
                 return (
-                <tr key={rowIdx} className="ucm-row">
+                <tr key={rowIdx} className={`ucm-row${row.oculto ? ' ucm-row-hidden' : ''}`}>
                   <td className="ucm-td ucm-td-idx">{rowIdx + 1}</td>
 
                   {TEXT_COLUMNS.map((col) => (
@@ -734,7 +747,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                   </td>
 
                   {/* Recorrido 360° */}
-                  <td className="ucm-td">
+                  <td className="ucm-td ucm-td-tour">
                     {(() => {
                       const nodeCount = tourNodeList(row.tour).length;
                       return (
@@ -751,6 +764,13 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                   </td>
 
                   <td className="ucm-td ucm-td-actions">
+                    <button
+                      className="ucm-action-btn"
+                      onClick={() => toggleHidden(rowIdx)}
+                      title={row.oculto ? 'Amenity oculto — mostrar en el listado' : 'Ocultar del listado (no se borra)'}
+                    >
+                      {row.oculto ? '🙈' : '👁️'}
+                    </button>
                     <button className="ucm-action-btn" onClick={() => duplicateRow(rowIdx)} title="Duplicar">📋</button>
                     <button className="ucm-action-btn ucm-action-btn-delete" onClick={() => removeRow(rowIdx)} title="Eliminar">🗑️</button>
                   </td>

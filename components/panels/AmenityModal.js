@@ -30,7 +30,6 @@ export function amenityGallery(amenity) {
 export default function AmenityModal({ amenity, onClose }) {
   const [mounted, setMounted] = useState(false);
   const [index, setIndex] = useState(0);
-  const [tourOpen, setTourOpen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
   const gallery = useMemo(() => amenityGallery(amenity), [amenity]);
@@ -44,7 +43,6 @@ export default function AmenityModal({ amenity, onClose }) {
   // Reset to the first image whenever the amenity changes.
   useEffect(() => {
     setIndex(0);
-    setTourOpen(false);
     setImgLoaded(false);
   }, [amenity]);
 
@@ -57,18 +55,25 @@ export default function AmenityModal({ amenity, onClose }) {
     });
   }, [gallery.length]);
 
-  // Arrow-key navigation while the modal is open. Suspended while the 360°
-  // tour is open on top — the tour viewer owns the keyboard (Esc closes IT).
+  // Keyboard while the modal is open. Escape closes — unless the embedded tour
+  // is in native fullscreen, in which case the first Escape exits fullscreen.
+  // Arrow keys page the gallery; the 360° tour has no gallery to page, and it
+  // owns its own pointer-driven navigation.
   useEffect(() => {
-    if (!amenity || tourOpen) return;
+    if (!amenity) return;
     const onKey = (e) => {
+      if (e.key === 'Escape') {
+        if (document.fullscreenElement || document.webkitFullscreenElement) return;
+        onClose?.();
+        return;
+      }
+      if (hasTour) return;
       if (e.key === 'ArrowLeft') go(-1);
       else if (e.key === 'ArrowRight') go(1);
-      else if (e.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [amenity, tourOpen, go, onClose]);
+  }, [amenity, hasTour, go, onClose]);
 
   if (!amenity || !mounted) return null;
 
@@ -78,7 +83,10 @@ export default function AmenityModal({ amenity, onClose }) {
 
   return createPortal(
     <div className="unidad-modal-overlay" onClick={onClose}>
-      <div className="unidad-modal amenity-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`unidad-modal amenity-modal${hasTour ? ' amenity-modal-tour' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close button */}
         <button className="unidad-modal-close" onClick={onClose} title="Cerrar">
           ✕
@@ -92,7 +100,13 @@ export default function AmenityModal({ amenity, onClose }) {
           )}
         </div>
 
-        {/* Image / gallery */}
+        {/* 360° tour takes over the media area when present — loaded inline,
+            with its own button to expand to fullscreen. Otherwise: gallery. */}
+        {hasTour ? (
+          <div className="amenity-modal-image amenity-tour-embed">
+            <TourViewer tour={amenity.tour} amenityName={amenity.nombre} embedded />
+          </div>
+        ) : (
         <div className="amenity-modal-image amenity-gallery">
           {currentSrc ? (
             <>
@@ -143,23 +157,9 @@ export default function AmenityModal({ amenity, onClose }) {
               <p>Sin imagen disponible</p>
             </div>
           )}
-
-          {/* 360° tour CTA — floats over the gallery, Matterport-style */}
-          {hasTour && (
-            <button className="amenity-tour-btn" onClick={() => setTourOpen(true)}>
-              🌐 Recorrer en 360°
-            </button>
-          )}
         </div>
+        )}
       </div>
-
-      {tourOpen && (
-        <TourViewer
-          tour={amenity.tour}
-          amenityName={amenity.nombre}
-          onClose={() => setTourOpen(false)}
-        />
-      )}
     </div>,
     document.body
   );

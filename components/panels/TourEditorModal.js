@@ -166,6 +166,27 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
     setUploading(null);
   }, [sceneId, uploadImage]);
 
+  // Replace one node's 360° image while keeping everything else — position,
+  // links, northOffset calibration and name all stay. Only `url` changes; the
+  // old image is queued for deletion (flushed at save, with the published-
+  // snapshot guard in AmenitiesModal).
+  const handleReplaceImage = useCallback(async (id, file) => {
+    if (!sceneId || !file) return;
+    const node = nodes[id];
+    if (!node) return;
+    setUploading({ progress: 0, name: file.name });
+    try {
+      const url = await uploadImage(file, PANO_MAX_W);
+      if (node.url && node.url !== url) onQueueDelete?.(node.url);
+      mutateNode(id, { url });
+      setSelectedId(id);
+    } catch (err) {
+      console.error('[TourEditor] Replace image error:', err);
+      window.alert('Error reemplazando la imagen. Revisá la consola.');
+    }
+    setUploading(null);
+  }, [sceneId, uploadImage, nodes, onQueueDelete, mutateNode]);
+
   // ─── Floor plan upload / replace / remove ───
   const handlePlanoUpload = useCallback(async (file) => {
     if (!sceneId || !file) return;
@@ -416,6 +437,20 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
                   >
                     {startNode === n.id ? '★' : '☆'}
                   </button>
+                  <label
+                    className="tour-node-btn"
+                    title="Reemplazar la imagen 360° (mantiene posición y conexiones)"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    🔄
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      disabled={uploading !== null}
+                      onChange={(e) => { handleReplaceImage(n.id, e.target.files?.[0]); e.target.value = ''; }}
+                    />
+                  </label>
                   <button
                     className="tour-node-btn tour-node-btn-delete"
                     title="Eliminar posición"

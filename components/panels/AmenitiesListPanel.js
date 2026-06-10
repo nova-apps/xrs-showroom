@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import Image from 'next/image';
 import AmenityModal from './AmenityModal';
 
@@ -14,7 +13,8 @@ export default function AmenitiesListPanel({
   selectedAmenity,
   onCloseModal,
 }) {
-  const items = Array.isArray(amenities) ? amenities : [];
+  // Hidden amenities (oculto) stay in the data but never show in the list.
+  const items = (Array.isArray(amenities) ? amenities : []).filter((a) => !a?.oculto);
 
   return (
     <>

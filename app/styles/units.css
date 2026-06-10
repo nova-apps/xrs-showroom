@@ -254,6 +254,16 @@
   background: rgba(68, 136, 255, 0.04);
 }
 
+/* Hidden amenity — kept in the data, dimmed in the editor so it reads as
+   "won't show in the list". The eye button keeps full opacity to stay usable. */
+.ucm-row-hidden > .ucm-td {
+  opacity: 0.4;
+}
+
+.ucm-row-hidden .ucm-td-actions {
+  opacity: 1;
+}
+
 .ucm-td {
   padding: 3px 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
@@ -470,7 +480,7 @@
 }
 
 /* Column sizing — the table has #, Nombre, Descripción, Imagen principal,
-   Galería, Thumbnail, Acciones. Fixed-width columns keep the flexible
+   Galería, Thumbnail, 360°, Acciones. Fixed-width columns keep the flexible
    Descripción + Galería columns from collapsing. */
 .amenities-modal .ucm-th:nth-child(1),
 .amenities-modal .ucm-td:nth-child(1) { width: 32px; }      /* # */
@@ -485,7 +495,17 @@
 .amenities-modal .ucm-th:nth-child(6),
 .amenities-modal .ucm-td:nth-child(6) { width: 120px; }     /* Thumbnail */
 .amenities-modal .ucm-th:nth-child(7),
-.amenities-modal .ucm-td:nth-child(7) { width: 70px; }      /* Acciones */
+.amenities-modal .ucm-td:nth-child(7) { width: 90px; }      /* 360° */
+.amenities-modal .ucm-th:nth-child(8),
+.amenities-modal .ucm-td:nth-child(8) { width: 70px; }      /* Acciones */
+
+/* 360° cell: single button, centered both ways (overrides the column's
+   default left + top alignment). */
+.amenities-modal .ucm-th-tour,
+.amenities-modal .ucm-td-tour {
+  text-align: center;
+  vertical-align: middle;
+}
 
 /* Give image cells room and keep their controls from wrapping awkwardly */
 .amenities-modal .ucm-td { vertical-align: top; }
@@ -1861,6 +1881,26 @@
   animation: spin 0.8s linear infinite;
 }
 
+/* Per-navigation spinner — a compact disc centered over the view while the
+   next node's image loads. Lighter than the full initial .pano-loading. */
+.pano-nav-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  animation: panoFadeIn 0.15s ease;
+}
+
 /* Hint */
 .pano-hint {
   position: absolute;
@@ -2041,32 +2081,43 @@
 }
 /* ═══════════════ Amenity 360° tours ═══════════════ */
 
-/* "Recorrer en 360°" CTA — floats over the gallery image like a tour badge,
-   instead of dangling at the bottom of the modal. */
-.amenity-tour-btn {
-  position: absolute;
-  bottom: 36px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 999px;
-  background: rgba(8, 8, 14, 0.65);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  z-index: 2;
-  white-space: nowrap;
+/* Embedded tour: the 360° viewer fills the modal's media area edge-to-edge
+   (no padding/centering like the gallery) and gives itself a positioning
+   context for the absolutely-positioned header/minimap/canvas inside. */
+.amenity-tour-embed {
+  position: relative;
+  padding: 0;
+  min-height: 360px;
+  background: #000;
 }
 
-.amenity-tour-btn:hover {
-  background: var(--accent-blue);
-  border-color: var(--accent-blue);
-  transform: translateX(-50%) scale(1.04);
+/* The viewer wrapper in inline mode — anchored to its host box, not the
+   viewport (that's .pano-overlay). On fullscreen the browser lifts this same
+   element into the top layer; the UA sizing then makes it fill the screen. */
+.pano-embedded {
+  position: absolute;
+  inset: 0;
+  z-index: auto;
+  animation: none;
+}
+
+.pano-embedded:fullscreen,
+.pano-embedded:-webkit-full-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Smaller chrome in the embedded box so it doesn't crowd the modal. The
+   minimap and hint scale back up automatically once in fullscreen. */
+.pano-embedded:not(:fullscreen):not(:-webkit-full-screen) .tour-minimap {
+  width: 140px;
+}
+
+.pano-embedded:not(:fullscreen):not(:-webkit-full-screen) .pano-hint {
+  font-size: 0.7rem;
+  bottom: 12px;
 }
 
 /* ─── Tour viewer: minimap ─── */
@@ -2075,10 +2126,10 @@
   right: 16px;
   bottom: 16px;
   width: 220px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(6px);
   z-index: 5;
 }
@@ -2087,7 +2138,7 @@
   display: block;
   width: 100%;
   height: auto;
-  opacity: 0.9;
+  opacity: 0.78;
   user-select: none;
 }
 
@@ -2296,7 +2347,8 @@
 
 .tour-node-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 5px;
   flex-shrink: 0;
 }
@@ -2522,7 +2574,7 @@
   .tour-minimap {
     width: 150px;
     right: 10px;
-    bottom: 64px;
+    bottom: 28px;
   }
 }
 

@@ -752,6 +752,39 @@ body {
   align-items: stretch;
 }
 
+/* When the modal hosts a 360° tour, give it far more room on desktop and a
+   landscape 16:9 shape (not the near-square default). The desktop overlay is
+   offset left:340px (the canvas area, right of the sidebar — see units.css),
+   so width is sized against that area, not full vw. Width is the smaller of
+   96% of the canvas area and whatever keeps the 16:9 height within 92vh, so it
+   never overflows either axis; aspect-ratio then derives the height.
+
+   The .amenity-modal compound selector outranks units.css's
+   `.unidad-modal { max-width: 860px }` desktop cap. Mobile keeps the default. */
+@media (min-width: 769px) {
+  .amenity-modal.amenity-modal-tour {
+    width: min(calc((100vw - 340px) * 0.96), calc(92vh * 16 / 9));
+    max-width: 1800px;
+    height: auto;
+    max-height: none;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* On mobile the 360° tour modal goes fullscreen — the embedded viewer needs
+   every pixel, and 16:9 makes no sense on a portrait phone. Overrides the
+   mobile .unidad-modal sizing (96vw / 94vh / rounded). */
+@media (max-width: 768px) {
+  .amenity-modal.amenity-modal-tour {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    aspect-ratio: auto;
+  }
+}
+
 .amenity-modal-header {
   padding: 28px 28px 16px;
   border-bottom: 1px solid var(--border-color);
