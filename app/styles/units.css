@@ -1881,6 +1881,12 @@
   animation: spin 0.8s linear infinite;
 }
 
+/* Rotation used by the panorama/tour spinners (was never defined — the
+   spinners sat still with their bright edge stuck at the top). */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Per-navigation spinner — a compact disc centered over the view while the
    next node's image loads. Lighter than the full initial .pano-loading. */
 .pano-nav-loading {
