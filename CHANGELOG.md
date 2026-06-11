@@ -6,6 +6,19 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.12] — 2026-06-11
+
+### ✨ Features
+- control de brillo, contraste y recorte de neblina del SOG
+
+### 🐛 Fixes
+- el blur del fondo oscurecía el skybox (encode sRGB faltante)
+
+### 📦 Chores
+- v0.13.11
+
+---
+
 ## [0.13.11] — 2026-06-11
 
 ### ✨ Features
