@@ -14,7 +14,8 @@ import { arPipelineModule } from './arPipelineModule';
 
 const GOLD = '#ab8869';
 
-export default function ARExperience({ modelUrl, onClose }) {
+export default function ARExperience({ modelUrl, logoUrl, onClose }) {
+  const rootRef = useRef(null);
   const canvasRef = useRef(null);
   const startedRef = useRef(false);
   const arModRef = useRef(null);
@@ -52,21 +53,37 @@ export default function ARExperience({ modelUrl, onClose }) {
     return () => clearTimeout(t);
   }, [placed]);
 
-  // Limpieza al desmontar: frenar la cámara, limpiar el pipeline y restaurar ColorManagement.
-  useEffect(() => {
-    return () => {
-      if (startedRef.current && window.XR8) {
-        try { window.XR8.stop(); } catch { /* noop */ }
-        try { window.XR8.clearCameraPipelineModules(); } catch { /* noop */ }
-        startedRef.current = false;
-      }
-      // Restaurar el pipeline de color del Viewer3D principal (el motor lo necesita en false).
-      if (colorMgmtPrevRef.current !== null) {
-        THREE.ColorManagement.enabled = colorMgmtPrevRef.current;
-        colorMgmtPrevRef.current = null;
-      }
-    };
+  // Teardown completo del motor: frena la cámara, limpia el pipeline, libera los tracks,
+  // recupera el canvas que FullWindowCanvas reparentó al <body> y restaura ColorManagement.
+  const stopEngine = useCallback(() => {
+    if (startedRef.current && window.XR8) {
+      try { window.XR8.stop(); } catch { /* noop */ }
+      try { window.XR8.clearCameraPipelineModules(); } catch { /* noop */ }
+      startedRef.current = false;
+    }
+    // Liberar la cámara: frenar los tracks de cualquier MediaStream activo.
+    try {
+      document.querySelectorAll('video').forEach((v) => {
+        const s = v.srcObject;
+        if (s && typeof s.getTracks === 'function') s.getTracks().forEach((t) => t.stop());
+      });
+    } catch { /* noop */ }
+    // FullWindowCanvas cuelga el canvas del <body>; devolverlo a nuestro root para que el
+    // unmount de React lo remueva (si no, el feed de cámara queda tapando al Viewer3D).
+    const c = canvasRef.current;
+    const root = rootRef.current;
+    if (c && root && c.parentNode && c.parentNode !== root) {
+      try { root.appendChild(c); } catch { /* noop */ }
+    }
+    // Restaurar el pipeline de color del Viewer3D principal (el motor lo necesita en false).
+    if (colorMgmtPrevRef.current !== null) {
+      THREE.ColorManagement.enabled = colorMgmtPrevRef.current;
+      colorMgmtPrevRef.current = null;
+    }
   }, []);
+
+  // Limpieza al desmontar.
+  useEffect(() => stopEngine, [stopEngine]);
 
   const start = useCallback(async () => {
     if (startedRef.current) return;
@@ -118,16 +135,12 @@ export default function ARExperience({ modelUrl, onClose }) {
   }, [modelUrl]);
 
   const handleClose = useCallback(() => {
-    if (startedRef.current && window.XR8) {
-      try { window.XR8.stop(); } catch { /* noop */ }
-      try { window.XR8.clearCameraPipelineModules(); } catch { /* noop */ }
-      startedRef.current = false;
-    }
+    stopEngine();
     onClose?.();
-  }, [onClose]);
+  }, [stopEngine, onClose]);
 
   return (
-    <div style={S.root}>
+    <div ref={rootRef} style={S.root}>
       {/* Canvas del motor: debe existir en el DOM antes de iniciar la cámara (capa de fondo). */}
       <canvas id="camerafeed" ref={canvasRef} style={S.canvas} />
 
@@ -138,37 +151,53 @@ export default function ARExperience({ modelUrl, onClose }) {
       {status === 'running' && (
         <div style={S.hud}>
           <div style={S.hudTop}>
-            <span
-              onPointerDown={startPress}
-              onPointerUp={cancelPress}
-              onPointerLeave={cancelPress}
-              onPointerCancel={cancelPress}
-              style={S.hudBrand}
-            >
-              XRS
-            </span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt=""
+                draggable={false}
+                onPointerDown={startPress}
+                onPointerUp={cancelPress}
+                onPointerLeave={cancelPress}
+                onPointerCancel={cancelPress}
+                style={S.hudLogo}
+              />
+            ) : (
+              <span
+                onPointerDown={startPress}
+                onPointerUp={cancelPress}
+                onPointerLeave={cancelPress}
+                onPointerCancel={cancelPress}
+                style={S.hudBrand}
+              >
+                XRS
+              </span>
+            )}
+          </div>
+
+          <div style={S.hudBottom}>
+            <div style={{ ...S.hudHints, opacity: hintsHidden ? 0 : 1 }}>
+              {modelError ? (
+                <Chip>No se pudo cargar la maqueta 3D</Chip>
+              ) : placed ? (
+                <Chip>1 dedo: mover · 2 dedos: escalar y rotar</Chip>
+              ) : !modelLoaded ? (
+                <Chip>Cargando maqueta 3D…</Chip>
+              ) : reticleActive ? (
+                <Chip>Tocá la pantalla para colocar la maqueta</Chip>
+              ) : (
+                <Chip>Movés el teléfono apuntando al piso…</Chip>
+              )}
+            </div>
             {placed && (
               <button
                 className="xrs-ar-btn"
                 onClick={() => { arModRef.current?.reposition(); setHintsHidden(false); }}
-                style={S.chipBtn}
+                style={S.repositionBtn}
               >
                 Reposicionar
               </button>
-            )}
-          </div>
-
-          <div style={{ ...S.hudHints, opacity: hintsHidden ? 0 : 1 }}>
-            {modelError ? (
-              <Chip>No se pudo cargar la maqueta 3D</Chip>
-            ) : placed ? (
-              <Chip>1 dedo: mover · 2 dedos: escalar y rotar</Chip>
-            ) : !modelLoaded ? (
-              <Chip>Cargando maqueta 3D…</Chip>
-            ) : reticleActive ? (
-              <Chip>Tocá la pantalla para colocar la maqueta</Chip>
-            ) : (
-              <Chip>Movés el teléfono apuntando al piso…</Chip>
             )}
           </div>
         </div>
@@ -247,10 +276,12 @@ const S = {
     backdropFilter: 'blur(8px)',
   },
   hud: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 16, pointerEvents: 'none' },
-  hudTop: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' },
+  hudTop: { display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start' },
   hudBrand: { pointerEvents: 'auto', userSelect: 'none', fontWeight: 700, letterSpacing: 2, color: GOLD, textShadow: '0 1px 4px rgba(0,0,0,0.9)' },
-  chipBtn: { pointerEvents: 'auto', borderRadius: 9999, background: 'rgba(0,0,0,0.4)', color: '#fff', padding: '4px 12px', fontSize: 12, backdropFilter: 'blur(8px)' },
-  hudHints: { marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', transition: 'opacity 0.7s' },
+  hudLogo: { pointerEvents: 'auto', userSelect: 'none', height: 22, width: 'auto', objectFit: 'contain', opacity: 0.9, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))', WebkitTouchCallout: 'none' },
+  hudBottom: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)' },
+  hudHints: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', transition: 'opacity 0.7s' },
+  repositionBtn: { pointerEvents: 'auto', borderRadius: 9999, background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '10px 22px', fontSize: 14, fontWeight: 600, backdropFilter: 'blur(8px)', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' },
   chip: { borderRadius: 9999, background: 'rgba(0,0,0,0.5)', padding: '8px 16px', fontSize: 14, backdropFilter: 'blur(8px)' },
   loading: { position: 'absolute', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#000' },
   landing: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', textAlign: 'center', background: 'linear-gradient(to bottom, #09090b, rgba(36,26,16,0.6), #000)' },

@@ -171,7 +171,11 @@ export function arPipelineModule(cb = {}, opts = {}) {
     modelRoot.position.copy(dragModelStart).add(p).sub(dragStart);
   };
 
+  // Ignorar toques sobre la UI (botones cerrar/reposicionar) para no colocar/mover al tocarlos.
+  const onUI = (e) => !!(e.target?.closest && e.target.closest('button, a, input'));
+
   const onTouchStart = (e) => {
+    if (onUI(e)) return;
     if (!placed) {
       placeModel(); // primer toque: colocar la maqueta en el reticle
       beginGesture(e.touches);
@@ -181,6 +185,7 @@ export function arPipelineModule(cb = {}, opts = {}) {
   };
 
   const onTouchMove = (e) => {
+    if (onUI(e)) return;
     e.preventDefault();
     if (!placed || !modelRoot) return;
     if (pinch && e.touches.length >= 2) {
@@ -197,6 +202,23 @@ export function arPipelineModule(cb = {}, opts = {}) {
     beginGesture(e.touches); // recalcular baseline según los dedos que quedan (evita saltos)
   };
 
+  // Escuchamos en window con captura: el canvas del motor queda por debajo de varias capas
+  // del overlay (HUD, loading de 8th Wall), así que un listener en el canvas no recibe el
+  // toque. window+capture llega siempre, antes de que cualquier capa pueda frenarlo.
+  const TOUCH_OPTS = { passive: false, capture: true };
+  const addTouchListeners = () => {
+    window.addEventListener('touchstart', onTouchStart, TOUCH_OPTS);
+    window.addEventListener('touchmove', onTouchMove, TOUCH_OPTS);
+    window.addEventListener('touchend', onTouchEnd, true);
+    window.addEventListener('touchcancel', onTouchEnd, true);
+  };
+  const removeTouchListeners = () => {
+    window.removeEventListener('touchstart', onTouchStart, TOUCH_OPTS);
+    window.removeEventListener('touchmove', onTouchMove, TOUCH_OPTS);
+    window.removeEventListener('touchend', onTouchEnd, true);
+    window.removeEventListener('touchcancel', onTouchEnd, true);
+  };
+
   // ---- Lifecycle ----
 
   return {
@@ -209,14 +231,11 @@ export function arPipelineModule(cb = {}, opts = {}) {
     // a React para mostrar nuestro modal de permisos mientras se piden.
     onCameraStatusChange: ({ status }) => { cb.onCameraStatus?.(status); },
 
-    onStart: ({ canvas }) => {
+    onStart: () => {
       const { scene, camera, renderer } = XR8().Threejs.xrScene();
       initXrScene({ scene, camera, renderer });
 
-      canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-      canvas.addEventListener('touchmove', onTouchMove, { passive: false });
-      canvas.addEventListener('touchend', onTouchEnd);
-      canvas.addEventListener('touchcancel', onTouchEnd);
+      addTouchListeners();
 
       XR8().XrController.updateCameraProjectionMatrix({
         origin: camera.position,
@@ -248,5 +267,9 @@ export function arPipelineModule(cb = {}, opts = {}) {
     onException: (err) => {
       cb.onError?.(err instanceof Error ? err.message : 'Error del motor AR');
     },
+
+    // El motor llama onDetach al limpiar el pipeline (clearCameraPipelineModules): sacamos
+    // los listeners de window para no acumularlos entre sesiones de AR.
+    onDetach: () => { removeTouchListeners(); },
   };
 }

@@ -200,8 +200,9 @@ export default function ViewPage() {
         <div className="canvas-curtain-half canvas-curtain-bottom" />
       </div>
 
-      {/* Left Sidebar — list panel; content swaps by scene.type */}
-      {scene && (
+      {/* Left Sidebar — list panel; content swaps by scene.type.
+          Se oculta mientras el AR posee la pantalla. */}
+      {scene && !arOpen && (
         <LeftPanelStack
           ref={panelRef}
           title={scene.name}
@@ -265,20 +266,28 @@ export default function ViewPage() {
         <button
           className="xrs-ar-btn"
           onClick={() => setArOpen(true)}
+          aria-label="Ver en AR"
+          title="Ver en AR"
           style={{
-            position: 'fixed', right: 16, bottom: 24, zIndex: 60,
-            display: 'flex', alignItems: 'center', gap: 8,
-            borderRadius: 9999, padding: '12px 18px',
+            position: 'fixed', right: 16,
+            top: 'calc(env(safe-area-inset-top, 0px) + 12px)', zIndex: 202,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 46, height: 46, borderRadius: 9999,
             background: '#ab8869', color: '#18120b',
-            fontSize: 14, fontWeight: 600,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
           }}
         >
-          <span aria-hidden="true">📱</span> Ver en AR
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {/* esquinas tipo visor AR */}
+            <path d="M3 8V5a2 2 0 0 1 2-2h3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M21 16v3a2 2 0 0 1-2 2h-3" />
+            {/* cubo 3D */}
+            <path d="M12 8.2l3.2 1.8v3.6L12 15.4l-3.2-1.8V10z" />
+            <path d="M12 8.2v0M12 11.8l3.2-1.8M12 11.8v3.6M12 11.8L8.8 10" />
+          </svg>
         </button>
       )}
 
-      {arOpen && <ARExperience modelUrl={arModelUrl} onClose={() => setArOpen(false)} />}
+      {arOpen && <ARExperience modelUrl={arModelUrl} logoUrl={scene?.panelLogoUrl} onClose={() => setArOpen(false)} />}
     </>
   );
 }
