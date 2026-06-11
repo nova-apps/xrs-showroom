@@ -6,6 +6,25 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.11] — 2026-06-11
+
+### ✨ Features
+- ver la maqueta en AR markerless desde mobile (8th Wall)
+- calibración por flecha, autosave y feedback de carga
+- tour 360° embebido en el modal + mejoras de editor y UX
+- recorridos 360° multi-nodo estilo Matterport
+
+### 🐛 Fixes
+- toque para colocar + teardown de cámara, y ajustes de UI
+- definir @keyframes spin — los spinners no giraban
+
+### 📦 Chores
+- regenerar yarn.lock (dedupe de rangos de versión)
+- update yarn.lock, ignore local GLB artifacts
+- v0.13.10
+
+---
+
 ## [0.13.10] — 2026-06-01
 
 ### 📦 Chores

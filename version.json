@@ -1,9 +1,12 @@
 {
-  "version": "0.13.10",
-  "buildDate": "2026-06-01",
-  "commitHash": "e24562f",
+  "version": "0.13.11",
+  "buildDate": "2026-06-11",
+  "commitHash": "59af3ed",
   "environment": "production",
   "features": [
-    "Maintenance and stability improvements"
+    "ver la maqueta en AR markerless desde mobile (8th Wall)",
+    "calibración por flecha, autosave y feedback de carga",
+    "tour 360° embebido en el modal + mejoras de editor y UX",
+    "recorridos 360° multi-nodo estilo Matterport"
   ]
 }
