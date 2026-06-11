@@ -74,6 +74,12 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     },
     // Per-splat saturation uniform (Spark dyno) — populated when splat loads.
     splatSaturationU: null,
+    // Per-splat brillo/contraste (Spark dyno) + recorte de las gaussianas (SparkRenderer.maxStdDev).
+    // brightness/contrast: 1.0 = sin cambio. maxStdDev recorta la extensión de cada gaussiana, lo
+    // que reduce la neblina lechosa al acercarse a los splats; null = default de Spark.
+    splatColor: { brightness: 1, contrast: 1, maxStdDev: null },
+    splatBrightnessU: null,
+    splatContrastU: null,
     // Collider hover-highlight: shows only the collider mesh under the
     // cursor with a translucent overlay; everything else stays invisible.
     colliderHover: {
@@ -440,6 +446,22 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
       const value = enabled ? Math.max(0, Math.min(1, raw)) : 1;
       s.saturationUniforms.uSaturation.value = value;
       if (s.splatSaturationU) s.splatSaturationU.value = value;
+    },
+    /**
+     * Live setter del color del splat: brillo y contraste (dyno), y maxStdDev del SparkRenderer
+     * (recorta las gaussianas para sacar la neblina lechosa de cercanías). Valores no numéricos
+     * caen a "sin cambio" (1.0) / al valor previo de maxStdDev.
+     */
+    setSplatColor: (color) => {
+      const s = stateRef.current;
+      const prev = s.splatColor || {};
+      const b = Number.isFinite(color?.brightness) ? color.brightness : 1;
+      const c = Number.isFinite(color?.contrast) ? color.contrast : 1;
+      const m = Number.isFinite(color?.maxStdDev) ? color.maxStdDev : (prev.maxStdDev ?? null);
+      s.splatColor = { brightness: b, contrast: c, maxStdDev: m };
+      if (s.splatBrightnessU) s.splatBrightnessU.value = b;
+      if (s.splatContrastU) s.splatContrastU.value = c;
+      if (s.sparkRenderer && Number.isFinite(m)) s.sparkRenderer.maxStdDev = m;
     },
     /**
      * Live setter for the BG-only post-process blur amount.
@@ -1670,6 +1692,8 @@ uniform float uSaturation;`
       // Ensure SparkRenderer exists in the scene (required by Spark 2.0)
       if (!s.sparkRenderer) {
         const sparkR = new SparkRenderer({ renderer: s.renderer });
+        // Recorte de gaussianas (menos neblina cercana) si la escena lo definió.
+        if (Number.isFinite(s.splatColor?.maxStdDev)) sparkR.maxStdDev = s.splatColor.maxStdDev;
         s.scene.add(sparkR);
         s.sparkRenderer = sparkR;
         console.log('[Viewer] SparkRenderer created (Spark 2.0)');
@@ -1714,6 +1738,10 @@ uniform float uSaturation;`
       // Saturation — mirrored from shared THREE uniform so editor edits stay in sync.
       const saturationU = new DynoFloat({ value: s.saturationUniforms.uSaturation.value });
       const lumaCoefs = dynoConst('vec3', [0.2126, 0.7152, 0.0722]);
+      // Brillo (multiplica el rgb) y contraste (mezcla alrededor de gris medio). 1.0 = sin cambio.
+      const brightnessU = new DynoFloat({ value: s.splatColor?.brightness ?? 1 });
+      const contrastU = new DynoFloat({ value: s.splatColor?.contrast ?? 1 });
+      const midGray = dynoConst('vec3', [0.5, 0.5, 0.5]);
 
       // Dyno modifier: point→splat + radial clip + saturation
       const splatModifier = dynoBlock(
@@ -1734,11 +1762,13 @@ uniform float uSaturation;`
           const clipFactor = sub(dynoConst('float', 1), smoothstep(fadeStart, clipRadiusU, dist));
           const clippedOpacity = mul(opacity, clipFactor);
 
-          // ── Saturation (mix toward luma) ──
+          // ── Saturación (mezcla hacia luma) → contraste (alrededor de gris) → brillo ──
           const luma = dot(rgb, lumaCoefs);
           const desatRgb = mix(vec3(luma), rgb, saturationU);
+          const contrasted = mix(midGray, desatRgb, contrastU);
+          const finalRgb = mul(contrasted, brightnessU);
 
-          return { gsplat: combineGsplat({ gsplat, scales: sized, opacity: clippedOpacity, rgb: desatRgb }) };
+          return { gsplat: combineGsplat({ gsplat, scales: sized, opacity: clippedOpacity, rgb: finalRgb }) };
         }
       );
 
@@ -1811,6 +1841,8 @@ uniform float uSaturation;`
       s.clipRadiusU = clipRadiusU;
       s.clipEdgeU = clipEdgeU;
       s.splatSaturationU = saturationU;
+      s.splatBrightnessU = brightnessU;
+      s.splatContrastU = contrastU;
 
       // Hide immediately before first render if any animation
       if (wantAnim || wantClip) {
@@ -2027,6 +2059,8 @@ uniform float uSaturation;`
       s.splatMesh = null;
     }
     s.splatSaturationU = null;
+    s.splatBrightnessU = null;
+    s.splatContrastU = null;
   }, []);
 
   const removeSkyboxTex = useCallback(() => {

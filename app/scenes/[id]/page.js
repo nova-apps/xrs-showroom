@@ -269,6 +269,14 @@ export default function ScenePage() {
     [sceneId]
   );
 
+  const handleSplatColorChange = useCallback(
+    (splatColor) => {
+      viewerRef.current?.setSplatColor?.(splatColor);
+      if (sceneId) updateScene(sceneId, { splatColor }).catch(console.error);
+    },
+    [sceneId]
+  );
+
   // Apply orbit immediately to controls (no delay)
   const handleApplyOrbit = useCallback(
     (orbit) => {
@@ -644,6 +652,8 @@ export default function ScenePage() {
                 onGlbSettingsChange={handleGlbSettingsChange}
                 splatSettings={scene?.splatSettings || null}
                 onSplatSettingsChange={handleSplatSettingsChange}
+                splatColor={scene?.splatColor || null}
+                onSplatColorChange={handleSplatColorChange}
                 collapsed={false}
                 onToggle={() => {}}
               />

@@ -291,6 +291,12 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     viewerRef.current.setSaturation(scene?.saturation);
   }, [viewerReady, scene?.saturation]);
 
+  // ── Apply splat color (brillo/contraste + recorte de neblina cercana) ──
+  useEffect(() => {
+    if (!viewerReady || !viewerRef.current) return;
+    if (scene?.splatColor) viewerRef.current.setSplatColor?.(scene.splatColor);
+  }, [viewerReady, scene?.splatColor]);
+
   return {
     loadMetrics,
     resetLoadedAsset,

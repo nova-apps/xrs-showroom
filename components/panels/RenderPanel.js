@@ -27,6 +27,12 @@ const DEFAULT_SPLAT_ANIM = {
   radialClipEasing: 'easeOut',
 };
 
+const DEFAULT_SPLAT_COLOR = {
+  brightness: 1,
+  contrast: 1,
+  maxStdDev: 2.5,
+};
+
 const EASING_OPTIONS = [
   { value: 'linear', label: 'Linear' },
   { value: 'easeIn', label: 'Ease In' },
@@ -50,6 +56,8 @@ export default function RenderPanel({
   onGlbSettingsChange,
   splatSettings,
   onSplatSettingsChange,
+  splatColor,
+  onSplatColorChange,
   collapsed,
   onToggle,
 }) {
@@ -89,6 +97,22 @@ export default function RenderPanel({
       });
     },
     [onSplatSettingsChange]
+  );
+
+  // ─── Splat color (brillo / contraste / recorte de neblina) ───
+  const [localSplatColor, setLocalSplatColor] = useState(() => ({ ...DEFAULT_SPLAT_COLOR, ...splatColor }));
+  useEffect(() => {
+    if (splatColor) setLocalSplatColor((prev) => ({ ...prev, ...splatColor }));
+  }, [splatColor]);
+  const updateSplatColorField = useCallback(
+    (field, value) => {
+      setLocalSplatColor((prev) => {
+        const next = { ...prev, [field]: value };
+        onSplatColorChange?.(next);
+        return next;
+      });
+    },
+    [onSplatColorChange]
   );
 
   // ─── Lighting ───
@@ -326,6 +350,46 @@ export default function RenderPanel({
             step={0.1}
             onChange={(v) => onBgBlurChange?.(v)}
             help="Desenfoca skybox, floor y splat con un blur post-proceso. La maqueta 3D queda nítida. 0 desactiva todo el post-proceso (sin costo extra)."
+          />
+        </div>
+      </SubAccordion>
+
+      <SubAccordion
+        title="Color del splat"
+        icon="🎚️"
+        open={openSection === 'splatColor'}
+        onToggle={() => toggleSection('splatColor')}
+      >
+        <div className="asset-transform-section">
+          <TransformRow
+            label="Brillo"
+            labelClass="label-s"
+            value={localSplatColor.brightness}
+            min={0.3}
+            max={1.5}
+            step={0.01}
+            onChange={(v) => updateSplatColorField('brightness', v)}
+            help="Multiplica el color del splat. <1 oscurece, >1 aclara. 1 = original."
+          />
+          <TransformRow
+            label="Contraste"
+            labelClass="label-s"
+            value={localSplatColor.contrast}
+            min={0.5}
+            max={2}
+            step={0.01}
+            onChange={(v) => updateSplatColorField('contrast', v)}
+            help="Separa claros y oscuros alrededor del gris medio. >1 recupera el look 'lavado'. 1 = original."
+          />
+          <TransformRow
+            label="Recorte"
+            labelClass="label-s"
+            value={localSplatColor.maxStdDev}
+            min={1.5}
+            max={4}
+            step={0.05}
+            onChange={(v) => updateSplatColorField('maxStdDev', v)}
+            help="Recorta la extensión de cada gaussiana (maxStdDev). Más bajo = menos neblina lechosa al acercarse, pero puede recortar splats. ~2.5 es un buen punto."
           />
         </div>
       </SubAccordion>
