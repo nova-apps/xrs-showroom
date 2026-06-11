@@ -358,6 +358,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
         console.log(`[Viewer] Pixel ratio set to ${clamped}`);
       }
     },
+    setRenderPaused: (paused) => { stateRef.current.renderPaused = !!paused; },
     loadGlb: (url, settings) => loadGlbModel(url, settings),
     setGlbSettings: (settings) => { stateRef.current.glbSettings = settings; },
     loadColliders: (url) => loadCollidersModel(url),
@@ -2768,6 +2769,9 @@ uniform float uSaturation;`
       // ─── Render Loop ───
       function tick() {
         s.animationId = requestAnimationFrame(tick);
+        // Paused while an overlay (e.g. AR) owns the screen — keep the rAF alive so we
+        // resume cleanly, but skip rendering to free the GPU for the AR WebGL context.
+        if (s.renderPaused) return;
         // Track frame time for adaptive quality
         s.adaptiveQuality.frameTimes.push(performance.now());
         // Skip camera state machines while gizmo is being dragged

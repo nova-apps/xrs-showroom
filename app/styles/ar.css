@@ -1,0 +1,29 @@
+/* ═══════════════════════════════════════════════════════════════
+   AR markerless overlay (8th Wall world-tracking)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* White-label: ocultar el branding "powered by 8th Wall" que inyecta el módulo de
+   loading del motor. La atribución legal se mantiene accesible por long-press en el HUD. */
+.poweredby-img,
+img[src*="poweredby" i] {
+  display: none !important;
+}
+
+@keyframes xrs-ar-spin {
+  to { transform: rotate(360deg); }
+}
+
+.xrs-ar-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #ab8869;
+  animation: xrs-ar-spin 0.8s linear infinite;
+}
+
+.xrs-ar-btn {
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-sans);
+}

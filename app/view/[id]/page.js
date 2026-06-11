@@ -26,6 +26,7 @@ import LoteModal from '@/components/panels/LoteModal';
 
 const Viewer3D = dynamic(() => import('@/components/viewer/Viewer3D'), { ssr: false });
 const FpsCounter = dynamic(() => import('@/components/viewer/FpsCounter'), { ssr: false });
+const ARExperience = dynamic(() => import('@/ar/ARExperience'), { ssr: false });
 
 export default function ViewPage() {
   const params = useParams();
@@ -39,6 +40,17 @@ export default function ViewPage() {
   const [modalAmenity, setModalAmenity] = useState(null);
   const [modalLote, setModalLote] = useState(null);
   const [highlightedLote, setHighlightedLote] = useState(null);
+  const [arOpen, setArOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // El botón "Ver en AR" solo se muestra en mobile (la cámara/SLAM viven en el teléfono).
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const { scene: rawScene, loading, error } = useScene(sceneId);
 
@@ -67,6 +79,16 @@ export default function ViewPage() {
   }, []);
 
   const isTerreno = scene?.type === 'terreno';
+
+  // Maqueta para AR: preferir el proxy (más liviano) y caer al GLB completo.
+  const arModelUrl = scene?.assets?.glb_proxy?.url || scene?.assets?.glb?.url || null;
+  const showArButton = isMobile && !!arModelUrl && !arOpen;
+
+  // Pausar el render del Viewer3D mientras el AR posee la pantalla: evita dos contextos
+  // WebGL activos a la vez en mobile (battery + posible context loss).
+  useEffect(() => {
+    viewerRef.current?.setRenderPaused?.(arOpen);
+  }, [arOpen]);
 
   const handleSelectTab = useCallback((tabId, { isMobile }) => {
     // Both the unidades and lotes lists pull the camera back to its initial
@@ -237,6 +259,26 @@ export default function ViewPage() {
           projectName={scene?.name || ''}
         />
       )}
+
+      {/* Botón "Ver en AR" — solo mobile, cuando hay maqueta GLB. */}
+      {showArButton && (
+        <button
+          className="xrs-ar-btn"
+          onClick={() => setArOpen(true)}
+          style={{
+            position: 'fixed', right: 16, bottom: 24, zIndex: 60,
+            display: 'flex', alignItems: 'center', gap: 8,
+            borderRadius: 9999, padding: '12px 18px',
+            background: '#ab8869', color: '#18120b',
+            fontSize: 14, fontWeight: 600,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          <span aria-hidden="true">📱</span> Ver en AR
+        </button>
+      )}
+
+      {arOpen && <ARExperience modelUrl={arModelUrl} onClose={() => setArOpen(false)} />}
     </>
   );
 }

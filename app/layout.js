@@ -6,6 +6,7 @@ import './styles/units.css';
 import './styles/viewer.css';
 import './styles/login.css';
 import './styles/materials.css';
+import './styles/ar.css';
 import StagingBanner from '@/components/StagingBanner';
 
 export const metadata = {
