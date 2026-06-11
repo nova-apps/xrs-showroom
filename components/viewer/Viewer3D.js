@@ -2636,8 +2636,19 @@ uniform float uSaturation;`
       //   pass 4: layer 1 (GLB/colliders) on top (autoClear off, depth cleared)
       //   pass 5: layer 2 (tint) on top
       // When amount == 0 we skip all of that — single renderer.render call.
+      // Versión de los recursos del blur. Subir este número fuerza la recreación de targets
+      // y shader aunque Fast Refresh (HMR) preserve el stateRef entre ediciones.
+      const BLUR_VERSION = 3;
       function ensureBgBlurResources() {
-        if (s.bgBlur.targetA) return;
+        if (s.bgBlur.targetA && s.bgBlur.version === BLUR_VERSION) return;
+        // Recrear si quedaron recursos de una versión anterior (HMR).
+        if (s.bgBlur.targetA) {
+          s.bgBlur.targetA.dispose();
+          s.bgBlur.targetB?.dispose();
+          s.bgBlur.blurMat?.dispose();
+          s.bgBlur.quadGeom?.dispose();
+        }
+        s.bgBlur.version = BLUR_VERSION;
         const w = Math.max(1, renderer.domElement.width);
         const h = Math.max(1, renderer.domElement.height);
         // targetA needs a depth buffer — splats and the skybox sphere use
@@ -2653,12 +2664,17 @@ uniform float uSaturation;`
           stencilBuffer: false,
           type: THREE.UnsignedByteType,
         });
+        // El fondo se renderiza a un target LINEAL (default) y el blur promedia en lineal.
+        // En el último pase (uOutputSRGB=1) codificamos a sRGB para el canvas, igual que hace
+        // el render directo; sin ese encode el fondo se mostraba oscuro (valores lineales
+        // interpretados como sRGB). Los pases intermedios escriben lineal (uOutputSRGB=0).
         s.bgBlur.blurMat = new THREE.ShaderMaterial({
           uniforms: {
             uTex: { value: null },
             uDir: { value: new THREE.Vector2(1, 0) },
             uTexelSize: { value: new THREE.Vector2(1 / w, 1 / h) },
             uAmount: { value: 1.0 },
+            uOutputSRGB: { value: 0 },
           },
           vertexShader: `
             varying vec2 vUv;
@@ -2675,18 +2691,26 @@ uniform float uSaturation;`
             uniform vec2 uDir;
             uniform vec2 uTexelSize;
             uniform float uAmount;
+            uniform float uOutputSRGB;
             void main() {
-              vec2 step = uDir * uTexelSize * uAmount;
+              vec2 texStep = uDir * uTexelSize * uAmount;
               vec4 c = vec4(0.0);
-              c += texture2D(uTex, vUv - step * 4.0) * 0.05;
-              c += texture2D(uTex, vUv - step * 3.0) * 0.09;
-              c += texture2D(uTex, vUv - step * 2.0) * 0.12;
-              c += texture2D(uTex, vUv - step * 1.0) * 0.15;
-              c += texture2D(uTex, vUv             ) * 0.18;
-              c += texture2D(uTex, vUv + step * 1.0) * 0.15;
-              c += texture2D(uTex, vUv + step * 2.0) * 0.12;
-              c += texture2D(uTex, vUv + step * 3.0) * 0.09;
-              c += texture2D(uTex, vUv + step * 4.0) * 0.05;
+              c += texture2D(uTex, vUv - texStep * 4.0) * 0.05;
+              c += texture2D(uTex, vUv - texStep * 3.0) * 0.09;
+              c += texture2D(uTex, vUv - texStep * 2.0) * 0.12;
+              c += texture2D(uTex, vUv - texStep * 1.0) * 0.15;
+              c += texture2D(uTex, vUv               ) * 0.18;
+              c += texture2D(uTex, vUv + texStep * 1.0) * 0.15;
+              c += texture2D(uTex, vUv + texStep * 2.0) * 0.12;
+              c += texture2D(uTex, vUv + texStep * 3.0) * 0.09;
+              c += texture2D(uTex, vUv + texStep * 4.0) * 0.05;
+              // Encode lineal→sRGB solo en el pase final (hacia el canvas). Curva sRGB exacta.
+              if (uOutputSRGB > 0.5) {
+                vec3 lin = clamp(c.rgb, 0.0, 1.0);
+                vec3 lo = lin * 12.92;
+                vec3 hi = 1.055 * pow(lin, vec3(1.0 / 2.4)) - 0.055;
+                c.rgb = mix(lo, hi, step(vec3(0.0031308), lin));
+              }
               gl_FragColor = c;
             }
           `,
@@ -2762,17 +2786,19 @@ uniform float uSaturation;`
         if (s.sparkRenderer) s.sparkRenderer.visible = sparkVis;
         if (s.maskHelper) s.maskHelper.visible = maskVis;
 
-        // ── Pass 2: horizontal blur → targetB ──
+        // ── Pass 2: horizontal blur → targetB (lineal, sin encode) ──
         s.bgBlur.blurMat.uniforms.uTex.value = s.bgBlur.targetA.texture;
         s.bgBlur.blurMat.uniforms.uDir.value.set(1, 0);
         s.bgBlur.blurMat.uniforms.uAmount.value = amount;
+        s.bgBlur.blurMat.uniforms.uOutputSRGB.value = 0;
         renderer.setRenderTarget(s.bgBlur.targetB);
         renderer.clear();
         renderer.render(s.bgBlur.quadScene, s.bgBlur.quadCamera);
 
-        // ── Pass 3: vertical blur → canvas ──
+        // ── Pass 3: vertical blur → canvas (encode a sRGB) ──
         s.bgBlur.blurMat.uniforms.uTex.value = s.bgBlur.targetB.texture;
         s.bgBlur.blurMat.uniforms.uDir.value.set(0, 1);
+        s.bgBlur.blurMat.uniforms.uOutputSRGB.value = 1;
         renderer.setRenderTarget(null);
         renderer.clear();
         renderer.render(s.bgBlur.quadScene, s.bgBlur.quadCamera);
