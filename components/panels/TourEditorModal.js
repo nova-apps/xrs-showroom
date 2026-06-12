@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { storage } from '@/lib/firebase';
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytesResumable, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { normalizeTour, emptyNode, isHotspotCalibrated } from '@/lib/tour';
+import { compressEquirect, PANO_MAX_WIDTH, PANO_QUALITY } from '@/lib/imageCompress';
 import TourViewer from './TourViewer';
 
 /**
@@ -85,6 +86,80 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
     setNodes((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], ...patch } } : prev));
     setHasChanges(true);
   }, []);
+
+  // ─── Optimización 360: recomprimir las imágenes de los nodos para que carguen más rápido ───
+  const mb = (n) => (n / 1024 / 1024).toFixed(1);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optMsg, setOptMsg] = useState({}); // nodeId -> texto de estado
+  const [sizes, setSizes] = useState({});   // url -> bytes | -1 (desconocido)
+  const measuredRef = useRef(new Set());
+  const OPT_BUDGET = 2_500_000; // ≤2.5MB ≈ ya optimizada (mismo criterio que la compresión)
+
+  // Recomprime la imagen de un nodo a ≤6144px WebP y reemplaza su URL. Saltea las ya optimizadas.
+  const recompressNode = useCallback(async (id) => {
+    const node = nodes[id];
+    if (!node?.url) return false;
+    setOptMsg((m) => ({ ...m, [id]: 'Descargando…' }));
+    const res = await fetch(node.url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const srcBlob = await res.blob();
+
+    setOptMsg((m) => ({ ...m, [id]: 'Comprimiendo…' }));
+    const out = await compressEquirect(srcBlob, { maxWidth: PANO_MAX_WIDTH, quality: PANO_QUALITY });
+    if (out.skipped) {
+      setOptMsg((m) => ({ ...m, [id]: out.reason === 'optimized' ? `Ya optimizada (${mb(out.srcBytes)} MB)` : 'Sin mejora' }));
+      return false;
+    }
+
+    setOptMsg((m) => ({ ...m, [id]: 'Subiendo…' }));
+    const r = storageRef(storage, `scenes/${sceneId}/amenities/${Date.now()}_360.webp`);
+    await uploadBytes(r, out.blob, { contentType: 'image/webp', cacheControl: 'public, max-age=2592000, immutable' });
+    const newUrl = await getDownloadURL(r);
+    mutateNode(id, { url: newUrl });
+    setOptMsg((m) => ({ ...m, [id]: `${mb(out.srcBytes)} → ${mb(out.bytes)} MB ✓` }));
+    return true;
+  }, [nodes, sceneId, mutateNode]);
+
+  const handleCompressNode = useCallback(async (id) => {
+    if (optimizing) return;
+    setOptimizing(true);
+    try { await recompressNode(id); }
+    catch (e) { setOptMsg((m) => ({ ...m, [id]: e?.message || 'Error' })); }
+    finally { setOptimizing(false); }
+  }, [optimizing, recompressNode]);
+
+  const handleCompressAll = useCallback(async () => {
+    if (optimizing) return;
+    setOptimizing(true);
+    try {
+      for (const n of Object.values(nodes)) {
+        if (!n?.url) continue;
+        try { await recompressNode(n.id); }
+        catch (e) { setOptMsg((m) => ({ ...m, [n.id]: e?.message || 'Error' })); }
+      }
+    } finally { setOptimizing(false); }
+  }, [optimizing, nodes, recompressNode]);
+
+  // Mide el peso de cada imagen (HEAD → Content-Length) para mostrar si ya está optimizada,
+  // sin descargarla entera. Cada URL se mide una sola vez. Si falla (CORS/err) queda -1.
+  useEffect(() => {
+    let cancelled = false;
+    for (const n of Object.values(nodes)) {
+      const url = n?.url;
+      if (!url || measuredRef.current.has(url)) continue;
+      measuredRef.current.add(url);
+      (async () => {
+        try {
+          const res = await fetch(url, { method: 'HEAD' });
+          const len = Number(res.headers.get('content-length'));
+          if (!cancelled) setSizes((s) => ({ ...s, [url]: Number.isFinite(len) && len > 0 ? len : -1 }));
+        } catch {
+          if (!cancelled) setSizes((s) => ({ ...s, [url]: -1 }));
+        }
+      })();
+    }
+    return () => { cancelled = true; };
+  }, [nodes]);
 
   // ─── Uploads ───
   // Panoramas keep 8192px: at FOV 75° only ~1/5 of the image width is on
@@ -393,23 +468,25 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
         <div className="ucm-header">
           <div className="ucm-header-left">
             <h2 className="ucm-title">🌐 Recorrido 360° — {amenity?.nombre || 'Amenity'}</h2>
-            <span className="ucm-count">
-              {nodeList.length} {nodeList.length === 1 ? 'posición' : 'posiciones'}
-            </span>
-            {calib.total > 0 && (
-              calib.pending > 0 ? (
-                <span
-                  className="tour-calib-badge is-pending"
-                  title="Abrí «Vista previa / Calibrar» y orientá cada flecha pendiente"
-                >
-                  ⚠ {calib.pending} {calib.pending === 1 ? 'flecha sin calibrar' : 'flechas sin calibrar'}
-                </span>
-              ) : (
-                <span className="tour-calib-badge is-done" title="Todas las flechas están calibradas">
-                  ✓ Flechas calibradas
-                </span>
-              )
-            )}
+            <div className="tour-header-meta">
+              <span className="ucm-count">
+                {nodeList.length} {nodeList.length === 1 ? 'posición' : 'posiciones'}
+              </span>
+              {calib.total > 0 && (
+                calib.pending > 0 ? (
+                  <span
+                    className="tour-calib-badge is-pending"
+                    title="Abrí «Vista previa / Calibrar» y orientá cada flecha pendiente"
+                  >
+                    ⚠ {calib.pending} {calib.pending === 1 ? 'flecha sin calibrar' : 'flechas sin calibrar'}
+                  </span>
+                ) : (
+                  <span className="tour-calib-badge is-done" title="Todas las flechas están calibradas">
+                    ✓ Flechas calibradas
+                  </span>
+                )
+              )}
+            </div>
           </div>
           <div className="ucm-header-right">
             <label className="ucm-csv-btn tour-upload-btn" title="Subir imágenes equirectangulares (una por posición)">
@@ -464,6 +541,18 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
                 Sin posiciones todavía.<br />Subí una o más imágenes 360°.
               </div>
             )}
+            {nodeList.length > 0 && (
+              <button
+                type="button"
+                className="tour-node-btn"
+                style={{ width: '100%', justifyContent: 'center', gap: 6, padding: '8px', marginBottom: 6 }}
+                disabled={optimizing}
+                title="Recomprime todas las imágenes 360 del recorrido a ≤6144px WebP para que carguen más rápido. Saltea las ya optimizadas. Publicá la escena para aplicarlo en la vista pública."
+                onClick={handleCompressAll}
+              >
+                🗜️ {optimizing ? 'Comprimiendo…' : `Comprimir todas (${nodeList.length})`}
+              </button>
+            )}
             {nodeList.map((n) => (
               <div
                 key={n.id}
@@ -471,27 +560,34 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
                 onClick={() => setSelectedId(n.id)}
               >
                 <img src={n.url} alt="" className="tour-node-thumb" />
-                <div className="tour-node-info">
-                  <input
-                    className="ucm-input"
-                    type="text"
-                    value={n.nombre}
-                    placeholder="Nombre de la posición"
-                    onChange={(e) => mutateNode(n.id, { nombre: e.target.value })}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <div className="tour-node-meta">
-                    <span>{n.links.length} {n.links.length === 1 ? 'conexión' : 'conexiones'}</span>
-                    {n.links.length > 0 && (
-                      <span
-                        className={`tour-node-calib${calib.perNode[n.id]?.done < n.links.length ? ' is-pending' : ' is-done'}`}
-                        title="Flechas calibradas en esta posición"
-                      >
-                        {calib.perNode[n.id]?.done < n.links.length ? '⚠' : '✓'}{' '}
-                        {calib.perNode[n.id]?.done ?? 0}/{n.links.length} calibradas
-                      </span>
-                    )}
-                  </div>
+                <input
+                  className="ucm-input tour-node-name"
+                  type="text"
+                  value={n.nombre}
+                  placeholder="Nombre de la posición"
+                  onChange={(e) => mutateNode(n.id, { nombre: e.target.value })}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div className="tour-node-meta">
+                  <span>{n.links.length} {n.links.length === 1 ? 'conexión' : 'conexiones'}</span>
+                  {n.links.length > 0 && (
+                    <span
+                      className={`tour-node-calib${calib.perNode[n.id]?.done < n.links.length ? ' is-pending' : ' is-done'}`}
+                      title="Flechas calibradas en esta posición"
+                    >
+                      {calib.perNode[n.id]?.done < n.links.length ? '⚠' : '✓'}{' '}
+                      {calib.perNode[n.id]?.done ?? 0}/{n.links.length} cal.
+                    </span>
+                  )}
+                  {optMsg[n.id] ? (
+                    <span className="tour-node-calib">🗜️ {optMsg[n.id]}</span>
+                  ) : (sizes[n.url] > 0 && (
+                    sizes[n.url] <= OPT_BUDGET ? (
+                      <span className="tour-node-calib is-done" title="Imagen liviana, ya optimizada">✓ opt.</span>
+                    ) : (
+                      <span className="tour-node-calib is-pending" title="Conviene comprimir esta imagen">⚠ {mb(sizes[n.url])} MB</span>
+                    )
+                  ))}
                 </div>
                 <div className="tour-node-actions">
                   <button
@@ -515,6 +611,14 @@ export default function TourEditorModal({ amenity, sceneId, onSave, onClose, onQ
                       onChange={(e) => { handleReplaceImage(n.id, e.target.files?.[0]); e.target.value = ''; }}
                     />
                   </label>
+                  <button
+                    className="tour-node-btn"
+                    title="Comprimir esta imagen 360 (más liviana, carga más rápido)"
+                    disabled={optimizing}
+                    onClick={(e) => { e.stopPropagation(); handleCompressNode(n.id); }}
+                  >
+                    🗜️
+                  </button>
                   <button
                     className="tour-node-btn tour-node-btn-delete"
                     title="Eliminar posición"

@@ -2312,7 +2312,7 @@
 
 /* Node list (left) */
 .tour-node-list {
-  width: 290px;
+  width: 330px;
   flex-shrink: 0;
   overflow-y: auto;
   display: flex;
@@ -2358,27 +2358,29 @@
   flex-shrink: 0;
 }
 
-.tour-node-info {
+/* Título (nombre de la posición): toma el espacio horizontal disponible. */
+.tour-node-name {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
 }
 
+/* Conexiones + estado de calibración, apilados en su propia columna. */
 .tour-node-meta {
   font-size: 0.62rem;
   color: var(--text-muted);
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
+/* Botones en grilla 2×2 para no ocupar tanto a lo ancho. */
 .tour-node-actions {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
   gap: 5px;
+  align-items: center;
   flex-shrink: 0;
 }
 
@@ -2585,10 +2587,20 @@
 }
 
 /* Calibration coverage badges — header (global) + per-node meta. */
+/* Contador de posiciones + badge de calibración, apilados en una columna para que
+   el aviso de flechas sin calibrar no quede pegado al contador. */
+.tour-header-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
 .tour-calib-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 9px;
+  padding: 3px 9px;
   border-radius: 999px;
   font-size: 0.66rem;
   font-weight: 600;
