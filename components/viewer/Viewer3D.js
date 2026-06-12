@@ -30,6 +30,22 @@ import {
 import { handleAdaptiveQuality, applyQualityLevel } from './quality';
 import { sanitizeMatKey, applyMaterialOverridesToModel, syncCameraRotation, disposeObject } from './helpers';
 
+// Spark termina sus web workers al hacer dispose(); si quedaba una tarea en vuelo, su promesa
+// rechaza ASÍNCRONAMENTE con "Worker terminate" — ruido benigno de teardown que un try/catch
+// sincrónico no puede atrapar. Silenciamos solo ese rechazo (sin tapar otros) para que no
+// aparezca como runtime error. Se registra una sola vez.
+if (typeof window !== 'undefined' && !window.__xrsWorkerTerminateGuard) {
+  window.__xrsWorkerTerminateGuard = true;
+  window.addEventListener('unhandledrejection', (e) => {
+    const msg = e?.reason?.message || String(e?.reason || '');
+    if (/worker\s*terminate/i.test(msg)) e.preventDefault();
+  });
+  window.addEventListener('error', (e) => {
+    const msg = e?.message || e?.error?.message || '';
+    if (/worker\s*terminate/i.test(msg)) { e.preventDefault(); e.stopImmediatePropagation?.(); }
+  });
+}
+
 const DEG2RAD = Math.PI / 180;
 const HALF_PI = Math.PI / 2;
 
