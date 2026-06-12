@@ -2894,30 +2894,31 @@ uniform float uSaturation;`
     return () => {
       mounted = false;
       const s = stateRef.current;
+      // Teardown defensivo: cada dispose va aislado para que un fallo (p.ej. Spark tira
+      // "Worker terminate" al cortar sus web workers, carrera benigna común con HMR) no
+      // aborte el resto de la limpieza ni emerja como runtime error.
       if (s.animationId) cancelAnimationFrame(s.animationId);
-      s._resizeObserver?.disconnect();
-      s._clickZoomCleanup?.();
+      try { s._resizeObserver?.disconnect(); } catch { /* noop */ }
+      try { s._clickZoomCleanup?.(); } catch { /* noop */ }
       if (s.transformControls) {
-        s.transformControls.detach();
-        s.transformControls.dispose();
+        try { s.transformControls.detach(); s.transformControls.dispose(); } catch { /* noop */ }
         s.transformControls = null;
       }
-      s.controls?.dispose();
+      try { s.controls?.dispose(); } catch { /* noop */ }
       if (s.sparkRenderer) {
-        s.sparkRenderer.dispose();
+        try { s.sparkRenderer.dispose(); } catch { /* noop */ }
         s.sparkRenderer = null;
       }
       if (s.pmremGenerator) {
-        s.pmremGenerator.dispose();
+        try { s.pmremGenerator.dispose(); } catch { /* noop */ }
         s.pmremGenerator = null;
       }
       if (s.envMap) {
-        s.envMap.dispose();
+        try { s.envMap.dispose(); } catch { /* noop */ }
         s.envMap = null;
       }
       if (s.renderer) {
-        s.renderer.domElement.remove();
-        s.renderer.dispose();
+        try { s.renderer.domElement.remove(); s.renderer.dispose(); } catch { /* noop */ }
       }
       s.renderer = null;
     };
