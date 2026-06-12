@@ -925,19 +925,23 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
         stateRef.current.adaptiveQuality.enabled = enabled;
       }
     },
-    loadGlbWithProgress: (url, _onProgress) => loadGlbModel(url),
-    loadGlbProgressive: async (proxyUrl, fullUrl, _onProgress) => {
-      // 1. Load proxy GLB immediately (tiny, ~200KB) — instant preview
+    loadGlbWithProgress: (url, settings) => loadGlbModel(url, settings),
+    loadGlbProgressive: async (proxyUrl, fullUrl, settings) => {
+      // 1. Load proxy GLB immediately (tiny, ~200KB) — instant preview.
+      //    El reveal (settings.revealType) se reproduce acá: es la primera aparición.
+      let revealed = false;
       if (proxyUrl) {
-        await loadGlbModel(proxyUrl);
+        await loadGlbModel(proxyUrl, settings);
+        revealed = true;
         const s = stateRef.current;
         if (s.glbModel) {
           s.glbModel.userData._isProxy = true;
           console.log('[Viewer] ⚡ Proxy GLB loaded, loading full model in background...');
         }
       }
-      // 2. Load full model in background
-      await loadGlbModel(fullUrl);
+      // 2. Load full model in background. Si el proxy ya hizo el reveal, el full entra
+      //    sin animación (swap directo) para no repetir/reiniciar la aparición.
+      await loadGlbModel(fullUrl, revealed ? { ...settings, revealType: 'none' } : settings);
       const s = stateRef.current;
       if (s.glbModel) {
         s.glbModel.userData._isProxy = false;

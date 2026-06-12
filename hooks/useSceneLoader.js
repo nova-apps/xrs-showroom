@@ -114,11 +114,11 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         if (glbUrl) {
           if (useProgressiveLoading && proxyUrl) {
             allPromises.push(
-              v.loadGlbProgressive(proxyUrl, glbUrl).catch(() => {})
+              v.loadGlbProgressive(proxyUrl, glbUrl, scene.glbSettings || undefined).catch(() => {})
             );
           } else if (useProgressiveLoading) {
             allPromises.push(
-              v.loadGlbWithProgress(glbUrl).catch(() => {})
+              v.loadGlbWithProgress(glbUrl, scene.glbSettings || undefined).catch(() => {})
             );
           } else {
             allPromises.push(v.loadGlb(glbUrl, scene.glbSettings || undefined));
