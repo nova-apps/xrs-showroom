@@ -16,6 +16,7 @@ import dynamic from 'next/dynamic';
 import { useScene } from '@/hooks/useScene';
 import { useSceneLoader } from '@/hooks/useSceneLoader';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
+import { useAmenityTourPrefetch } from '@/hooks/useAmenityTourPrefetch';
 
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
@@ -77,6 +78,10 @@ export default function ViewPage() {
   const handleViewerReady = useCallback(() => {
     setViewerReady(true);
   }, []);
+
+  // Once the 3D scene is up, warm the HTTP cache with each amenity tour's first
+  // panorama (idle, low-priority) so opening a tour later paints instantly.
+  useAmenityTourPrefetch(scene, viewerReady);
 
   const isTerreno = scene?.type === 'terreno';
 
