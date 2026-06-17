@@ -1114,18 +1114,18 @@ body {
    ═══════════════════════════════════════ */
 .staging-banner {
   position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 12px;
+  left: 0;
+  width: 340px; /* match the left side panel so the pill centers over it */
   z-index: 5000;
-  color: #fff;
+  color: var(--lp-text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 12px;
   line-height: 1.45;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse; /* pill sits at the bottom; changelog opens upward */
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   pointer-events: none;
 }
 
@@ -1138,21 +1138,21 @@ body {
   align-items: center;
   gap: 8px;
   padding: 5px 10px 5px 6px;
-  border: 1px solid rgba(255, 159, 28, 0.55);
+  border: 1px solid var(--lp-border);
   border-radius: 999px;
-  background: rgba(8, 8, 14, 0.92);
+  background: var(--lp-card-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: inherit;
   cursor: pointer;
   font: inherit;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   transition: border-color 0.15s, transform 0.15s;
 }
 
 .staging-banner-pill-btn:hover {
-  border-color: rgba(255, 159, 28, 0.85);
-  transform: translateY(1px);
+  border-color: rgba(150, 168, 136, 0.5);
+  transform: translateY(-1px);
 }
 
 .staging-banner-pill {
@@ -1161,14 +1161,15 @@ body {
   letter-spacing: 0.08em;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #ff9f1c;
-  color: #1a0e00;
+  background: rgba(125, 142, 110, 0.22);
+  border: 1px solid rgba(125, 142, 110, 0.4);
+  color: var(--lp-accent-light);
 }
 
 .staging-banner-version {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--lp-text-dim);
 }
 
 .staging-banner-chevron {
@@ -1182,12 +1183,14 @@ body {
 }
 
 .staging-banner-panel {
-  width: min(540px, calc(100vw - 24px));
+  align-self: flex-start; /* anchor to the panel's left edge, not centered */
+  margin-left: 12px;
+  width: min(480px, calc(100vw - 24px));
   max-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
-  background: rgba(8, 8, 14, 0.95);
-  border: 1px solid rgba(255, 159, 28, 0.4);
+  background: var(--lp-bg);
+  border: 1px solid var(--lp-border);
   border-radius: 12px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(14px);
@@ -1254,8 +1257,8 @@ body {
 .staging-banner-foot {
   padding: 8px 14px;
   font-size: 10px;
-  color: rgba(255, 159, 28, 0.85);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--lp-text-dim);
+  border-top: 1px solid var(--lp-border);
 }
 
 /* ── Changelog content blocks ── */
@@ -1275,7 +1278,7 @@ body {
 .changelog-section {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(255, 159, 28, 0.95);
+  color: var(--lp-accent-light);
   letter-spacing: 0.02em;
   margin: 10px 0 4px;
 }
@@ -1306,9 +1309,14 @@ body {
 
 @media (max-width: 768px) {
   .staging-banner {
-    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    bottom: 10px;
   }
   .staging-banner-panel {
+    align-self: center;
+    margin-left: 0;
     width: calc(100vw - 16px);
   }
 }
