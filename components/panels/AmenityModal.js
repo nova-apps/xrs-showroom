@@ -107,6 +107,11 @@ export default function AmenityModal({ amenity, onClose }) {
         {hasTour ? (
           <div className="amenity-modal-image amenity-tour-embed">
             <TourViewer
+              // Remount per amenity. TourViewer's WebGL setup runs once on mount
+              // ([mounted] dep) and only fires onReady from there, so reusing the
+              // instance for a different tour left it stuck on "Cargando…" forever
+              // (onReady never re-fired, currentId kept the old tour's node).
+              key={[amenity.nombre, amenity.tour?.startNode].filter(Boolean).join('|') || 'tour'}
               tour={amenity.tour}
               amenityName={amenity.nombre}
               embedded
