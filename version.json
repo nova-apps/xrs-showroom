@@ -1,12 +1,9 @@
 {
-  "version": "0.13.13",
+  "version": "0.13.14",
   "buildDate": "2026-06-18",
-  "commitHash": "406c7da",
+  "commitHash": "68be686",
   "environment": "production",
   "features": [
-    "dilatar el alpha de texturas para eliminar el halo blanco del borde",
-    "prefetch del primer panorama de cada tour 360",
-    "el link compartido muestra solo el nombre del proyecto",
-    "compresión de imágenes 360 en el editor + mejoras de UI"
+    "persistir la textura dilatada en la escena y publicarla"
   ]
 }

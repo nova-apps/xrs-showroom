@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.14] — 2026-06-18
+
+### ✨ Features
+- persistir la textura dilatada en la escena y publicarla
+
+### 📦 Chores
+- v0.13.13
+
+---
+
 ## [0.13.13] — 2026-06-18
 
 ### ✨ Features
