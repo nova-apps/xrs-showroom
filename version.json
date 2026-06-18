@@ -1,9 +1,9 @@
 {
-  "version": "0.13.14",
+  "version": "0.13.15",
   "buildDate": "2026-06-18",
-  "commitHash": "68be686",
+  "commitHash": "910463a",
   "environment": "production",
   "features": [
-    "persistir la textura dilatada en la escena y publicarla"
+    "Maintenance and stability improvements"
   ]
 }
