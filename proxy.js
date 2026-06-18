@@ -12,8 +12,10 @@ import { NextResponse } from 'next/server';
  */
 
 // Hosts that always pass through without a domain lookup.
+// 'showroom.xrs.studio' is the app's own general domain — served natively
+// (dashboard/editor), never treated as a project custom domain.
 const DEFAULT_HOST_SUFFIXES = ['.web.app', '.firebaseapp.com', '.vercel.app', '.run.app'];
-const DEFAULT_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
+const DEFAULT_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', 'showroom.xrs.studio']);
 
 const SESSION_COOKIE = '__session';
 
