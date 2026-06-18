@@ -6,6 +6,29 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.13] — 2026-06-18
+
+### ✨ Features
+- dilatar el alpha de texturas para eliminar el halo blanco del borde
+- prefetch del primer panorama de cada tour 360
+- el link compartido muestra solo el nombre del proyecto
+- compresión de imágenes 360 en el editor + mejoras de UI
+
+### 🐛 Fixes
+- recargar el tour 360 al cambiar de amenity
+- silenciar el "Worker terminate" de Spark al desmontar
+- teardown resiliente del Viewer3D (Worker terminate de Spark)
+- la animación de reveal del GLB no corría en /view
+
+### 💅 Style
+- mover el badge a la esquina inferior derecha
+- mover el badge al fondo del panel izquierdo, centrado
+
+### 📦 Chores
+- v0.13.12
+
+---
+
 ## [0.13.12] — 2026-06-11
 
 ### ✨ Features

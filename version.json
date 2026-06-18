@@ -1,9 +1,12 @@
 {
-  "version": "0.13.12",
-  "buildDate": "2026-06-11",
-  "commitHash": "4292bb0",
+  "version": "0.13.13",
+  "buildDate": "2026-06-18",
+  "commitHash": "406c7da",
   "environment": "production",
   "features": [
-    "control de brillo, contraste y recorte de neblina del SOG"
+    "dilatar el alpha de texturas para eliminar el halo blanco del borde",
+    "prefetch del primer panorama de cada tour 360",
+    "el link compartido muestra solo el nombre del proyecto",
+    "compresión de imágenes 360 en el editor + mejoras de UI"
   ]
 }
