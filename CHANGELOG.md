@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.16] — 2026-06-18
+
+### ✨ Features
+- reservar showroom.xrs.studio como dominio general de la app
+
+### 📦 Chores
+- v0.13.15
+
+---
+
 ## [0.13.15] — 2026-06-18
 
 ### 📦 Chores

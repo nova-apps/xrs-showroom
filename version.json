@@ -1,9 +1,9 @@
 {
-  "version": "0.13.15",
+  "version": "0.13.16",
   "buildDate": "2026-06-18",
-  "commitHash": "910463a",
+  "commitHash": "0194bec",
   "environment": "production",
   "features": [
-    "Maintenance and stability improvements"
+    "reservar showroom.xrs.studio como dominio general de la app"
   ]
 }
