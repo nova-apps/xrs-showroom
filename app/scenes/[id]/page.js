@@ -632,6 +632,7 @@ export default function ScenePage() {
                     collapsed={false}
                     onToggle={() => {}}
                     inline
+                    sceneId={sceneId}
                   />
                 }
               />

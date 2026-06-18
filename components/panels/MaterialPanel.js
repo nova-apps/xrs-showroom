@@ -10,6 +10,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import FloatingPanel from './FloatingPanel';
 import { usePresets } from '@/hooks/usePresets';
 import { dilateTextureAlpha } from '@/lib/utils';
+import { uploadAsset } from '@/lib/storage';
+import { applyTextureOverrideToMaterial } from '@/components/viewer/helpers';
 
 /**
  * Color picker + hex input row.
@@ -106,6 +108,9 @@ const SAVEABLE_KEYS = [
   'transmission', 'thickness', 'ior', 'clearcoat', 'clearcoatRoughness',
   'sheen', 'sheenRoughness', 'sheenColor', 'reflectivity', 'emissive',
   'emissiveIntensity',
+  // Persisted texture-image overrides (Storage download URLs), e.g. an
+  // edge-padded/dilated map. Applied in the viewer by swapping texture.image.
+  'mapUrl', 'alphaMapUrl',
 ];
 
 /**
@@ -204,6 +209,12 @@ function applySavedOverrides(mat, overrides) {
       case 'side':
         mat.side = value;
         break;
+      case 'mapUrl':
+        applyTextureOverrideToMaterial(mat, 'map', value);
+        break;
+      case 'alphaMapUrl':
+        applyTextureOverrideToMaterial(mat, 'alphaMap', value);
+        break;
       default:
         if (mat[key] !== undefined) {
           mat[key] = value;
@@ -230,28 +241,57 @@ function extractSaveableProps(props) {
 /**
  * Single material accordion with all editable parameters.
  */
-function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyChange, presets }) {
+function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyChange, presets, sceneId }) {
   const [props, setProps] = useState(initialProps);
   const [dilatePx, setDilatePx] = useState(4);
   const [dilateStatus, setDilateStatus] = useState(null);
 
   // Dilate the RGB under a texture's transparency to kill the alpha-edge white
-  // halo. Runtime-only: mutates the live texture, not persisted.
+  // halo, then upload the result to Storage and persist its URL into the scene's
+  // material override so it survives reload and reaches the published viewer.
   const dilate = useCallback((mapName) => {
     const tex = matRef?.[mapName];
     if (!tex) return;
     setDilateStatus({ ok: true, msg: 'Procesando…' });
     // Defer so the "Procesando…" label paints before the (sync, heavy) scan.
-    setTimeout(() => {
+    setTimeout(async () => {
       const res = dilateTextureAlpha(tex, dilatePx);
-      if (res.ok) {
-        matRef.needsUpdate = true;
-        setDilateStatus({ ok: true, msg: `✓ ${mapName} dilatado ${dilatePx}px (${res.filled} téxeles)` });
-      } else {
+      if (!res.ok) {
         setDilateStatus({ ok: false, msg: `✕ ${res.reason}` });
+        return;
+      }
+      matRef.needsUpdate = true;
+
+      if (!sceneId) {
+        // No scene context (e.g. standalone preview) — live only.
+        setDilateStatus({ ok: true, msg: `✓ ${mapName} dilatado ${dilatePx}px en vivo (sin escena para guardar)` });
+        return;
+      }
+
+      setDilateStatus({ ok: true, msg: 'Subiendo a la escena…' });
+      try {
+        const blob = await new Promise((resolve, reject) =>
+          res.canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob falló'))), 'image/png')
+        );
+        const matKey = sanitizeKey(props.name);
+        const file = new File([blob], `${matKey}_${mapName}.png`, { type: 'image/png' });
+        const { url } = await uploadAsset(sceneId, 'textures', file);
+
+        // Remember on the material so re-applies are idempotent, then persist
+        // the URL into the material override (saved + published via `materials`).
+        matRef.userData = matRef.userData || {};
+        matRef.userData[`${mapName}Url`] = url;
+        setProps((prev) => {
+          const next = { ...prev, [`${mapName}Url`]: url };
+          onPropertyChange?.(next);
+          return next;
+        });
+        setDilateStatus({ ok: true, msg: `✓ guardado en la escena (${mapName}, ${dilatePx}px, ${res.filled} téxeles)` });
+      } catch (e) {
+        setDilateStatus({ ok: false, msg: `✕ dilatado en vivo, pero falló la subida: ${e.message}` });
       }
     }, 30);
-  }, [matRef, dilatePx]);
+  }, [matRef, dilatePx, sceneId, props.name, onPropertyChange]);
 
   const applyPreset = useCallback((preset) => {
     if (!preset?.properties || !matRef) return;
@@ -441,7 +481,7 @@ function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyCha
               {props.maps.some((m) => m === 'map' || m === 'alphaMap') && (
                 <>
                   <div className="mat-dilate-row">
-                    <span className="mat-param-label" title="Rellena el color bajo la transparencia para eliminar la línea blanca del borde alpha. No persiste.">
+                    <span className="mat-param-label" title="Rellena el color bajo la transparencia para eliminar la línea blanca del borde alpha. Se guarda en la escena y se publica.">
                       Dilatar alpha
                     </span>
                     <input
@@ -479,7 +519,7 @@ function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyCha
  * Main MaterialPanel component.
  * Supports controlled collapse via collapsed/onToggle props (for RightPanelStack).
  */
-export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, onMaterialsChange, collapsed, onToggle, inline }) {
+export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, onMaterialsChange, collapsed, onToggle, inline, sceneId }) {
   const [materials, setMaterials] = useState([]);
   const [openMat, setOpenMat] = useState(null);
   const matRefsMap = useRef(new Map());
@@ -547,6 +587,12 @@ export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, 
     const matList = [];
     for (const [uuid, mat] of seen) {
       const props = extractMaterialProps(mat);
+      // Carry over persisted texture-image overrides so editing any other
+      // property doesn't drop them on the next save (they aren't readable
+      // back off the live material object).
+      const saved = savedMaterials?.[sanitizeKey(props.name)];
+      if (saved?.mapUrl) props.mapUrl = saved.mapUrl;
+      if (saved?.alphaMapUrl) props.alphaMapUrl = saved.alphaMapUrl;
       matList.push(props);
       currentPropsRef.current.set(uuid, props);
     }
@@ -609,6 +655,7 @@ export default function MaterialPanel({ viewerRef, viewerReady, savedMaterials, 
           onToggle={() => toggleMat(mat.uuid)}
           onPropertyChange={(updatedProps) => handlePropertyChange(mat.uuid, updatedProps)}
           presets={presets}
+          sceneId={sceneId}
         />
       ))}
     </div>

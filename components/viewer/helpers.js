@@ -11,6 +11,39 @@ export function sanitizeMatKey(name) {
   return name.replace(/[.#$/[\]]/g, '_');
 }
 
+/**
+ * Apply a persisted texture-image override to a material's texture slot.
+ *
+ * Swaps ONLY the `.image` of the existing GLB texture (keeping its colorSpace,
+ * flipY, wrap, filters, anisotropy and mipmap settings intact) so a saved
+ * dilated/edge-padded texture survives reload and reaches the published viewer.
+ * Async + idempotent: guards on userData so re-applies are cheap no-ops.
+ *
+ * The base texture must already exist in the slot (we only swap pixels, not
+ * create new maps). CORS on the storage bucket is already configured (GLBs are
+ * fetched the same way).
+ */
+export function applyTextureOverrideToMaterial(mat, slot, url) {
+  if (!mat || !url) return;
+  mat.userData = mat.userData || {};
+  const tex = mat[slot];
+  if (!tex) {
+    console.warn(`[Viewer] texture override for "${mat.name}" slot "${slot}" skipped — no base texture to swap`);
+    return;
+  }
+  if (mat.userData[`${slot}Url`] === url && tex.image) return; // already applied
+  fetch(url)
+    .then((r) => r.blob())
+    .then((b) => createImageBitmap(b))
+    .then((img) => {
+      tex.image = img;
+      tex.needsUpdate = true;
+      mat.userData[`${slot}Url`] = url;
+      mat.needsUpdate = true;
+    })
+    .catch((e) => console.warn(`[Viewer] failed to load texture override ${url}`, e));
+}
+
 export function applyMaterialOverridesToModel(model, overrides) {
   if (!model || !overrides) return;
   let count = 0;
@@ -31,6 +64,8 @@ export function applyMaterialOverridesToModel(model, overrides) {
               case 'visible': mat.visible = value; break;
               case 'flatShading': mat.flatShading = value; break;
               case 'side': mat.side = value; break;
+              case 'mapUrl': applyTextureOverrideToMaterial(mat, 'map', value); break;
+              case 'alphaMapUrl': applyTextureOverrideToMaterial(mat, 'alphaMap', value); break;
               default:
                 if (mat[prop] !== undefined) mat[prop] = value;
                 break;
