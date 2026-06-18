@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import FloatingPanel from './FloatingPanel';
 import { usePresets } from '@/hooks/usePresets';
+import { dilateTextureAlpha } from '@/lib/utils';
 
 /**
  * Color picker + hex input row.
@@ -231,6 +232,26 @@ function extractSaveableProps(props) {
  */
 function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyChange, presets }) {
   const [props, setProps] = useState(initialProps);
+  const [dilatePx, setDilatePx] = useState(4);
+  const [dilateStatus, setDilateStatus] = useState(null);
+
+  // Dilate the RGB under a texture's transparency to kill the alpha-edge white
+  // halo. Runtime-only: mutates the live texture, not persisted.
+  const dilate = useCallback((mapName) => {
+    const tex = matRef?.[mapName];
+    if (!tex) return;
+    setDilateStatus({ ok: true, msg: 'Procesando…' });
+    // Defer so the "Procesando…" label paints before the (sync, heavy) scan.
+    setTimeout(() => {
+      const res = dilateTextureAlpha(tex, dilatePx);
+      if (res.ok) {
+        matRef.needsUpdate = true;
+        setDilateStatus({ ok: true, msg: `✓ ${mapName} dilatado ${dilatePx}px (${res.filled} téxeles)` });
+      } else {
+        setDilateStatus({ ok: false, msg: `✕ ${res.reason}` });
+      }
+    }, 30);
+  }, [matRef, dilatePx]);
 
   const applyPreset = useCallback((preset) => {
     if (!preset?.properties || !matRef) return;
@@ -417,6 +438,35 @@ function MaterialAccordion({ matRef, initialProps, open, onToggle, onPropertyCha
                   <span key={m} className="mat-map-badge">{m}</span>
                 ))}
               </div>
+              {props.maps.some((m) => m === 'map' || m === 'alphaMap') && (
+                <>
+                  <div className="mat-dilate-row">
+                    <span className="mat-param-label" title="Rellena el color bajo la transparencia para eliminar la línea blanca del borde alpha. No persiste.">
+                      Dilatar alpha
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={16}
+                      step={1}
+                      value={dilatePx}
+                      onChange={(e) => setDilatePx(Math.min(16, Math.max(1, parseInt(e.target.value) || 1)))}
+                      title="Píxeles de relleno hacia la transparencia"
+                    />
+                    {props.maps.includes('map') && (
+                      <button className="mat-dilate-btn" onClick={() => dilate('map')}>map</button>
+                    )}
+                    {props.maps.includes('alphaMap') && (
+                      <button className="mat-dilate-btn" onClick={() => dilate('alphaMap')}>alphaMap</button>
+                    )}
+                  </div>
+                  {dilateStatus && (
+                    <div className={`mat-dilate-status ${dilateStatus.ok ? 'ok' : 'err'}`}>
+                      {dilateStatus.msg}
+                    </div>
+                  )}
+                </>
+              )}
             </>
           )}
         </div>

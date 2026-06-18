@@ -360,6 +360,41 @@
   letter-spacing: 0.02em;
 }
 
+.mat-dilate-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mat-dilate-row input[type="number"] {
+  width: 48px;
+}
+
+.mat-dilate-btn {
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color, #e6e6e6);
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+
+.mat-dilate-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mat-dilate-status {
+  margin-top: 5px;
+  font-size: 0.55rem;
+  font-family: var(--font-mono);
+}
+
+.mat-dilate-status.ok { color: #51cf66; }
+.mat-dilate-status.err { color: #ff6b6b; }
+
 .mat-preset-row {
   display: flex;
   align-items: center;
