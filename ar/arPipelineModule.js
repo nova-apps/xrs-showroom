@@ -64,13 +64,27 @@ export function arPipelineModule(cb = {}, opts = {}) {
 
   const initXrScene = ({ scene, camera, renderer }) => {
     sceneRef = scene;
+
+    // Cap del pixel ratio: el framebuffer a 2–3x (retina) es el mayor consumidor de
+    // VRAM y dispara el recargado por presión de memoria en iOS al sumarse el feed de
+    // cámara + GLB + splat. El feed domina la imagen, así que bajar la resolución del
+    // render 3D casi no se nota. iOS es el más sensible → 1.0; resto → 1.5.
+    try {
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPhone|iPad|iPod/i.test(ua) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const maxRatio = isIOS ? 1 : 1.5;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxRatio));
+    } catch { /* noop */ }
+
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const key = new THREE.DirectionalLight(0xffffff, 1.1);
     key.position.set(1.5, 4, 2);
     key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024);
+    // 512 en vez de 1024: menos VRAM en la sombra; en mobile la diferencia no se ve.
+    key.shadow.mapSize.set(512, 512);
     scene.add(key);
     scene.add(new THREE.AmbientLight(0xffffff, 1.4));
 
