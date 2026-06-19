@@ -16,6 +16,7 @@ import {
   updateLotes as dbUpdateLotes,
   updatePanoramaSettings as dbUpdatePanoramaSettings,
   updateCollidersVisible as dbUpdateCollidersVisible,
+  updateVisibility as dbUpdateVisibility,
   updateLighting as dbUpdateLighting,
   updateTint as dbUpdateTint,
   updateSaturation as dbUpdateSaturation,
@@ -111,6 +112,18 @@ export function useScene(sceneId) {
     (visible) => {
       if (!sceneId) return;
       dbUpdateCollidersVisible(sceneId, visible).catch(console.error);
+    },
+    [sceneId]
+  );
+
+  /**
+   * Persist a single asset's show/hide state (immediate, no debounce — toggles
+   * are discrete). type ∈ glb|colliders|sog|skybox|floor.
+   */
+  const updateVisibility = useCallback(
+    (type, visible) => {
+      if (!sceneId) return;
+      dbUpdateVisibility(sceneId, type, visible).catch(console.error);
     },
     [sceneId]
   );
@@ -232,6 +245,7 @@ export function useScene(sceneId) {
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
+    updateVisibility,
     publish,
     discardChanges,
     uploadAsset,

@@ -73,6 +73,7 @@ export default function ScenePage() {
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
+    updateVisibility,
     publish,
     discardChanges,
     uploadAsset,
@@ -134,7 +135,9 @@ export default function ScenePage() {
         setAssetVisibility((prev) => ({ ...prev, [assetType]: visible }));
         if (viewerRef.current) viewerRef.current.setAssetVisible(assetType, visible);
       },
-      save: () => {}, // visibility is local-only, no Firebase persist
+      save: (assetType, visible) => {
+        updateVisibility(assetType, visible);
+      },
     },
   });
 
@@ -352,6 +355,13 @@ export default function ScenePage() {
     [removeAsset, resetLoadedAsset]
   );
 
+  // Sync the eye-toggle state from the persisted scene.visibility on load, so
+  // saved show/hide states survive a refresh (defaults fill any unset asset).
+  useEffect(() => {
+    if (!scene?.visibility) return;
+    setAssetVisibility((prev) => ({ ...prev, ...scene.visibility }));
+  }, [scene?.visibility]);
+
   // Handle asset visibility toggle (with history)
   const handleVisibilityChange = useCallback((assetType, visible) => {
     const prevVisible = assetVisibility[assetType] !== false;
@@ -365,7 +375,8 @@ export default function ScenePage() {
     if (viewerRef.current) {
       viewerRef.current.setAssetVisible(assetType, visible);
     }
-  }, [assetVisibility, history]);
+    updateVisibility(assetType, visible);
+  }, [assetVisibility, history, updateVisibility]);
 
   // Handle active section change — update gizmo target
   const handleActiveSectionChange = useCallback((section) => {

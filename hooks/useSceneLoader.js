@@ -196,6 +196,16 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         }
       }
 
+      // ── Apply persisted asset visibility (published show/hide per asset) ──
+      // Colliders are intentionally excluded: both editor and /view keep them
+      // hidden + hover-enabled for click targeting, regardless of the toggle.
+      const vis = scene.visibility;
+      if (vis) {
+        for (const type of ['glb', 'sog', 'skybox', 'floor']) {
+          v.setAssetVisible?.(type, vis[type] !== false);
+        }
+      }
+
       // ── Apply initial camera position after GLB is loaded ──
       // Only when an asset was actually (re)loaded in this pass — otherwise
       // every scene-data update (e.g. an editor transform tweak that rewrites
