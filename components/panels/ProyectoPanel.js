@@ -20,6 +20,7 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
   const [logoProgress, setLogoProgress] = useState(0);
   const [customDomain, setCustomDomain] = useState('');
   const [customDomainStatus, setCustomDomainStatus] = useState({ type: 'idle', message: '' });
+  const [showArButton, setShowArButton] = useState(true);
   const whatsappTimer = useRef(null);
   const logoInputRef = useRef(null);
   const customDomainTimer = useRef(null);
@@ -50,6 +51,13 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
     }
   }, [scene?.customDomain]);
 
+  // showArButton ausente (escenas legacy) => mostrar el botón por defecto.
+  useEffect(() => {
+    if (scene?.showArButton !== undefined) {
+      setShowArButton(scene.showArButton !== false);
+    }
+  }, [scene?.showArButton]);
+
   // ── Handlers ──
   const handleWhatsappChange = useCallback((value) => {
     setWhatsappNumber(value);
@@ -58,6 +66,12 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
     whatsappTimer.current = setTimeout(() => {
       updateScene(sceneId, { whatsappNumber: value }).catch(console.error);
     }, 800);
+  }, [sceneId]);
+
+  const handleShowArButtonChange = useCallback((value) => {
+    setShowArButton(value);
+    if (!sceneId) return;
+    updateScene(sceneId, { showArButton: value }).catch(console.error);
   }, [sceneId]);
 
   const handleLogoUpload = useCallback(async (e) => {
@@ -220,6 +234,27 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
               />
             </div>
           )}
+        </div>
+      </SubAccordion>
+
+      <SubAccordion
+        title="Realidad aumentada"
+        icon="📱"
+        open={openSection === 'ar'}
+        onToggle={() => toggleSection('ar')}
+      >
+        <div className="whatsapp-config">
+          <label className="hdri-checkbox-row">
+            <input
+              type="checkbox"
+              checked={showArButton}
+              onChange={(e) => handleShowArButtonChange(e.target.checked)}
+            />
+            <span>Mostrar botón "Ver en AR"</span>
+          </label>
+          <span className="whatsapp-hint">
+            El botón solo aparece en dispositivos móviles y cuando la escena tiene una maqueta 3D (GLB).
+          </span>
         </div>
       </SubAccordion>
 

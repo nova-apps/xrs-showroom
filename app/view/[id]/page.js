@@ -87,7 +87,7 @@ export default function ViewPage() {
 
   // Maqueta para AR: preferir el proxy (más liviano) y caer al GLB completo.
   const arModelUrl = scene?.assets?.glb_proxy?.url || scene?.assets?.glb?.url || null;
-  const showArButton = isMobile && !!arModelUrl && !arOpen;
+  const showArButton = isMobile && !!arModelUrl && !arOpen && scene?.showArButton !== false;
 
   // Pausar el render del Viewer3D mientras el AR posee la pantalla: evita dos contextos
   // WebGL activos a la vez en mobile (battery + posible context loss).
