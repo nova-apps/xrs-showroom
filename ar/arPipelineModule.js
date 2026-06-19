@@ -14,6 +14,8 @@ const PLACE_REF_DIST = 2; // distancia (m) a la que la escala inicial = 1 (tama�
 
 export function arPipelineModule(cb = {}, opts = {}) {
   const modelUrl = opts.modelUrl;
+  const sogUrl = opts.sogUrl;
+  const transforms = opts.transforms;
   const XR8 = () => window.XR8;
 
   const raycaster = new THREE.Raycaster();
@@ -85,11 +87,27 @@ export function arPipelineModule(cb = {}, opts = {}) {
 
     camera.position.set(0, 3, 0);
 
-    // Cargar la maqueta de la escena (con el renderer del motor para KTX2).
+    // Cargar la maqueta de la escena (GLB + SOG opcional) con el renderer del motor.
     if (!modelUrl) { cb.onModelError?.(); return; }
-    loadArModel(modelUrl, renderer)
+    loadArModel({ modelUrl, sogUrl, transforms, renderer, scene })
       .then((m) => { modelTemplate = m; cb.onModelLoaded?.(); })
       .catch(() => cb.onModelError?.());
+  };
+
+  // Libera los splats (Spark termina sus web workers en dispose()) y el SparkRenderer.
+  const disposeSplatResources = () => {
+    const holder = modelRoot || modelTemplate;
+    holder?.traverse?.((o) => {
+      if (o?.userData?.__isArSplat && typeof o.dispose === 'function') {
+        try { o.dispose(); } catch { /* noop */ }
+      }
+    });
+    const sr = sceneRef?.userData?.__sparkRenderer;
+    if (sr) {
+      try { sceneRef.remove(sr); } catch { /* noop */ }
+      try { sr.dispose?.(); } catch { /* noop */ }
+      sceneRef.userData.__sparkRenderer = null;
+    }
   };
 
   // ---- Colocación + manipulación ----
@@ -269,7 +287,7 @@ export function arPipelineModule(cb = {}, opts = {}) {
     },
 
     // El motor llama onDetach al limpiar el pipeline (clearCameraPipelineModules): sacamos
-    // los listeners de window para no acumularlos entre sesiones de AR.
-    onDetach: () => { removeTouchListeners(); },
+    // los listeners de window y liberamos los recursos de Spark para no filtrarlos entre sesiones.
+    onDetach: () => { removeTouchListeners(); disposeSplatResources(); },
   };
 }

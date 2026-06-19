@@ -4,17 +4,19 @@
 // maqueta de la escena. Toda interacción con el motor/cámara ocurre en el navegador.
 //
 // Props:
-//   - modelUrl: URL del GLB a colocar en AR (de la escena).
-//   - onClose:  callback al cerrar el overlay (desmonta y frena la cámara).
+//   - modelUrl:   URL del GLB a colocar en AR (de la escena).
+//   - sogUrl:     URL del splat gaussiano SOG (opcional) a mostrar junto al GLB.
+//   - transforms: scene.transforms { glb, sog } para alinear el splat al GLB.
+//   - logoUrl:    logo del proyecto a mostrar en el overlay (reemplaza el branding genérico).
+//   - onClose:    callback al cerrar el overlay (desmonta y frena la cámara).
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { loadEngine } from './engineLoader';
 import { arPipelineModule } from './arPipelineModule';
 
 const GOLD = '#ab8869';
 
-export default function ARExperience({ modelUrl, logoUrl, onClose }) {
+export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, onClose }) {
   const rootRef = useRef(null);
   const canvasRef = useRef(null);
   const startedRef = useRef(false);
@@ -27,7 +29,6 @@ export default function ARExperience({ modelUrl, logoUrl, onClose }) {
   const [modelError, setModelError] = useState(false);
   const [placed, setPlaced] = useState(false);
   const [hintsHidden, setHintsHidden] = useState(false);
-  const [permStatus, setPermStatus] = useState(null);
   const [showCredits, setShowCredits] = useState(false);
 
   // Long-press (~600 ms) sobre el HUD revela la atribución del motor (requisito de licencia).
@@ -111,8 +112,7 @@ export default function ARExperience({ modelUrl, logoUrl, onClose }) {
         onModelError: () => setModelError(true),
         onReticle: setReticleActive,
         onPlaced: setPlaced,
-        onCameraStatus: setPermStatus,
-      }, { modelUrl });
+      }, { modelUrl, sogUrl, transforms });
       arModRef.current = arMod;
 
       XR8.addCameraPipelineModules([
@@ -132,7 +132,7 @@ export default function ARExperience({ modelUrl, logoUrl, onClose }) {
       setErrorMsg(e instanceof Error ? e.message : 'Error desconocido al iniciar AR');
       setStatus('error');
     }
-  }, [modelUrl]);
+  }, [modelUrl, sogUrl, transforms]);
 
   const handleClose = useCallback(() => {
     stopEngine();
@@ -164,15 +164,16 @@ export default function ARExperience({ modelUrl, logoUrl, onClose }) {
                 style={S.hudLogo}
               />
             ) : (
+              // Sin logo del proyecto: zona invisible que conserva el long-press para
+              // revelar la atribución legal del motor (requisito de licencia).
               <span
                 onPointerDown={startPress}
                 onPointerUp={cancelPress}
                 onPointerLeave={cancelPress}
                 onPointerCancel={cancelPress}
-                style={S.hudBrand}
-              >
-                XRS
-              </span>
+                style={S.hudCreditsHotspot}
+                aria-hidden="true"
+              />
             )}
           </div>
 
@@ -214,7 +215,10 @@ export default function ARExperience({ modelUrl, logoUrl, onClose }) {
       {/* Pantalla de inicio (idle / error). */}
       {(status === 'idle' || status === 'error') && (
         <div style={S.landing}>
-          <span style={S.landingBrand}>XRS</span>
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" draggable={false} style={S.landingLogo} />
+          )}
           <p style={S.landingText}>
             Realidad aumentada: colocá la maqueta en tu espacio y manipulala con los dedos.
           </p>
@@ -235,7 +239,10 @@ export default function ARExperience({ modelUrl, logoUrl, onClose }) {
       {showCredits && (
         <div style={S.creditsWrap}>
           <div style={S.creditsCard}>
-            <span style={{ ...S.landingBrand, fontSize: 22 }}>XRS</span>
+            {logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" draggable={false} style={S.creditsLogo} />
+            )}
             <p style={{ marginTop: 12, fontSize: 12, lineHeight: 1.6, color: 'rgba(255,255,255,0.6)' }}>
               Motor de tracking AR © 2026 Niantic Spatial, Inc.
             </p>
@@ -244,19 +251,6 @@ export default function ARExperience({ modelUrl, logoUrl, onClose }) {
             </button>
           </div>
         </div>
-      )}
-
-      {/* Modal de permisos mientras el motor pide cámara/sensores. Vía portal a <body>. */}
-      {permStatus === 'requesting' && typeof document !== 'undefined' && createPortal(
-        <div style={S.permWrap}>
-          <div style={S.permCard}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Aceptá los permisos para continuar</p>
-            <p style={{ marginTop: 4, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-              Necesitamos acceso a la cámara y a los sensores de movimiento.
-            </p>
-          </div>
-        </div>,
-        document.body,
       )}
     </div>
   );
@@ -277,7 +271,7 @@ const S = {
   },
   hud: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 16, pointerEvents: 'none' },
   hudTop: { display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start' },
-  hudBrand: { pointerEvents: 'auto', userSelect: 'none', fontWeight: 700, letterSpacing: 2, color: GOLD, textShadow: '0 1px 4px rgba(0,0,0,0.9)' },
+  hudCreditsHotspot: { pointerEvents: 'auto', display: 'block', width: 44, height: 44 },
   hudLogo: { pointerEvents: 'auto', userSelect: 'none', height: 22, width: 'auto', objectFit: 'contain', opacity: 0.9, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))', WebkitTouchCallout: 'none' },
   hudBottom: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)' },
   hudHints: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', transition: 'opacity 0.7s' },
@@ -285,13 +279,12 @@ const S = {
   chip: { borderRadius: 9999, background: 'rgba(0,0,0,0.5)', padding: '8px 16px', fontSize: 14, backdropFilter: 'blur(8px)' },
   loading: { position: 'absolute', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#000' },
   landing: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', textAlign: 'center', background: 'linear-gradient(to bottom, #09090b, rgba(36,26,16,0.6), #000)' },
-  landingBrand: { fontSize: 40, fontWeight: 800, letterSpacing: 4, color: GOLD },
+  landingLogo: { maxHeight: 64, maxWidth: 220, width: 'auto', objectFit: 'contain', marginBottom: 4 },
   landingText: { marginTop: 12, maxWidth: 360, fontSize: 14, color: 'rgba(255,255,255,0.7)' },
   errorBox: { marginTop: 16, maxWidth: 360, borderRadius: 8, background: 'rgba(239,68,68,0.15)', padding: '8px 16px', fontSize: 14, color: '#fca5a5' },
   primaryBtn: { marginTop: 32, borderRadius: 9999, background: GOLD, padding: '12px 32px', fontSize: 16, fontWeight: 600, color: '#18120b', boxShadow: '0 8px 24px rgba(171,136,105,0.3)' },
   landingNote: { marginTop: 24, maxWidth: 280, fontSize: 11, lineHeight: 1.6, color: 'rgba(255,255,255,0.4)' },
   creditsWrap: { position: 'absolute', inset: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' },
   creditsCard: { maxWidth: 360, borderRadius: 16, background: '#18181b', padding: 24, textAlign: 'center' },
-  permWrap: { position: 'fixed', insetInline: 0, top: 0, zIndex: 2147483647, display: 'flex', justifyContent: 'center', padding: 16, pointerEvents: 'none' },
-  permCard: { pointerEvents: 'auto', maxWidth: 360, borderRadius: 16, background: 'rgba(24,24,27,0.95)', padding: '16px 20px', textAlign: 'center', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' },
+  creditsLogo: { maxHeight: 40, maxWidth: 180, width: 'auto', objectFit: 'contain' },
 };

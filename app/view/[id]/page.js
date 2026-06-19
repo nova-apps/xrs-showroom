@@ -319,7 +319,15 @@ export default function ViewPage() {
         </button>
       )}
 
-      {arOpen && <ARExperience modelUrl={arModelUrl} logoUrl={scene?.panelLogoUrl} onClose={() => setArOpen(false)} />}
+      {arOpen && (
+        <ARExperience
+          modelUrl={arModelUrl}
+          sogUrl={scene?.assets?.sog?.url || null}
+          transforms={scene?.transforms || null}
+          logoUrl={scene?.panelLogoUrl}
+          onClose={() => setArOpen(false)}
+        />
+      )}
     </>
   );
 }
