@@ -1,9 +1,9 @@
 {
-  "version": "0.13.16",
-  "buildDate": "2026-06-18",
-  "commitHash": "0194bec",
+  "version": "0.13.17",
+  "buildDate": "2026-06-19",
+  "commitHash": "707198f",
   "environment": "production",
   "features": [
-    "reservar showroom.xrs.studio como dominio general de la app"
+    "toggle para ocultar/mostrar el botón de AR desde la config del proyecto"
   ]
 }

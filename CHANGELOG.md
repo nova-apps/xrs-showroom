@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.17] — 2026-06-19
+
+### ✨ Features
+- toggle para ocultar/mostrar el botón de AR desde la config del proyecto
+
+### 📦 Chores
+- v0.13.16
+
+---
+
 ## [0.13.16] — 2026-06-18
 
 ### ✨ Features
