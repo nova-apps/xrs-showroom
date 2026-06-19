@@ -30,6 +30,9 @@ export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, on
   const [placed, setPlaced] = useState(false);
   const [hintsHidden, setHintsHidden] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  // El logo del proyecto se muestra recién cuando la cámara está viva ('hasVideo'),
+  // para no superponerse al prompt de permisos ("tap to allow") de 8th Wall.
+  const [cameraLive, setCameraLive] = useState(false);
 
   // Long-press (~600 ms) sobre el HUD revela la atribución del motor (requisito de licencia).
   const pressTimer = useRef(null);
@@ -110,8 +113,11 @@ export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, on
       const arMod = arPipelineModule({
         onModelLoaded: () => setModelLoaded(true),
         onModelError: () => setModelError(true),
-        onReticle: setReticleActive,
+        // Si aparece el reticle, la cámara ya está viva (red de seguridad por si el
+        // motor no emite 'hasVideo').
+        onReticle: (active) => { setReticleActive(active); if (active) setCameraLive(true); },
         onPlaced: setPlaced,
+        onCameraStatus: (s) => { if (s === 'hasVideo') setCameraLive(true); },
       }, { modelUrl, sogUrl, transforms });
       arModRef.current = arMod;
 
@@ -150,8 +156,10 @@ export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, on
       {/* HUD durante la sesión (no bloquea los toques del canvas). */}
       {status === 'running' && (
         <div style={S.hud}>
+          {/* El contenedor se mantiene siempre (preserva el layout flex space-between);
+              el logo aparece recién con la cámara viva, para no pisar el prompt de permisos. */}
           <div style={S.hudTop}>
-            {logoUrl ? (
+            {cameraLive && (logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={logoUrl}
@@ -174,7 +182,7 @@ export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, on
                 style={S.hudCreditsHotspot}
                 aria-hidden="true"
               />
-            )}
+            ))}
           </div>
 
           <div style={S.hudBottom}>
