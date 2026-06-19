@@ -95,21 +95,29 @@ export default function ViewPage() {
     viewerRef.current?.setRenderPaused?.(arOpen);
   }, [arOpen]);
 
+  // Animate the camera back to the scene's initial framing (mobile override
+  // first, then the shared initial). Shared by every deselect gesture below.
+  const resetCameraToInitial = useCallback(() => {
+    const initial = scene?.orbit?.mobile?.initialCamera || scene?.orbit?.initialCamera;
+    if (initial) viewerRef.current?.setInitialCameraPosition(initial);
+  }, [scene]);
+
   const handleSelectTab = useCallback((tabId, { isMobile }) => {
     // Both the unidades and lotes lists pull the camera back to its initial
     // mobile framing when their tab gets tapped on a small viewport.
     if (!isMobile) return;
     if (tabId !== 'unidades' && tabId !== 'lotes') return;
-    const initial = scene?.orbit?.mobile?.initialCamera || scene?.orbit?.initialCamera;
-    if (initial) viewerRef.current?.setInitialCameraPosition(initial);
-  }, [scene]);
+    resetCameraToInitial();
+  }, [resetCameraToInitial]);
 
-  // Mobile-only: collapsing the panel back to the initial view drops any
-  // currently selected collider so the 3D goes back to a clean state.
+  // Mobile-only: collapsing the panel is a deselect — drop the selected
+  // collider AND pull the camera back to its initial framing (only if
+  // something was actually selected, so the mount-time collapse is a no-op).
   const handlePanelCollapse = useCallback(() => {
+    if (highlightedUnit || highlightedLote) resetCameraToInitial();
     setHighlightedUnit(null);
     setHighlightedLote(null);
-  }, []);
+  }, [highlightedUnit, highlightedLote, resetCameraToInitial]);
 
   const handleSelectUnit = useCallback((unit) => {
     // Row tap in the panel always opens detail (both desktop and mobile).
@@ -127,6 +135,25 @@ export default function ViewPage() {
       viewerRef.current.focusOnCollider(String(lote.id));
     }
   }, []);
+
+  // Closing a detail on mobile is also a deselect: clear the highlight and
+  // return the camera to its initial framing. On desktop the modal is a side
+  // panel, so closing it just dismisses the panel (camera/highlight untouched).
+  const handleCloseUnitModal = useCallback(() => {
+    setModalUnit(null);
+    if (isMobile) {
+      setHighlightedUnit(null);
+      resetCameraToInitial();
+    }
+  }, [isMobile, resetCameraToInitial]);
+
+  const handleCloseLoteModal = useCallback(() => {
+    setModalLote(null);
+    if (isMobile) {
+      setHighlightedLote(null);
+      resetCameraToInitial();
+    }
+  }, [isMobile, resetCameraToInitial]);
 
   // Keep the 3D collider tint in sync with whatever the user is currently
   // pointing at — either via row tap or collider tap (mobile or desktop).
@@ -249,7 +276,7 @@ export default function ViewPage() {
       {modalUnit && (
         <UnidadModal
           unit={modalUnit}
-          onClose={() => setModalUnit(null)}
+          onClose={handleCloseUnitModal}
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
           panoramaSettings={scene?.panoramaSettings}
@@ -260,7 +287,7 @@ export default function ViewPage() {
         <LoteModal
           lote={modalLote}
           barrio={loteBarrio}
-          onClose={() => setModalLote(null)}
+          onClose={handleCloseLoteModal}
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
         />
