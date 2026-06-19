@@ -6,6 +6,21 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.18] — 2026-06-19
+
+### ✨ Features
+- mostrar el splat SOG junto al GLB + usar el logo del proyecto y deduplicar permisos
+
+### 🐛 Fixes
+- mostrar el logo recién cuando la cámara está viva
+- persistir y publicar la visibilidad de assets (piso, skybox, glb, sog)
+- volver la cámara a la posición inicial al deseleccionar en mobile
+
+### 📦 Chores
+- v0.13.17
+
+---
+
 ## [0.13.17] — 2026-06-19
 
 ### ✨ Features

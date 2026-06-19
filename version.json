@@ -1,9 +1,9 @@
 {
-  "version": "0.13.17",
+  "version": "0.13.18",
   "buildDate": "2026-06-19",
-  "commitHash": "707198f",
+  "commitHash": "f1d9821",
   "environment": "production",
   "features": [
-    "toggle para ocultar/mostrar el botón de AR desde la config del proyecto"
+    "mostrar el splat SOG junto al GLB + usar el logo del proyecto y deduplicar permisos"
   ]
 }
