@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.19] — 2026-06-19
+
+### 🐛 Fixes
+- capear pixel ratio y reducir shadow map para bajar la VRAM
+
+### 📦 Chores
+- v0.13.18
+
+---
+
 ## [0.13.18] — 2026-06-19
 
 ### ✨ Features

@@ -1,9 +1,9 @@
 {
-  "version": "0.13.18",
+  "version": "0.13.19",
   "buildDate": "2026-06-19",
-  "commitHash": "f1d9821",
+  "commitHash": "66f1b2c",
   "environment": "production",
   "features": [
-    "mostrar el splat SOG junto al GLB + usar el logo del proyecto y deduplicar permisos"
+    "Maintenance and stability improvements"
   ]
 }
