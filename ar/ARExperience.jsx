@@ -16,6 +16,21 @@ import { arPipelineModule } from './arPipelineModule';
 
 const GOLD = '#ab8869';
 
+// 8th Wall muestra el prompt de permisos (cámara/movimiento) en inglés y no expone API
+// de i18n. Traducimos solo el texto visible con un MutationObserver (no toca el flujo de
+// permisos del motor). Las strings no mapeadas quedan en inglés — degradación inocua.
+const AR_PROMPT_ES = {
+  "Tap 'Allow' to access AR": "Tocá 'Permitir' para usar la AR",
+  "Let's enable your camera": 'Habilitá tu cámara',
+  "Let's enable your microphone": 'Habilitá tu micrófono',
+  "Let's enable your motion sensors": 'Habilitá los sensores de movimiento',
+  'Reload the page and enable camera access': 'Recargá la página y permití el acceso a la cámara',
+  'Reload the page and enable camera + microphone access': 'Recargá la página y permití el acceso a cámara y micrófono',
+  "You've prevented the page from accessing your motion sensors": 'Bloqueaste el acceso a los sensores de movimiento',
+  'Permissions were denied. You need to accept motion permissions to continue': 'Se denegaron los permisos. Tenés que aceptar los permisos de movimiento para continuar',
+  'Motion & Orientation Access': 'Acceso a Movimiento y Orientación',
+};
+
 export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, onClose }) {
   const rootRef = useRef(null);
   const canvasRef = useRef(null);
@@ -49,6 +64,35 @@ export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, on
   // Precargar el motor al montar: así al tocar "Iniciar" el pedido de cámara/sensores ocurre
   // dentro del gesto del usuario y el motor se saltea su prompt intermedio.
   useEffect(() => { loadEngine().catch(() => {}); }, []);
+
+  // Traducir al español el prompt de permisos de 8th Wall (cámara/movimiento), que viene
+  // en inglés. Reemplaza solo las strings conocidas en los text nodes que cambian.
+  useEffect(() => {
+    const translate = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const es = AR_PROMPT_ES[(node.nodeValue || '').trim()];
+        if (es) node.nodeValue = es;
+        return;
+      }
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        let n;
+        while ((n = walker.nextNode())) {
+          const es = AR_PROMPT_ES[(n.nodeValue || '').trim()];
+          if (es) n.nodeValue = es;
+        }
+      }
+    };
+    translate(document.body); // primera pasada sobre lo ya presente
+    const obs = new MutationObserver((records) => {
+      for (const r of records) {
+        if (r.type === 'characterData') translate(r.target);
+        else r.addedNodes.forEach(translate);
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => obs.disconnect();
+  }, []);
 
   // Las indicaciones se desvanecen ~5 s después de colocar la maqueta.
   useEffect(() => {
