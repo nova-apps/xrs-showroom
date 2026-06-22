@@ -2387,7 +2387,10 @@ uniform float uSaturation;`
       // ─── WebGL Context Loss Recovery ───
       renderer.domElement.addEventListener('webglcontextlost', (e) => {
         e.preventDefault();
-        console.error('[Viewer] WebGL context lost! Stopping render loop.');
+        // warn (no error): en Next dev un console.error abre el overlay de error y tapa la
+        // pantalla. Además suele ser intencional — al abrir el AR desmontamos el viewer y
+        // forzamos la pérdida de contexto para liberar la VRAM.
+        console.warn('[Viewer] WebGL context lost — render loop detenido.');
         if (s.animationId) {
           cancelAnimationFrame(s.animationId);
           s.animationId = null;

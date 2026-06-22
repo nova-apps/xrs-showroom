@@ -16,6 +16,9 @@ import { arPipelineModule } from './arPipelineModule';
 
 const GOLD = '#ab8869';
 
+// world-tracking se configura una sola vez por carga de página (ver start()).
+let worldTrackingConfigured = false;
+
 // 8th Wall muestra el prompt de permisos (cámara/movimiento) en inglés y no expone API
 // de i18n. Traducimos solo el texto visible con un MutationObserver (no toca el flujo de
 // permisos del motor). Las strings no mapeadas quedan en inglés — degradación inocua.
@@ -30,6 +33,34 @@ const AR_PROMPT_ES = {
   'Permissions were denied. You need to accept motion permissions to continue': 'Se denegaron los permisos. Tenés que aceptar los permisos de movimiento para continuar',
   'Motion & Orientation Access': 'Acceso a Movimiento y Orientación',
 };
+
+// Estilo del cartel de permisos, como string para inyectarlo DENTRO del shadow root del
+// módulo de 8th Wall (el CSS global de ar.css no cruza el shadow boundary). Esta versión del
+// engine usa IDs (#requestingCameraPermissions, etc.), no las clases .prompt-box-8w.
+const PROMPT_IDS = ['#requestingCameraPermissions', '#cameraPermissionsErrorApple',
+  '#cameraPermissionsErrorAndroid', '#microphonePermissionsErrorApple',
+  '#microphonePermissionsErrorAndroid', '#deviceMotionErrorApple',
+  '#motionPermissionsErrorApple', '#userPromptError'];
+const PROMPT_CSS = `
+${PROMPT_IDS.join(',')}{
+  position:fixed!important;top:50%!important;left:50%!important;
+  transform:translate(-50%,-50%)!important;margin:0!important;
+  width:90vw!important;max-width:420px!important;
+  box-sizing:border-box!important;padding:26px 28px!important;
+  background:#1c1c1c!important;color:#ab8869!important;
+  font-family:var(--font-sans,system-ui)!important;font-size:14px!important;line-height:1.45!important;
+  border:1px solid rgba(255,255,255,.08)!important;border-radius:16px!important;
+  box-shadow:0 12px 40px rgba(0,0,0,.5)!important;
+}
+${PROMPT_IDS.map((id) => `${id} *`).join(',')}{
+  font-family:var(--font-sans,system-ui)!important;color:#ab8869!important;font-size:14px!important;
+}
+#requestingCameraIcon,#requestingCameraIcon *{color:#ab8869!important;stroke:#ab8869!important;}
+${PROMPT_IDS.map((id) => `${id} button`).join(',')}{
+  background:#ab8869!important;color:#18120b!important;border:none!important;
+  border-radius:9999px!important;font-weight:600!important;
+}
+`;
 
 export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, onClose }) {
   const rootRef = useRef(null);
@@ -65,33 +96,41 @@ export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, on
   // dentro del gesto del usuario y el motor se saltea su prompt intermedio.
   useEffect(() => { loadEngine().catch(() => {}); }, []);
 
-  // Traducir al español el prompt de permisos de 8th Wall (cámara/movimiento), que viene
-  // en inglés. Reemplaza solo las strings conocidas en los text nodes que cambian.
+  // Traduce al español y reestiliza el cartel de permisos de 8th Wall, atravesando shadow
+  // roots (el módulo lo renderiza aislado del CSS de la página). Pollea porque el cartel
+  // aparece/desaparece dentro del shadow root y MutationObserver no cruza ese límite.
   useEffect(() => {
-    const translate = (node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const es = AR_PROMPT_ES[(node.nodeValue || '').trim()];
-        if (es) node.nodeValue = es;
-        return;
-      }
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
-        let n;
-        while ((n = walker.nextNode())) {
-          const es = AR_PROMPT_ES[(n.nodeValue || '').trim()];
-          if (es) n.nodeValue = es;
-        }
+    const collectRoots = () => {
+      const roots = [];
+      const visit = (root) => {
+        roots.push(root);
+        (root.querySelectorAll?.('*') || []).forEach((el) => { if (el.shadowRoot) visit(el.shadowRoot); });
+      };
+      visit(document); // recursivo: incluye shadow roots anidados
+      return roots;
+    };
+    const translateRoot = (root) => {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = walker.nextNode())) {
+        const es = AR_PROMPT_ES[(n.nodeValue || '').trim()];
+        if (es) n.nodeValue = es;
       }
     };
-    translate(document.body); // primera pasada sobre lo ya presente
-    const obs = new MutationObserver((records) => {
-      for (const r of records) {
-        if (r.type === 'characterData') translate(r.target);
-        else r.addedNodes.forEach(translate);
+    const styleRoot = (root) => {
+      if (!root.querySelector?.(PROMPT_IDS.join(','))) return;
+      const host = root === document ? document.head : root;
+      if (!host.querySelector?.('style[data-xrs-ar-style]')) {
+        const s = document.createElement('style');
+        s.setAttribute('data-xrs-ar-style', '1');
+        s.textContent = PROMPT_CSS;
+        host.appendChild(s);
       }
-    });
-    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
-    return () => obs.disconnect();
+    };
+    const tick = () => collectRoots().forEach((r) => { translateRoot(r); styleRoot(r); });
+    tick();
+    const id = window.setInterval(tick, 400);
+    return () => clearInterval(id);
   }, []);
 
   // Las indicaciones se desvanecen ~5 s después de colocar la maqueta.
@@ -151,8 +190,14 @@ export default function ARExperience({ modelUrl, sogUrl, transforms, logoUrl, on
       }
       THREE.ColorManagement.enabled = false;
 
-      // Solo world-tracking (sin image targets).
-      XR8.XrController.configure({ disableWorldTracking: false });
+      // Solo world-tracking (sin image targets). configure() debe llamarse ANTES de run();
+      // al reabrir el AR en la misma carga de página el motor ya corrió, y reconfigurar
+      // tira "[XR] World tracking can only be changed before calling XR8.run()". Como
+      // disableWorldTracking:false ya es el default, lo configuramos una sola vez por página.
+      if (!worldTrackingConfigured) {
+        XR8.XrController.configure({ disableWorldTracking: false });
+        worldTrackingConfigured = true;
+      }
 
       const arMod = arPipelineModule({
         onModelLoaded: () => setModelLoaded(true),

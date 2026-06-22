@@ -28,52 +28,6 @@ img[src*="poweredby" i] {
   font-family: var(--font-sans);
 }
 
-/* ───────────────────────────────────────────────────────────────
-   Cartel de permisos de cámara/movimiento (módulo Loading de 8th Wall).
-   Lo alineamos con la estética del overlay de AR: tarjeta oscura,
-   tipografía de la app y acento oro. Usamos !important porque el motor
-   inyecta sus propios estilos con alta especificidad.
-   ─────────────────────────────────────────────────────────────── */
-.prompt-box-8w {
-  background: #18181b !important;
-  color: #e8eaf0 !important;
-  font-family: var(--font-sans) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
-}
-
-.prompt-box-8w *,
-.bottom-message,
-.loading-error-header,
-.loading-error-instructions {
-  font-family: var(--font-sans) !important;
-  color: #e8eaf0 !important;
-}
-
-.loading-error-instructions,
-.bottom-message {
-  color: rgba(255, 255, 255, 0.6) !important;
-}
-
-/* Botones del prompt: pill con la tipografía de la app. */
-.prompt-button-8w,
-.button-primary-8w {
-  font-family: var(--font-sans) !important;
-  border-radius: 9999px !important;
-  font-weight: 600 !important;
-}
-
-/* Botón primario ("Permitir"): oro XRS con texto oscuro, igual que el CTA del landing. */
-.button-primary-8w {
-  background: #ab8869 !important;
-  color: #18120b !important;
-  border: none !important;
-}
-
-/* Botón secundario: borde tenue sobre la tarjeta oscura. */
-.prompt-button-8w:not(.button-primary-8w) {
-  background: transparent !important;
-  color: #e8eaf0 !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
+/* El cartel de permisos de 8th Wall vive dentro de un shadow root (IDs como
+   #requestingCameraPermissions), así que su estilo no se puede aplicar desde acá:
+   se inyecta dentro del shadow root en ar/ARExperience.jsx (PROMPT_CSS). */
