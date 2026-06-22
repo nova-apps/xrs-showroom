@@ -6,6 +6,24 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.20] — 2026-06-22
+
+### ✨ Features
+- traducir al español el prompt de permisos de 8th Wall
+
+### 🐛 Fixes
+- silenciar el 'Worker terminate' de Spark también en el overlay de Next dev
+- traducir y reestilar el cartel de permisos (shadow DOM, por ID)
+- liberar la VRAM del Viewer3D principal mientras el AR está abierto
+
+### 💅 Style
+- estilar el cartel de permisos de 8th Wall con la estética del overlay AR
+
+### 📦 Chores
+- v0.13.19
+
+---
+
 ## [0.13.19] — 2026-06-19
 
 ### 🐛 Fixes

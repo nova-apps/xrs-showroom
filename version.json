@@ -1,9 +1,9 @@
 {
-  "version": "0.13.19",
-  "buildDate": "2026-06-19",
-  "commitHash": "66f1b2c",
+  "version": "0.13.20",
+  "buildDate": "2026-06-22",
+  "commitHash": "62f0332",
   "environment": "production",
   "features": [
-    "Maintenance and stability improvements"
+    "traducir al español el prompt de permisos de 8th Wall"
   ]
 }
