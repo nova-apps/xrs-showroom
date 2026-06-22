@@ -67,7 +67,7 @@ export default function ViewPage() {
 
   useDocumentMeta(scene?.name, scene?.panelLogoUrl);
 
-  useSceneLoader({
+  const { resetLoadedAsset } = useSceneLoader({
     viewerRef,
     scene,
     viewerReady,
@@ -89,11 +89,16 @@ export default function ViewPage() {
   const arModelUrl = scene?.assets?.glb_proxy?.url || scene?.assets?.glb?.url || null;
   const showArButton = isMobile && !!arModelUrl && !arOpen && scene?.showArButton !== false;
 
-  // Pausar el render del Viewer3D mientras el AR posee la pantalla: evita dos contextos
-  // WebGL activos a la vez en mobile (battery + posible context loss).
+  // Mientras el AR posee la pantalla, DESMONTAMOS el Viewer3D principal por completo
+  // (no solo lo pausamos) para liberar su VRAM: GLB + splat full-quality + texturas
+  // seguían residentes en GPU y, sumados al splat + feed de cámara del AR, cruzaban el
+  // límite de memoria de iOS y disparaban el recargado del tab. Reseteamos el tracking
+  // del loader para que, al cerrar el AR y remontarse el viewer, la escena recargue limpia.
   useEffect(() => {
-    viewerRef.current?.setRenderPaused?.(arOpen);
-  }, [arOpen]);
+    if (!arOpen) return;
+    setViewerReady(false);
+    ['glb', 'colliders', 'sog', 'skybox', 'floor', 'modelHdri'].forEach(resetLoadedAsset);
+  }, [arOpen, resetLoadedAsset]);
 
   // Animate the camera back to the scene's initial framing (mobile override
   // first, then the shared initial). Shared by every deselect gesture below.
@@ -221,7 +226,11 @@ export default function ViewPage() {
 
   return (
     <>
-      <Viewer3D ref={viewerRef} onReady={handleViewerReady} onColliderClick={handleColliderClick} />
+      {/* Se desmonta mientras el AR está abierto para liberar su VRAM (ver efecto arriba).
+          Al cerrarse el AR se remonta y la escena recarga (la cortina enmascara la recarga). */}
+      {!arOpen && (
+        <Viewer3D ref={viewerRef} onReady={handleViewerReady} onColliderClick={handleColliderClick} />
+      )}
 
       {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
       <div className="canvas-blackout" aria-hidden="true" />

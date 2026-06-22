@@ -2921,6 +2921,17 @@ uniform float uSaturation;`
         s.transformControls = null;
       }
       try { s.controls?.dispose(); } catch { /* noop */ }
+      // Liberar explícitamente los assets pesados (no basta con GC en Safari): el splat
+      // y sus workers, la maqueta y los colliders. Imprescindible para que desmontar el
+      // viewer al abrir el AR realmente recupere la VRAM.
+      if (s.splatMesh) {
+        try { s.splatMesh.dispose?.(); } catch { /* noop */ }
+        s.splatMesh = null;
+      }
+      try { if (s.glbModel) { disposeObject(s.glbModel); s.glbModel = null; } } catch { /* noop */ }
+      try { if (s.collidersModel) { disposeObject(s.collidersModel); s.collidersModel = null; } } catch { /* noop */ }
+      try { if (s.skyboxMesh?.material?.map) s.skyboxMesh.material.map.dispose(); } catch { /* noop */ }
+      try { if (s.floorMesh?.material?.map) s.floorMesh.material.map.dispose(); } catch { /* noop */ }
       if (s.sparkRenderer) {
         try { s.sparkRenderer.dispose(); } catch { /* noop */ }
         s.sparkRenderer = null;
@@ -2935,6 +2946,9 @@ uniform float uSaturation;`
       }
       if (s.renderer) {
         try { s.renderer.domElement.remove(); s.renderer.dispose(); } catch { /* noop */ }
+        // forceContextLoss libera la VRAM del contexto de inmediato; sin esto Safari
+        // puede mantenerlo vivo hasta el próximo GC y no recuperar la memoria a tiempo.
+        try { s.renderer.forceContextLoss(); } catch { /* noop */ }
       }
       s.renderer = null;
     };
