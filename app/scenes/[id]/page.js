@@ -103,12 +103,23 @@ export default function ScenePage() {
   const {
     loadMetrics,
     resetLoadedAsset,
+    framed,
   } = useSceneLoader({
     viewerRef,
     scene,
     viewerReady,
     isEditor: true,
   });
+
+  // Hold the reveal curtain closed until the camera is at its configured pose
+  // (no flash of the default OrbitControls view). Fall back after 6s so the
+  // curtain never gets stuck closed if framing never signals.
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => { if (framed) setRevealed(true); }, [framed]);
+  useEffect(() => {
+    const t = setTimeout(() => setRevealed(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
 
   // ─── Undo / Redo history ───
   const snapshotRef = useRef({}); // tracks "before" state for in-progress edits
@@ -529,8 +540,8 @@ export default function ScenePage() {
       {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
       <div className="canvas-blackout" aria-hidden="true" />
 
-      {/* Canvas-scoped curtain animation — plays immediately on mount */}
-      <div className="canvas-curtain">
+      {/* Canvas-scoped curtain — opens once the camera is framed (see `revealed`) */}
+      <div className={`canvas-curtain${revealed ? ' is-open' : ''}`}>
         <div className="canvas-curtain-half canvas-curtain-top" />
         <div className="canvas-curtain-half canvas-curtain-bottom" />
       </div>

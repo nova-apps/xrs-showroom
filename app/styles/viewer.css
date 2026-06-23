@@ -30,15 +30,23 @@
   will-change: transform;
 }
 
+/* Halves stay closed (covering the canvas) until the scene is framed; the
+   `.is-open` class — added once the camera is in position — plays the reveal. */
 .canvas-curtain-top {
   top: 0;
   height: calc(50% + 1px);
-  animation: curtain-slide-up 0.8s 0.15s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
 .canvas-curtain-bottom {
   bottom: 0;
-  animation: curtain-slide-down 0.8s 0.15s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+.canvas-curtain.is-open .canvas-curtain-top {
+  animation: curtain-slide-up 0.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+.canvas-curtain.is-open .canvas-curtain-bottom {
+  animation: curtain-slide-down 0.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
 @keyframes curtain-slide-up {

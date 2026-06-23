@@ -215,6 +215,34 @@ export function handleFocusAnimation(s) {
   const { camera, controls, focusTarget: focus, THREE } = s;
   if (!camera || !controls || !focus || !THREE || focus.state === 'idle') return;
 
+  // Fixed-duration tween (intro → final framing on load). Time-based easing so
+  // the move always lasts exactly `durationMs`, independent of frame rate.
+  if (focus.state === 'animating-timed') {
+    const elapsed = performance.now() - focus.startTime;
+    let t = focus.durationMs > 0 ? elapsed / focus.durationMs : 1;
+    if (t > 1) t = 1;
+    // easeInOutCubic
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const sph = new THREE.Spherical(
+      THREE.MathUtils.lerp(focus.startRadius, focus.targetRadius, e),
+      THREE.MathUtils.lerp(focus.startPhi, focus.targetPhi, e),
+      THREE.MathUtils.lerp(focus.startTheta, focus.targetTheta, e)
+    );
+    sph.makeSafe();
+    const offset = new THREE.Vector3().setFromSpherical(sph);
+    camera.position.copy(controls.target).add(offset);
+    camera.lookAt(controls.target);
+    if (t >= 1) {
+      focus.state = 'idle';
+      focus.durationMs = 0;
+      if (typeof focus.onComplete === 'function') {
+        focus.onComplete();
+        focus.onComplete = null;
+      }
+    }
+    return;
+  }
+
   if (focus.state === 'animating') {
     // focusSpeed: 5 (very slow) → 100 (instant), stored in orbit settings
     const speed = s.pendingOrbit?.focusSpeed ?? 25;

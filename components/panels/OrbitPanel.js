@@ -103,6 +103,8 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
   const [freeCam, setFreeCam] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
   const [mobileSaveFlash, setMobileSaveFlash] = useState(false);
+  const [introSaveFlash, setIntroSaveFlash] = useState(false);
+  const [introMobileSaveFlash, setIntroMobileSaveFlash] = useState(false);
   const [openSection, setOpenSection] = useState('initial');
 
   const toggleSection = useCallback((id) => {
@@ -221,6 +223,48 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
     onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
   }, [local, onOrbitChange, onApplyOrbit, freeCam]);
 
+  // ── Intro camera handlers (entrance animation start pose) ──
+  const captureDesktopIntro = useCallback(() => {
+    if (!viewerRef?.current) return;
+    const state = viewerRef.current.getCameraState();
+    if (!state) return;
+    const next = { ...local, introCamera: state };
+    setLocal(next);
+    onOrbitChange?.(next);
+    onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
+    setIntroSaveFlash(true);
+    setTimeout(() => setIntroSaveFlash(false), 1200);
+  }, [local, viewerRef, onOrbitChange, onApplyOrbit, freeCam]);
+
+  const clearDesktopIntro = useCallback(() => {
+    const next = { ...local };
+    delete next.introCamera;
+    setLocal(next);
+    onOrbitChange?.(next);
+    onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
+  }, [local, onOrbitChange, onApplyOrbit, freeCam]);
+
+  const captureMobileIntro = useCallback(() => {
+    if (!viewerRef?.current) return;
+    const state = viewerRef.current.getCameraState();
+    if (!state) return;
+    const next = { ...local, mobile: { ...local.mobile, introCamera: state } };
+    setLocal(next);
+    onOrbitChange?.(next);
+    onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
+    setIntroMobileSaveFlash(true);
+    setTimeout(() => setIntroMobileSaveFlash(false), 1200);
+  }, [local, viewerRef, onOrbitChange, onApplyOrbit, freeCam]);
+
+  const clearMobileIntro = useCallback(() => {
+    const nextMobile = { ...local.mobile };
+    delete nextMobile.introCamera;
+    const next = { ...local, mobile: nextMobile };
+    setLocal(next);
+    onOrbitChange?.(next);
+    onApplyOrbit?.(freeCam ? { ...next, ...FREE_CAMERA } : next);
+  }, [local, onOrbitChange, onApplyOrbit, freeCam]);
+
   if (!local) return null;
 
   return (
@@ -257,7 +301,46 @@ export default function OrbitPanel({ scene, onOrbitChange, onApplyOrbit, collaps
         </div>
       </SubAccordion>
 
-      {/* ═══ 2. Límites de cámara ═══ */}
+      {/* ═══ 2. Animación de entrada ═══ */}
+      <SubAccordion
+        title="Animación de entrada"
+        icon="🎬"
+        open={openSection === 'intro'}
+        onToggle={() => toggleSection('intro')}
+      >
+        <InitialCameraCard
+          label="Desktop"
+          value={local.introCamera}
+          flash={introSaveFlash}
+          onCapture={captureDesktopIntro}
+          onClear={clearDesktopIntro}
+        />
+        <InitialCameraCard
+          label="Mobile"
+          value={local.mobile?.introCamera}
+          flash={introMobileSaveFlash}
+          onCapture={captureMobileIntro}
+          onClear={clearMobileIntro}
+        />
+        <div className="transform-section">
+          <ControlRow
+            label="Dur"
+            labelClass="label-s"
+            value={local.introDuration ?? 2}
+            min={0.5}
+            max={6}
+            step={0.5}
+            onChange={(v) => updateField('introDuration', v)}
+            help="Duración (segundos) del movimiento de cámara desde la pose de entrada hasta la posición inicial, una vez que carga la escena."
+          />
+        </div>
+        <div className="initial-camera-help">
+          Al cargar, la cámara arranca en esta pose y, cuando termina de cargar todo,
+          se anima suavemente hasta la “Posición inicial”. Si no la configurás, no hay animación.
+        </div>
+      </SubAccordion>
+
+      {/* ═══ 3. Límites de cámara ═══ */}
       <SubAccordion
         title="Límites de cámara"
         icon="🔒"

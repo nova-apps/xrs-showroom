@@ -23,6 +23,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  */
 export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false, useProgressiveLoading = false }) {
   const [loadMetrics, setLoadMetrics] = useState(null);
+  // `framed` flips true once the camera is sitting at its configured intro/initial
+  // pose, so the page can hold the reveal curtain closed until then (no flash of
+  // the default OrbitControls pose while Firebase data is still in flight).
+  const [framed, setFramed] = useState(false);
+  // Pending intro→final camera animation + floor-reveal timers (cleared on
+  // reload/unmount so a stale callback never fires against a new scene).
+  const introTimerRef = useRef(null);
+  const floorRevealTimerRef = useRef(null);
+  const floorBackstopRef = useRef(null);
 
   // Track which assets have been loaded to avoid re-loading
   const loadedAssetsRef = useRef({
@@ -63,22 +72,6 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     async function loadAssets() {
       if (isEditor) {
         timing.startTime = timing.startTime || performance.now();
-      }
-
-      // Apply the configured camera position BEFORE we start loading assets
-      // so the user doesn't see the floor at the default (3,2,5) zoom while
-      // the GLB streams in. fitCamera will still run when the GLB loads,
-      // and the final snap below will re-apply the saved position once
-      // glbCenter is known — this is just to keep the initial frames sane.
-      const isMobileEarly = typeof navigator !== 'undefined' && (
-        /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-      );
-      const earlyCamera = (isMobileEarly && scene.orbit?.mobile?.initialCamera)
-        ? scene.orbit.mobile.initialCamera
-        : scene.orbit?.initialCamera;
-      if (earlyCamera) {
-        v.setInitialCameraPosition?.(earlyCamera, { animate: false });
       }
 
       const allPromises = [];
@@ -175,6 +168,27 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         }
       }
 
+      // ── Camera framing ──
+      // Show the intro (or, if none, the final) pose BEFORE assets stream in so
+      // the user never sees the default OrbitControls pose. fitCamera re-applies
+      // it relative to the GLB center once the model loads; the intro→final
+      // animation below runs after everything has loaded.
+      const isMobileEarly = typeof navigator !== 'undefined' && (
+        /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      );
+      const orbit = scene.orbit || {};
+      const introCam = (isMobileEarly && orbit.mobile?.introCamera) ? orbit.mobile.introCamera : orbit.introCamera;
+      const finalCam = (isMobileEarly && orbit.mobile?.initialCamera) ? orbit.mobile.initialCamera : orbit.initialCamera;
+      const startCam = introCam || finalCam;
+      // Only (re)frame on a real (re)load — a plain scene-data edit (allPromises
+      // empty) must not snap the camera back to the configured pose.
+      if (allPromises.length > 0 && startCam) {
+        v.setInitialCameraPosition?.(startCam, { animate: false });
+      }
+      // Reveal the canvas (open the curtain) once the framing pose is painted.
+      requestAnimationFrame(() => setFramed(true));
+
       // Wait for all assets (parallel, but initiated in priority order)
       if (allPromises.length > 0) {
         if (!isEditor) {
@@ -206,28 +220,36 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         }
       }
 
-      // ── Apply initial camera position after GLB is loaded ──
-      // Only when an asset was actually (re)loaded in this pass — otherwise
-      // every scene-data update (e.g. an editor transform tweak that rewrites
-      // the scene to Firebase) would re-emit `scene`, this effect would
-      // re-run, and the camera would snap back to the configured initial
-      // position. allPromises is empty when nothing new was loaded.
+      // ── Camera: settle into the final framing once everything has loaded ──
+      // Only on a real (re)load (allPromises>0) so editor edits don't snap the
+      // camera back. With an intro pose configured, animate intro→final after a
+      // short dwell so the building's reveal can be appreciated first; otherwise
+      // snap straight to the final pose (fitCamera has already run by now).
+      // The floor stays hidden until the camera has come to rest (revealFloor),
+      // so it never appears to slide while the camera is moving/reframing.
       if (allPromises.length > 0) {
-        const isMobileDevice = typeof navigator !== 'undefined' && (
-          /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
-          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-        );
-        const mobileCamera = scene.orbit?.mobile?.initialCamera;
-        const desktopCamera = scene.orbit?.initialCamera;
-        const initialCamera = (isMobileDevice && mobileCamera) ? mobileCamera : desktopCamera;
-        if (initialCamera) {
-          // Snap (no animation): fitCamera has already run at this point, so
-          // the configured position takes effect immediately. Animating here
-          // is unreliable — OrbitControls cancels the focus animation on the
-          // user's first touch, leaving the camera mid-flight (often near the
-          // auto-fit distance, much further than configured).
-          viewerRef.current?.setInitialCameraPosition(initialCamera, { animate: false });
+        if (introCam && finalCam) {
+          const durationMs = Math.max(0, (orbit.introDuration ?? 2) * 1000);
+          clearTimeout(introTimerRef.current);
+          clearTimeout(floorRevealTimerRef.current);
+          introTimerRef.current = setTimeout(() => {
+            viewerRef.current?.setInitialCameraPosition(finalCam, { animate: true, durationMs });
+            floorRevealTimerRef.current = setTimeout(
+              () => viewerRef.current?.revealFloor(),
+              durationMs + 100
+            );
+          }, 500);
+        } else if (finalCam) {
+          // No intro animation: fitCamera has already run, so snap and reveal now.
+          viewerRef.current?.setInitialCameraPosition(finalCam, { animate: false });
+          viewerRef.current?.revealFloor();
+        } else {
+          viewerRef.current?.revealFloor();
         }
+      } else {
+        // Nothing (re)loaded this pass (e.g. a scene-data edit, or a scene with
+        // no assets) — make sure the floor is shown rather than stuck hidden.
+        viewerRef.current?.revealFloor();
       }
 
       // Measure total load time (editor only)
@@ -239,8 +261,25 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       }
     }
 
+    // Safety net: the floor is normally revealed once the camera settles after
+    // loading. If asset loading stalls (a hung download), reveal it anyway so it
+    // never stays hidden. revealFloor is idempotent, so the normal path wins.
+    clearTimeout(floorBackstopRef.current);
+    floorBackstopRef.current = setTimeout(() => viewerRef.current?.revealFloor(), 12000);
+
     loadAssets();
+    return () => {
+      clearTimeout(introTimerRef.current);
+      clearTimeout(floorRevealTimerRef.current);
+      clearTimeout(floorBackstopRef.current);
+    };
   }, [viewerReady, scene]);
+
+  // Re-arm the reveal curtain whenever the viewer tears down (e.g. AR remount),
+  // so it masks the next load instead of staying open on the default pose.
+  useEffect(() => {
+    if (!viewerReady) setFramed(false);
+  }, [viewerReady]);
 
   // ── Apply transforms when they change from Firebase ──
   useEffect(() => {
@@ -252,7 +291,9 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     if (t.colliders) v.applyTransform('colliders', t.colliders);
     if (t.sog) v.applyTransform('sog', t.sog);
     if (t.skybox) v.applyTransform('skybox', t.skybox);
-    if (t.floor) v.applyTransform('floor', t.floor);
+    // Always apply (fallback to {} → schema defaults) so the floor gets
+    // positioned and revealed even on legacy scenes with no saved transform.
+    v.applyTransform('floor', t.floor || {});
     if (t.mask) v.applyTransform('mask', t.mask);
   }, [viewerReady, scene?.transforms]);
 
@@ -310,5 +351,6 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
   return {
     loadMetrics,
     resetLoadedAsset,
+    framed,
   };
 }

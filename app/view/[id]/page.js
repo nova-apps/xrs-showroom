@@ -67,13 +67,22 @@ export default function ViewPage() {
 
   useDocumentMeta(scene?.name, scene?.panelLogoUrl);
 
-  const { resetLoadedAsset } = useSceneLoader({
+  const { resetLoadedAsset, framed } = useSceneLoader({
     viewerRef,
     scene,
     viewerReady,
     isEditor: false,
     useProgressiveLoading: true,
   });
+
+  // Hold the reveal curtain closed until the camera is framed (no flash of the
+  // default pose). Fall back after 6s so it never gets stuck closed.
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => { if (framed) setRevealed(true); }, [framed]);
+  useEffect(() => {
+    const t = setTimeout(() => setRevealed(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleViewerReady = useCallback(() => {
     setViewerReady(true);
@@ -235,8 +244,8 @@ export default function ViewPage() {
       {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
       <div className="canvas-blackout" aria-hidden="true" />
 
-      {/* Canvas-scoped curtain animation — plays immediately on mount */}
-      <div className="canvas-curtain">
+      {/* Canvas-scoped curtain — opens once the camera is framed (see `revealed`) */}
+      <div className={`canvas-curtain${revealed ? ' is-open' : ''}`}>
         <div className="canvas-curtain-half canvas-curtain-top" />
         <div className="canvas-curtain-half canvas-curtain-bottom" />
       </div>

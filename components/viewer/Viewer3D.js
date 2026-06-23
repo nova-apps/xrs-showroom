@@ -65,6 +65,9 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     splatMesh: null,
     skyboxMesh: null,
     floorMesh: null,
+    floorPositioned: false,   // floor transform applied (sitting at its real y/scale)
+    floorRevealed: false,     // floor allowed on screen (set once the camera has settled)
+    floorVisibleIntent: true, // scene's show/hide intent for the floor
     skyboxRawTexture: null,
     floorRawTexture: null,
     pmremGenerator: null,
@@ -151,8 +154,13 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     pitchSnap: { state: 'idle', originalMinPolar: 0 },
     // Click zoom animation state machine
     clickZoom: { state: 'idle', originalFov: 45 },
-    // Camera Focus animation state (spherical coords)
-    focusTarget: { state: 'idle', targetPhi: 0, targetTheta: 0, targetRadius: 0, onComplete: null, lerpOverride: null },
+    // Camera Focus animation state (spherical coords). The timed-tween fields
+    // (start*, durationMs, startTime) are only read when state === 'animating-timed',
+    // used for the intro→final camera move on load (fixed, configurable duration).
+    focusTarget: {
+      state: 'idle', targetPhi: 0, targetTheta: 0, targetRadius: 0, onComplete: null, lerpOverride: null,
+      startPhi: 0, startTheta: 0, startRadius: 0, durationMs: 0, startTime: 0,
+    },
     // Adaptive quality auto-adjustment
     adaptiveQuality: {
       enabled: true,
@@ -903,7 +911,10 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
           }
           break;
         case 'floor':
-          if (s.floorMesh) s.floorMesh.visible = visible;
+          // Remember the scene's intent, but never reveal the floor before the
+          // camera has settled (see revealFloor).
+          s.floorVisibleIntent = visible;
+          if (s.floorMesh) s.floorMesh.visible = visible && s.floorRevealed;
           break;
         case 'mask':
           if (s.maskHelper) s.maskHelper.visible = visible;
@@ -976,7 +987,16 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
         zoom: Math.round(sph.radius * 100) / 100,
       };
     },
-    setInitialCameraPosition: (initialCamera, { animate = true } = {}) => {
+    // Reveal the floor once the camera has come to rest. Kept separate from the
+    // floor transform so the floor never appears to slide while the camera is
+    // still moving (intro→final animation, fitCamera reframing, etc.).
+    revealFloor: () => {
+      const s = stateRef.current;
+      if (!s.floorMesh) return;
+      s.floorRevealed = true;
+      s.floorMesh.visible = s.floorPositioned && s.floorVisibleIntent;
+    },
+    setInitialCameraPosition: (initialCamera, { animate = true, durationMs = 0 } = {}) => {
       const s = stateRef.current;
       const THREE = s.THREE;
       if (!THREE || !s.camera || !s.controls || !initialCamera) return;
@@ -986,7 +1006,25 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
       const radius = initialCamera.zoom;
       const sph = new THREE.Spherical(radius, phi, theta);
       sph.makeSafe();
-      if (animate) {
+      if (animate && durationMs > 0) {
+        // Fixed-duration tween (intro → final on load). Capture the current
+        // pose as the start, and unwrap the target yaw to the shortest path so
+        // the camera never spins the long way around.
+        const offset = new THREE.Vector3().subVectors(s.camera.position, s.controls.target);
+        const cur = new THREE.Spherical().setFromVector3(offset);
+        cur.makeSafe();
+        let targetTheta = sph.theta;
+        while (targetTheta - cur.theta > Math.PI) targetTheta -= 2 * Math.PI;
+        while (targetTheta - cur.theta < -Math.PI) targetTheta += 2 * Math.PI;
+        const f = s.focusTarget;
+        f.startPhi = cur.phi; f.startTheta = cur.theta; f.startRadius = cur.radius;
+        f.targetPhi = sph.phi; f.targetTheta = targetTheta; f.targetRadius = sph.radius;
+        f.durationMs = durationMs;
+        f.startTime = performance.now();
+        f.onComplete = null;
+        f.lerpOverride = null;
+        f.state = 'animating-timed';
+      } else if (animate) {
         s.focusTarget.targetPhi = sph.phi;
         s.focusTarget.targetTheta = sph.theta;
         s.focusTarget.targetRadius = sph.radius;
@@ -1261,6 +1299,13 @@ uniform float uSaturation;`
         s.floorMesh.material.map = blurred;
         s.floorMesh.material.needsUpdate = true;
       }
+
+      // The floor now sits at its real position/scale. Only show it if it has
+      // already been revealed (revealFloor) — on first load it stays hidden
+      // until the camera settles, so it never appears to slide while the camera
+      // is still moving. On later edits (already revealed) it stays visible.
+      s.floorPositioned = true;
+      s.floorMesh.visible = s.floorRevealed && s.floorVisibleIntent;
     }
 
     if (type === 'mask') {
@@ -2558,6 +2603,10 @@ uniform float uSaturation;`
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(0, -0.5, 0);
       floor.renderOrder = -1;
+      // Hidden until applyTransform('floor') places it: the saved transform
+      // (position/scale) arrives async, so revealing the mesh at its creation
+      // default would make it visibly jump/resize once the real values land.
+      floor.visible = false;
       scene.add(floor);
       s.floorMesh = floor;
 
