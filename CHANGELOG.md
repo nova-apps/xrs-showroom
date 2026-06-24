@@ -6,6 +6,16 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.21] — 2026-06-24
+
+### ✨ Features
+- cámara de entrada animada + fix del salto del piso al cargar
+
+### 📦 Chores
+- v0.13.20
+
+---
+
 ## [0.13.20] — 2026-06-22
 
 ### ✨ Features

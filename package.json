@@ -1,6 +1,6 @@
 {
   "name": "xrs-showroom",
-  "version": "0.13.20",
+  "version": "0.13.21",
   "private": true,
   "engines": {
     "node": "20"

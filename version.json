@@ -1,9 +1,9 @@
 {
-  "version": "0.13.20",
-  "buildDate": "2026-06-22",
-  "commitHash": "62f0332",
+  "version": "0.13.21",
+  "buildDate": "2026-06-24",
+  "commitHash": "2be3399",
   "environment": "production",
   "features": [
-    "traducir al español el prompt de permisos de 8th Wall"
+    "cámara de entrada animada + fix del salto del piso al cargar"
   ]
 }
