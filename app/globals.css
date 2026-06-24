@@ -77,6 +77,22 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Disable text selection across the whole experience: dragging on the canvas
+     or the unit list (especially on touch) must never start a text selection
+     that covers the screen. Also kills the iOS long-press callout/magnifier and
+     the grey tap highlight. Selection is re-enabled on form fields below. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Re-enable selection where the user genuinely needs it: typing/editing fields. */
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* ─── Scrollbar ─── */
