@@ -20,6 +20,7 @@ import {
   updateLighting as dbUpdateLighting,
   updateTint as dbUpdateTint,
   updateSaturation as dbUpdateSaturation,
+  updateIntroFx as dbUpdateIntroFx,
   publishScene as dbPublishScene,
   discardSceneChanges as dbDiscardSceneChanges,
   updateGlbSettings as dbUpdateGlbSettings,
@@ -102,6 +103,7 @@ export function useScene(sceneId) {
   const updateLighting = useMemo(() => makeDebouncedUpdate('lighting', dbUpdateLighting), [makeDebouncedUpdate]);
   const updateTint = useMemo(() => makeDebouncedUpdate('tint', dbUpdateTint), [makeDebouncedUpdate]);
   const updateSaturation = useMemo(() => makeDebouncedUpdate('saturation', dbUpdateSaturation), [makeDebouncedUpdate]);
+  const updateIntroFx = useMemo(() => makeDebouncedUpdate('introFx', dbUpdateIntroFx), [makeDebouncedUpdate]);
   const updateGlbSettings = useMemo(() => makeDebouncedUpdate('glbSettings', dbUpdateGlbSettings), [makeDebouncedUpdate]);
   const updateSplatSettings = useMemo(() => makeDebouncedUpdate('splatSettings', dbUpdateSplatSettings), [makeDebouncedUpdate]);
 
@@ -242,6 +244,7 @@ export function useScene(sceneId) {
     updateLighting,
     updateTint,
     updateSaturation,
+    updateIntroFx,
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,

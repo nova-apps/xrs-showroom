@@ -86,10 +86,19 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
       uMaskRadius: { value: 50.0 },
       uMaskFalloff: { value: 10.0 },
     },
-    // Environment desaturation (skybox, floor, splat). Excludes GLB.
+    // Environment desaturation + contrast (skybox, floor). Excludes GLB.
     // uSaturation: 1.0 = original color, 0.0 = grayscale.
+    // uContrast: 1.0 = original, <1 = flatter (toward mid-gray). Driven by the
+    // intro FX during load, then animated back to 1.0.
     saturationUniforms: {
       uSaturation: { value: 1.0 },
+      uContrast: { value: 1.0 },
+    },
+    // Intro cinematic FX: blur + low contrast on the environment while the scene
+    // loads, faded out smoothly once the maqueta (GLB) + SOG are ready.
+    introFx: {
+      enabled: false, active: false, fading: false,
+      startTime: 0, duration: 1.5, blurFrom: 0, contrastFrom: 1,
     },
     // Per-splat saturation uniform (Spark dyno) — populated when splat loads.
     splatSaturationU: null,
@@ -125,6 +134,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     // Resources are created lazily the first time amount > 0.
     bgBlur: {
       amount: 0,
+      base: 0,
       targetA: null,
       targetB: null,
       blurMat: null,
@@ -495,7 +505,45 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     setBgBlur: (value) => {
       const s = stateRef.current;
       const v = Math.max(0, Math.min(20, Number(value) || 0));
-      s.bgBlur.amount = v;
+      s.bgBlur.base = v;
+      // While the intro FX owns the blur, leave the live amount to it.
+      if (!s.introFx.active) s.bgBlur.amount = v;
+    },
+    /**
+     * Apply the intro FX look immediately (blur + low contrast on the
+     * environment). Used at load start and for live preview while editing.
+     * Passing { enabled:false } clears it back to the scene's base look.
+     */
+    setIntroFx: (cfg) => {
+      const s = stateRef.current;
+      const enabled = cfg?.enabled === true;
+      s.introFx.enabled = enabled;
+      s.introFx.fading = false;
+      s.introFx.duration = Number.isFinite(cfg?.duration) ? cfg.duration : 1.5;
+      if (enabled) {
+        s.introFx.active = true;
+        const blur = Math.max(0, Math.min(20, Number(cfg?.blur) || 0));
+        const contrast = Math.max(0, Math.min(1, Number.isFinite(cfg?.contrast) ? cfg.contrast : 1));
+        s.bgBlur.amount = s.bgBlur.base + blur;
+        s.saturationUniforms.uContrast.value = contrast;
+      } else {
+        s.introFx.active = false;
+        s.bgBlur.amount = s.bgBlur.base;
+        s.saturationUniforms.uContrast.value = 1;
+      }
+    },
+    /**
+     * Smoothly fade the intro FX out: blur → base, contrast → 1, over `duration`
+     * seconds. No-op if the intro FX isn't currently active.
+     */
+    fadeOutIntroFx: (duration) => {
+      const s = stateRef.current;
+      if (!s.introFx.active || s.introFx.fading) return;
+      s.introFx.fading = true;
+      s.introFx.startTime = performance.now();
+      s.introFx.duration = Number.isFinite(duration) ? duration : (s.introFx.duration ?? 1.5);
+      s.introFx.blurFrom = s.bgBlur.amount;
+      s.introFx.contrastFrom = s.saturationUniforms.uContrast.value;
     },
     /**
      * Smoothly fade the tint overlay opacity to the configured targetOpacity over `duration` seconds.
@@ -1180,17 +1228,20 @@ if (uMaskEnabled > 0.5) {
         prevOnBeforeCompile.call(material, shader);
       }
       shader.uniforms.uSaturation = uniforms.uSaturation;
+      shader.uniforms.uContrast = uniforms.uContrast;
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <common>',
         `#include <common>
-uniform float uSaturation;`
+uniform float uSaturation;
+uniform float uContrast;`
       );
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <dithering_fragment>',
         `#include <dithering_fragment>
 {
   float _luma = dot(gl_FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-  gl_FragColor.rgb = mix(vec3(_luma), gl_FragColor.rgb, uSaturation);
+  vec3 _sat = mix(vec3(_luma), gl_FragColor.rgb, uSaturation);
+  gl_FragColor.rgb = mix(vec3(0.5), _sat, uContrast);
 }`
       );
     };
@@ -2924,6 +2975,19 @@ uniform float uSaturation;`
         handleSplatFade(s);
         handleSplatClip(s);
         syncCameraRotation(s);
+        // Intro FX fade-out: blur → base, contrast → 1 (easeOutCubic).
+        if (s.introFx.fading) {
+          const t = Math.min((performance.now() - s.introFx.startTime) / ((s.introFx.duration || 1.5) * 1000), 1);
+          const e = 1 - Math.pow(1 - t, 3);
+          s.bgBlur.amount = s.introFx.blurFrom + (s.bgBlur.base - s.introFx.blurFrom) * e;
+          s.saturationUniforms.uContrast.value = s.introFx.contrastFrom + (1 - s.introFx.contrastFrom) * e;
+          if (t >= 1) {
+            s.introFx.fading = false;
+            s.introFx.active = false;
+            s.bgBlur.amount = s.bgBlur.base;
+            s.saturationUniforms.uContrast.value = 1;
+          }
+        }
         // ─── Skybox Zoom Sync — scale + position tracks camera distance ───
         if (s.skyboxMesh) {
           const dist = Math.max(0.5, camera.position.distanceTo(controls.target));

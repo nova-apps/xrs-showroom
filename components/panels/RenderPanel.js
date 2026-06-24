@@ -52,6 +52,9 @@ export default function RenderPanel({
   onApplySaturation,
   bgBlur,
   onBgBlurChange,
+  introFx,
+  onIntroFxChange,
+  onApplyIntroFx,
   glbSettings,
   onGlbSettingsChange,
   splatSettings,
@@ -200,6 +203,32 @@ export default function RenderPanel({
       });
     },
     [onSaturationChange, onApplySaturation]
+  );
+
+  // ─── Intro FX (blur + low contrast on load) ───
+  const [localIntroFx, setLocalIntroFx] = useState({ enabled: false, blur: 8, contrast: 0.5, duration: 1.5 });
+
+  useEffect(() => {
+    if (introFx) {
+      setLocalIntroFx({
+        enabled: introFx.enabled === true,
+        blur: introFx.blur ?? 8,
+        contrast: introFx.contrast ?? 0.5,
+        duration: introFx.duration ?? 1.5,
+      });
+    }
+  }, [introFx]);
+
+  const updateIntroFxField = useCallback(
+    (field, value) => {
+      setLocalIntroFx((prev) => {
+        const next = { ...prev, [field]: value };
+        onIntroFxChange?.(next);
+        onApplyIntroFx?.(next);
+        return next;
+      });
+    },
+    [onIntroFxChange, onApplyIntroFx]
   );
 
   return (
@@ -351,6 +380,59 @@ export default function RenderPanel({
             onChange={(v) => onBgBlurChange?.(v)}
             help="Desenfoca skybox, floor y splat con un blur post-proceso. La maqueta 3D queda nítida. 0 desactiva todo el post-proceso (sin costo extra)."
           />
+        </div>
+      </SubAccordion>
+
+      <SubAccordion
+        title="Entrada cinematográfica"
+        icon="🎞️"
+        open={openSection === 'introFx'}
+        onToggle={() => toggleSection('introFx')}
+      >
+        <div className="asset-transform-section">
+          <label className="hdri-checkbox-row">
+            <input
+              type="checkbox"
+              checked={localIntroFx.enabled}
+              onChange={(e) => updateIntroFxField('enabled', e.target.checked)}
+            />
+            <span>Activar entrada</span>
+            <HelpTooltip text="Al iniciar la escena aplica blur + bajo contraste sobre el entorno (skybox/floor). Cuando termina de cargar la maqueta (GLB) y el splat (SOG), se apaga suavemente." />
+          </label>
+          {localIntroFx.enabled && (
+            <>
+              <TransformRow
+                label="Blur"
+                labelClass=""
+                value={localIntroFx.blur}
+                min={0}
+                max={15}
+                step={0.1}
+                onChange={(v) => updateIntroFxField('blur', v)}
+                help="Cantidad de desenfoque inicial (se suma al blur de fondo y vuelve a 0 al terminar de cargar)."
+              />
+              <TransformRow
+                label="Contraste"
+                labelClass="label-s"
+                value={localIntroFx.contrast}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => updateIntroFxField('contrast', v)}
+                help="Contraste inicial del entorno. 1 = normal, más bajo = más plano/lavado. Vuelve a 1 al terminar de cargar."
+              />
+              <TransformRow
+                label="Dur"
+                labelClass="label-s"
+                value={localIntroFx.duration}
+                min={0.3}
+                max={5}
+                step={0.1}
+                onChange={(v) => updateIntroFxField('duration', v)}
+                help="Duración (segundos) del fundido de salida del efecto, una vez cargada la escena."
+              />
+            </>
+          )}
         </div>
       </SubAccordion>
 

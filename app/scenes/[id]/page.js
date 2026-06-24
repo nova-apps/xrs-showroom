@@ -70,6 +70,7 @@ export default function ScenePage() {
     updateLighting,
     updateTint,
     updateSaturation,
+    updateIntroFx,
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
@@ -282,6 +283,17 @@ export default function ScenePage() {
     },
     [sceneId]
   );
+
+  const handleIntroFxChange = useCallback(
+    (introFx) => {
+      updateIntroFx(introFx);
+    },
+    [updateIntroFx]
+  );
+
+  const handleApplyIntroFx = useCallback((introFx) => {
+    viewerRef.current?.setIntroFx?.(introFx);
+  }, []);
 
   const handleSplatColorChange = useCallback(
     (splatColor) => {
@@ -671,6 +683,9 @@ export default function ScenePage() {
                 onApplySaturation={handleApplySaturation}
                 bgBlur={scene?.bgBlur ?? 0}
                 onBgBlurChange={handleBgBlurChange}
+                introFx={scene?.introFx || null}
+                onIntroFxChange={handleIntroFxChange}
+                onApplyIntroFx={handleApplyIntroFx}
                 glbSettings={scene?.glbSettings || null}
                 onGlbSettingsChange={handleGlbSettingsChange}
                 splatSettings={scene?.splatSettings || null}

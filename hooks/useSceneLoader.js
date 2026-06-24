@@ -184,6 +184,13 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       // Reveal the canvas (open the curtain) once the framing pose is painted.
       requestAnimationFrame(() => setFramed(true));
 
+      // ── Intro FX ──
+      // Blur + low contrast on the environment while the scene loads; faded out
+      // below once the maqueta (GLB) + SOG are in. Only on a real (re)load.
+      if (allPromises.length > 0 && scene.introFx?.enabled) {
+        v.setIntroFx?.(scene.introFx);
+      }
+
       // Wait for all assets (parallel, but initiated in priority order)
       if (allPromises.length > 0) {
         if (!isEditor) {
@@ -241,6 +248,11 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         } else {
           viewerRef.current?.revealFloor();
         }
+        // Maqueta (GLB) + SOG are loaded by now (awaited above) — fade the intro
+        // FX (blur + low contrast) back to the scene's normal look.
+        if (scene.introFx?.enabled) {
+          viewerRef.current?.fadeOutIntroFx(scene.introFx.duration ?? 1.5);
+        }
       } else {
         // Nothing (re)loaded this pass (e.g. a scene-data edit, or a scene with
         // no assets) — make sure the floor is shown rather than stuck hidden.
@@ -260,7 +272,11 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     // loading. If asset loading stalls (a hung download), reveal it anyway so it
     // never stays hidden. revealFloor is idempotent, so the normal path wins.
     clearTimeout(floorBackstopRef.current);
-    floorBackstopRef.current = setTimeout(() => viewerRef.current?.revealFloor(), 12000);
+    floorBackstopRef.current = setTimeout(() => {
+      viewerRef.current?.revealFloor();
+      // Don't leave the scene blurred/low-contrast if asset loading stalled.
+      viewerRef.current?.fadeOutIntroFx?.(scene?.introFx?.duration ?? 1.5);
+    }, 12000);
 
     loadAssets();
     return () => {
