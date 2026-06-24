@@ -101,21 +101,21 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       // ── Priority 3: GLB (Maqueta 3D) ──
       const glbUrl = assets.glb?.url || null;
       const proxyUrl = assets.glb_proxy?.url || null;
+      // Captured so the colliders can wait for the maqueta before becoming
+      // visible/interactive (they load faster and must not appear first).
+      let glbPromise = null;
 
       if (glbUrl !== loaded.glb) {
         loaded.glb = glbUrl;
         if (glbUrl) {
           if (useProgressiveLoading && proxyUrl) {
-            allPromises.push(
-              v.loadGlbProgressive(proxyUrl, glbUrl, scene.glbSettings || undefined).catch(() => {})
-            );
+            glbPromise = v.loadGlbProgressive(proxyUrl, glbUrl, scene.glbSettings || undefined).catch(() => {});
           } else if (useProgressiveLoading) {
-            allPromises.push(
-              v.loadGlbWithProgress(glbUrl, scene.glbSettings || undefined).catch(() => {})
-            );
+            glbPromise = v.loadGlbWithProgress(glbUrl, scene.glbSettings || undefined).catch(() => {});
           } else {
-            allPromises.push(v.loadGlb(glbUrl, scene.glbSettings || undefined));
+            glbPromise = v.loadGlb(glbUrl, scene.glbSettings || undefined);
           }
+          allPromises.push(glbPromise);
         } else if (isEditor) {
           v.removeGlb();
         }
@@ -137,22 +137,17 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       if (collidersUrl !== loaded.colliders) {
         loaded.colliders = collidersUrl;
         if (collidersUrl) {
-          if (isEditor) {
-            allPromises.push((async () => {
-              await v.loadColliders(collidersUrl);
-              // Editor mirrors the published view: colliders stay hidden by
-              // default (so the imported GLB material never shows) and only
-              // surface on hover/select. The eye toggle can force-show them.
-              v.setCollidersVisible(false);
-              v.setCollidersHoverEnabled?.(true);
-            })());
-          } else {
-            // View mode: colliders are hidden by default; hover surfaces them.
-            allPromises.push(v.loadColliders(collidersUrl).then(() => {
-              v.setCollidersVisible(false);
-              v.setCollidersHoverEnabled?.(true);
-            }).catch(() => {}));
-          }
+          // Colliders are a lightweight GLB that loads faster than the maqueta.
+          // Load + hide them now, but enable hover/click only AFTER the maqueta
+          // (GLB) has loaded — otherwise they'd surface (flash / hover-highlight)
+          // over an empty scene before the model is on screen. Both editor and
+          // /view share this behavior; the editor eye toggle can still force-show.
+          allPromises.push((async () => {
+            await v.loadColliders(collidersUrl);
+            v.setCollidersVisible(false);
+            if (glbPromise) await glbPromise.catch(() => {});
+            v.setCollidersHoverEnabled?.(true);
+          })().catch(() => {}));
         } else if (isEditor) {
           v.removeColliders();
         }

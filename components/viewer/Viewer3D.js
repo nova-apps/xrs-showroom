@@ -1717,6 +1717,11 @@ uniform float uSaturation;`
       s.scene.add(model);
       s.collidersModel = model;
 
+      // Hidden by default: colliders only surface on hover/select, and must not
+      // flash on screen before the maqueta (GLB) has loaded. The loader enables
+      // hover once the GLB is in; hover temporarily makes the hovered mesh visible.
+      model.traverse((c) => { if (c.isMesh) c.visible = false; });
+
       // Apply pending transforms if they exist
       if (s.pendingTransforms.colliders) {
         applyTransformToObject('colliders', s.pendingTransforms.colliders);
