@@ -461,7 +461,11 @@ export default function TourViewer({
   }, []);
 
   // ─── Pointer interaction (drag-to-look + click-to-jump) ───
+  // Touch is handled by the dedicated touch handlers below; ignoring touch-type
+  // pointers here avoids double-processing that zeroed the fling velocity on
+  // mobile (the trailing pointermove saw dx=0 and killed the inertia).
   const handlePointerDown = useCallback((e) => {
+    if (e.pointerType === 'touch') return;
     isDraggingRef.current = true;
     prevMouseRef.current = { x: e.clientX, y: e.clientY };
     downPosRef.current = { x: e.clientX, y: e.clientY };
@@ -469,6 +473,7 @@ export default function TourViewer({
   }, []);
 
   const handlePointerMove = useCallback((e) => {
+    if (e.pointerType === 'touch') return;
     if (!isDraggingRef.current) {
       // Hover feedback over hotspots.
       const hit = raycastHotspot(e.clientX, e.clientY);
@@ -488,6 +493,7 @@ export default function TourViewer({
   }, [raycastHotspot]);
 
   const handlePointerUp = useCallback((e) => {
+    if (e.pointerType === 'touch') return;
     isDraggingRef.current = false;
     const down = downPosRef.current;
     downPosRef.current = null;
@@ -500,7 +506,8 @@ export default function TourViewer({
     }
   }, [raycastHotspot]);
 
-  const handlePointerLeave = useCallback(() => {
+  const handlePointerLeave = useCallback((e) => {
+    if (e.pointerType === 'touch') return;
     isDraggingRef.current = false;
     downPosRef.current = null;
   }, []);

@@ -226,13 +226,18 @@ export default function PanoramaViewer({
   }, [mounted, url]);
 
   // ─── Mouse interaction ───
+  // Touch is handled by the dedicated touch handlers below; ignoring touch-type
+  // pointers here avoids double-processing that zeroed the fling velocity on
+  // mobile (the trailing pointermove saw dx=0 and killed the inertia).
   const handlePointerDown = useCallback((e) => {
+    if (e.pointerType === 'touch') return;
     isDraggingRef.current = true;
     prevMouseRef.current = { x: e.clientX, y: e.clientY };
     velocityRef.current = { lon: 0, lat: 0 };
   }, []);
 
   const handlePointerMove = useCallback((e) => {
+    if (e.pointerType === 'touch') return;
     if (!isDraggingRef.current) return;
     const dx = e.clientX - prevMouseRef.current.x;
     const dy = e.clientY - prevMouseRef.current.y;
@@ -244,7 +249,8 @@ export default function PanoramaViewer({
     prevMouseRef.current = { x: e.clientX, y: e.clientY };
   }, []);
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e) => {
+    if (e?.pointerType === 'touch') return;
     isDraggingRef.current = false;
   }, []);
 
