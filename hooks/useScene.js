@@ -23,6 +23,7 @@ import {
   updateIntroFx as dbUpdateIntroFx,
   publishScene as dbPublishScene,
   discardSceneChanges as dbDiscardSceneChanges,
+  restoreSceneVersion as dbRestoreSceneVersion,
   updateGlbSettings as dbUpdateGlbSettings,
   updateSplatSettings as dbUpdateSplatSettings,
   updateSceneAsset,
@@ -159,6 +160,21 @@ export function useScene(sceneId) {
   }, [sceneId]);
 
   /**
+   * Restore a previously published version into the draft for review. Cancels
+   * in-flight debounced writes (like discard) so they don't clobber the
+   * restored fields. Leaves the live published version untouched until the user
+   * publishes again.
+   */
+  const restoreVersion = useCallback(async (versionId) => {
+    if (!sceneId || !versionId) return;
+    Object.keys(debounceTimers.current).forEach((key) => {
+      clearTimeout(debounceTimers.current[key]);
+      delete debounceTimers.current[key];
+    });
+    await dbRestoreSceneVersion(sceneId, versionId);
+  }, [sceneId]);
+
+  /**
    * Upload an asset file.
    * @param {'glb'|'sog'|'skybox'|'floor'|'colliders'} assetType
    * @param {File} file
@@ -251,6 +267,7 @@ export function useScene(sceneId) {
     updateVisibility,
     publish,
     discardChanges,
+    restoreVersion,
     uploadAsset,
     removeAsset,
   };

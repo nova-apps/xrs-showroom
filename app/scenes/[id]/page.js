@@ -77,6 +77,7 @@ export default function ScenePage() {
     updateVisibility,
     publish,
     discardChanges,
+    restoreVersion,
     uploadAsset,
     removeAsset,
   } = useScene(sceneId);
@@ -639,6 +640,7 @@ export default function ScenePage() {
                 sceneId={sceneId}
                 onPublish={publish}
                 onDiscard={discardChanges}
+                onRestoreVersion={restoreVersion}
                 collapsed={false}
                 onToggle={() => {}}
               />

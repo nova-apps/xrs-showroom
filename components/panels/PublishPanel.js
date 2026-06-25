@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import FloatingPanel from './FloatingPanel';
 import ConfirmDialog from '../ui/ConfirmDialog';
+import { subscribeSceneVersions } from '@/lib/scenes';
+import { diffSnapshots } from '@/lib/sceneDiff';
 
 /**
  * PublishPanel — accordion section that replaces the old floating Publish
@@ -24,99 +26,23 @@ function formatDateTime(ts) {
   }
 }
 
-/**
- * Order-stable JSON serialization so deep-equality comparisons between draft
- * fields and the published snapshot don't get tripped up by key ordering
- * differences coming back from Firebase.
- */
-function stableStringify(value) {
-  if (value === null || value === undefined) return 'null';
-  if (typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
-  const keys = Object.keys(value).sort();
-  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
-}
-
-/**
- * Human-friendly labels for each publishable field. Sub-fields under `assets`
- * and `transforms` get split out so the list reads as discrete changes.
- */
-const FIELD_LABELS = {
-  name: 'Nombre',
-  type: 'Tipo de escena',
-  panelLogoUrl: 'Logo del panel',
-  whatsappNumber: 'WhatsApp',
-  customDomain: 'Dominio personalizado',
-  orbit: 'Cámara y órbita',
-  materials: 'Materiales',
-  unidades: 'Unidades',
-  amenities: 'Amenities',
-  barrios: 'Barrios',
-  lotes: 'Lotes',
-  panoramaSettings: 'Panorámicas',
-  lighting: 'Iluminación',
-  tint: 'Tinte',
-  saturation: 'Saturación',
-  bgBlur: 'Blur de fondo',
-  glbSettings: 'Ajustes del modelo',
-  splatSettings: 'Ajustes del splat',
-  collidersVisible: 'Visibilidad de colliders',
-};
-
-const ASSET_LABELS = {
-  glb: 'Modelo 3D (GLB)',
-  sog: 'Gaussian Splat',
-  skybox: 'Cielo (skybox)',
-  floor: 'Piso',
-  colliders: 'Colliders',
-  modelHdri: 'HDRI del modelo',
-};
-
-const TRANSFORM_LABELS = {
-  glb: 'Transformación del modelo',
-  sog: 'Transformación del splat',
-  skybox: 'Posición del cielo',
-  floor: 'Posición del piso',
-  colliders: 'Transformación de colliders',
-  mask: 'Máscara de fondo',
-};
-
-function diffPublished(scene) {
-  if (!scene) return [];
-  const published = scene.published || {};
-  const changes = [];
-
-  for (const [field, label] of Object.entries(FIELD_LABELS)) {
-    if (stableStringify(scene[field]) !== stableStringify(published[field])) {
-      changes.push(label);
-    }
-  }
-
-  // Split assets and transforms by sub-key for a more useful list.
-  const draftAssets = scene.assets || {};
-  const pubAssets = published.assets || {};
-  for (const [key, label] of Object.entries(ASSET_LABELS)) {
-    if (stableStringify(draftAssets[key]) !== stableStringify(pubAssets[key])) {
-      changes.push(label);
-    }
-  }
-
-  const draftTransforms = scene.transforms || {};
-  const pubTransforms = published.transforms || {};
-  for (const [key, label] of Object.entries(TRANSFORM_LABELS)) {
-    if (stableStringify(draftTransforms[key]) !== stableStringify(pubTransforms[key])) {
-      changes.push(label);
-    }
-  }
-
-  return changes;
-}
-
-export default function PublishPanel({ scene, sceneId, onPublish, onDiscard, collapsed, onToggle }) {
+export default function PublishPanel({ scene, sceneId, onPublish, onDiscard, onRestoreVersion, collapsed, onToggle }) {
   const [publishing, setPublishing] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [justPublished, setJustPublished] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [confirmRestore, setConfirmRestore] = useState(null); // version object
+  const [restoringId, setRestoringId] = useState(null);
+  const [expandedVersion, setExpandedVersion] = useState(null); // version id
+  const [versionsOpen, setVersionsOpen] = useState(false);
+
+  // Subscribe to the published version history (lightweight metadata list).
+  useEffect(() => {
+    if (!sceneId) return undefined;
+    const unsubscribe = subscribeSceneVersions(sceneId, setVersions);
+    return () => unsubscribe();
+  }, [sceneId]);
 
   const publishedAt = scene?.publishedAt ?? 0;
   const updatedAt = scene?.updatedAt ?? 0;
@@ -127,7 +53,7 @@ export default function PublishPanel({ scene, sceneId, onPublish, onDiscard, col
   // Only diff against the published snapshot — when nothing has been
   // published yet there's nothing meaningful to enumerate.
   const pendingChanges = useMemo(
-    () => (neverPublished ? [] : diffPublished(scene)),
+    () => (neverPublished ? [] : diffSnapshots(scene, scene.published)),
     [scene, neverPublished],
   );
 
@@ -161,6 +87,19 @@ export default function PublishPanel({ scene, sceneId, onPublish, onDiscard, col
     }
     setDiscarding(false);
   }, [onDiscard, discarding]);
+
+  const handleRestore = useCallback(async () => {
+    const version = confirmRestore;
+    setConfirmRestore(null);
+    if (!version || restoringId || !onRestoreVersion) return;
+    setRestoringId(version.id);
+    try {
+      await onRestoreVersion(version.id);
+    } catch (err) {
+      console.error('[Restore] failed:', err);
+    }
+    setRestoringId(null);
+  }, [confirmRestore, restoringId, onRestoreVersion]);
 
   const publishLabel = publishing
     ? 'Publicando…'
@@ -241,6 +180,72 @@ export default function PublishPanel({ scene, sceneId, onPublish, onDiscard, col
           🌐 Abrir versión publicada
         </button>
 
+        {versions.length > 0 && (
+          <div className={`publish-versions${versionsOpen ? ' is-open' : ''}`}>
+            <button
+              type="button"
+              className="publish-versions-title"
+              aria-expanded={versionsOpen}
+              onClick={() => setVersionsOpen((o) => !o)}
+            >
+              <span className={`publish-version-chevron${versionsOpen ? ' is-open' : ''}`}>▸</span>
+              Versiones publicadas
+              <span className="publish-changes-count">{versions.length}</span>
+            </button>
+            {versionsOpen && (<>
+            <ul className="publish-versions-list">
+              {versions.map((v, i) => {
+                const isOpen = expandedVersion === v.id;
+                return (
+                  <li key={v.id} className={`publish-version-card${isOpen ? ' is-open' : ''}`}>
+                    <button
+                      type="button"
+                      className="publish-version-header"
+                      aria-expanded={isOpen}
+                      onClick={() => setExpandedVersion(isOpen ? null : v.id)}
+                    >
+                      <span className={`publish-version-chevron${isOpen ? ' is-open' : ''}`}>▸</span>
+                      <span className="publish-version-date">{formatDateTime(v.publishedAt)}</span>
+                      {i === 0 && <span className="publish-version-live">En vivo</span>}
+                      {v.changes.length > 0 && (
+                        <span className="publish-changes-count">{v.changes.length}</span>
+                      )}
+                    </button>
+
+                    {isOpen && (
+                      <div className="publish-version-body">
+                        {v.changes.length > 0 ? (
+                          <ul className="publish-changes-list">
+                            {v.changes.map((label, idx) => (
+                              <li key={`${label}-${idx}`}>{label}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="publish-version-empty">Sin cambios registrados.</p>
+                        )}
+                        <button
+                          type="button"
+                          className="publish-version-restore"
+                          disabled={!!restoringId || publishing || discarding}
+                          onClick={() => setConfirmRestore(v)}
+                          title="Cargar esta versión en el editor para revisarla"
+                        >
+                          {restoringId === v.id ? 'Restaurando…' : 'Restaurar esta versión'}
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="publish-versions-hint">
+              Restaurar carga la versión en el editor. La vista pública no cambia
+              hasta que publiques de nuevo.
+            </p>
+            </>)}
+          </div>
+        )}
+
         <p className="publish-panel-hint">
           {neverPublished
             ? 'Publicá la escena para que /view/ la muestre.'
@@ -257,6 +262,16 @@ export default function PublishPanel({ scene, sceneId, onPublish, onDiscard, col
           confirmLabel="Descartar"
           onConfirm={handleDiscard}
           onCancel={() => setConfirmDiscard(false)}
+        />
+      )}
+
+      {confirmRestore && (
+        <ConfirmDialog
+          title="Restaurar versión"
+          message={`Se va a cargar la versión del ${formatDateTime(confirmRestore.publishedAt)} en el editor, reemplazando los cambios actuales sin publicar. La vista pública no cambia hasta que publiques de nuevo.`}
+          confirmLabel="Restaurar"
+          onConfirm={handleRestore}
+          onCancel={() => setConfirmRestore(null)}
         />
       )}
     </FloatingPanel>
