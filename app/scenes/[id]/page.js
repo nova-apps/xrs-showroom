@@ -415,6 +415,14 @@ export default function ScenePage() {
     }
   }, [gizmoMode]);
 
+  // Leaving the Assets panel — hide the transform gizmo (and reset the tool)
+  const handleActivePanelChange = useCallback((panel) => {
+    if (panel !== 'assets') {
+      setGizmoMode('select');
+      viewerRef.current?.detachGizmo();
+    }
+  }, []);
+
   // Handle gizmo mode change
   const handleGizmoMode = useCallback((mode) => {
     setGizmoMode(mode);
@@ -612,6 +620,7 @@ export default function ScenePage() {
       {scene && <RightPanelStack
         sceneName={scene.name}
         sceneId={sceneId}
+        onActivePanelChange={handleActivePanelChange}
         sections={[
           { id: 'publish', label: 'Publicación', icon: '🚀' },
           { id: 'assets', label: 'Assets', icon: '📁' },

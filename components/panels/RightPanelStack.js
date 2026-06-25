@@ -19,13 +19,19 @@
  * `data-section="<id>"` so the stack can show only the active one.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function RightPanelStack({ sceneName, sections = [], children }) {
+export default function RightPanelStack({ sceneName, sections = [], children, onActivePanelChange }) {
   const [activePanel, setActivePanel] = useState(null);
   const [visible, setVisible] = useState(true);
   const router = useRouter();
+
+  // Notify the parent whenever the open section changes (e.g. to detach the
+  // transform gizmo when leaving the Assets panel).
+  useEffect(() => {
+    onActivePanelChange?.(activePanel);
+  }, [activePanel, onActivePanelChange]);
 
   const open = useCallback((id) => setActivePanel(id), []);
   const back = useCallback(() => setActivePanel(null), []);
@@ -46,16 +52,18 @@ export default function RightPanelStack({ sceneName, sections = [], children }) 
         {/* ─── Scene Header ─── */}
         <div className="sidebar-header">
           <div className="sidebar-header-top">
+            <span className="sidebar-scene-label" title={sceneName}>{sceneName || 'Sin nombre'}</span>
             <button
               className="sidebar-home-btn"
               onClick={() => router.push('/')}
               title="Volver al inicio"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9.5 12 3l9 6.5" />
+                <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9" />
+                <path d="M9 20v-6h6v6" />
               </svg>
             </button>
-            <span className="sidebar-scene-label" title={sceneName}>{sceneName || 'Sin nombre'}</span>
             <button
               className="sidebar-close-btn"
               onClick={() => setVisible(false)}

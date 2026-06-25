@@ -309,13 +309,17 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
   }, [viewerReady, scene?.transforms]);
 
   // ── Apply orbit settings ──
+  // Depend on the orbit *values*, not its object identity. Every Firebase
+  // update (e.g. a gizmo transform write, which also bumps `updatedAt`) rebuilds
+  // the scene via `{ ...data }`, handing us a fresh `scene.orbit` reference with
+  // identical contents. Keying on reference would re-fire `applyOrbit` on every
+  // transform, which recenters `controls.target` and snaps the camera back.
+  const orbitKey = scene?.orbit ? JSON.stringify(scene.orbit) : null;
   useEffect(() => {
-    if (!viewerReady || !viewerRef.current) return;
-    const orbit = scene?.orbit;
-    if (orbit) {
-      viewerRef.current.applyOrbit(orbit);
-    }
-  }, [viewerReady, scene?.orbit]);
+    if (!viewerReady || !viewerRef.current || !orbitKey) return;
+    viewerRef.current.applyOrbit(JSON.parse(orbitKey));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewerReady, orbitKey]);
 
   // ── Apply lighting settings ──
   useEffect(() => {
