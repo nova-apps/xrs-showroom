@@ -17,8 +17,8 @@ export default function SceneEditorPanel({
   onRemove,
   onTransformChange,
   onApplyTransform,
-  onVisibilityChange,
-  visibility,
+  onEnabledChange,
+  enabled,
   collapsed,
   onToggle,
   materialsContent,
@@ -243,8 +243,8 @@ export default function SceneEditorPanel({
         icon="🧊"
         open={openSection === 'glb'}
         onToggle={() => toggleSection('glb')}
-        visible={visibility?.glb !== false}
-        onVisibilityToggle={scene.assets?.glb ? (v) => onVisibilityChange?.('glb', v) : undefined}
+        enabled={enabled?.glb !== false}
+        onToggleEnabled={scene.assets?.glb ? (v) => onEnabledChange?.('glb', v) : undefined}
         selected={openSection === 'glb'}
         tris={assetStats.glb}
       >
@@ -380,8 +380,8 @@ export default function SceneEditorPanel({
         icon="🧱"
         open={openSection === 'colliders'}
         onToggle={() => toggleSection('colliders')}
-        visible={visibility?.colliders !== false}
-        onVisibilityToggle={scene.assets?.colliders ? (v) => onVisibilityChange?.('colliders', v) : undefined}
+        enabled={enabled?.colliders !== false}
+        onToggleEnabled={scene.assets?.colliders ? (v) => onEnabledChange?.('colliders', v) : undefined}
         selected={openSection === 'colliders'}
         tris={assetStats.colliders}
       >
@@ -421,8 +421,8 @@ export default function SceneEditorPanel({
         icon="✨"
         open={openSection === 'sog'}
         onToggle={() => toggleSection('sog')}
-        visible={visibility?.sog !== false}
-        onVisibilityToggle={scene.assets?.sog ? (v) => onVisibilityChange?.('sog', v) : undefined}
+        enabled={enabled?.sog !== false}
+        onToggleEnabled={scene.assets?.sog ? (v) => onEnabledChange?.('sog', v) : undefined}
         selected={openSection === 'sog'}
         tris={assetStats.sog}
       >
@@ -482,8 +482,8 @@ export default function SceneEditorPanel({
         icon="🌐"
         open={openSection === 'skybox'}
         onToggle={() => toggleSection('skybox')}
-        visible={visibility?.skybox !== false}
-        onVisibilityToggle={scene.assets?.skybox ? (v) => onVisibilityChange?.('skybox', v) : undefined}
+        enabled={enabled?.skybox !== false}
+        onToggleEnabled={scene.assets?.skybox ? (v) => onEnabledChange?.('skybox', v) : undefined}
         selected={openSection === 'skybox'}
       >
         <FileUploader
@@ -520,8 +520,8 @@ export default function SceneEditorPanel({
         icon="🟫"
         open={openSection === 'floor'}
         onToggle={() => toggleSection('floor')}
-        visible={visibility?.floor !== false}
-        onVisibilityToggle={(v) => onVisibilityChange?.('floor', v)}
+        enabled={enabled?.floor !== false}
+        onToggleEnabled={scene.assets?.floor ? (v) => onEnabledChange?.('floor', v) : undefined}
         selected={openSection === 'floor'}
       >
         <FileUploader

@@ -32,6 +32,10 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
   const introTimerRef = useRef(null);
   const floorRevealTimerRef = useRef(null);
   const floorBackstopRef = useRef(null);
+  // The cinematic entrance (snap to intro pose → glide to final + intro FX) must
+  // play only once per viewer mount. Otherwise re-enabling/re-uploading an asset
+  // — which pushes a load promise — would replay the whole camera animation.
+  const cinematicPlayedRef = useRef(false);
 
   // Track which assets have been loaded to avoid re-loading
   const loadedAssetsRef = useRef({
@@ -69,6 +73,14 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     const loaded = loadedAssetsRef.current;
     const timing = loadTimingRef.current;
 
+    // Per-asset enabled (loaded) state. Absent/true = enabled (default); false =
+    // disabled. A disabled asset resolves to a null "effective URL" below, so
+    // the dedup logic never downloads it and (in the editor) unloads it if it
+    // was previously loaded. This is distinct from the old `visibility` toggle,
+    // which only flipped `.visible` on an already-loaded mesh.
+    const enabledMap = scene.enabled || {};
+    const isEnabled = (type) => enabledMap[type] !== false;
+
     async function loadAssets() {
       if (isEditor) {
         timing.startTime = timing.startTime || performance.now();
@@ -77,7 +89,7 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       const allPromises = [];
 
       // ── Priority 1: Floor ──
-      const floorUrl = assets.floor?.url || null;
+      const floorUrl = isEnabled('floor') ? (assets.floor?.url || null) : null;
       if (floorUrl !== loaded.floor) {
         loaded.floor = floorUrl;
         if (floorUrl) {
@@ -88,7 +100,7 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       }
 
       // ── Priority 2: Skybox ──
-      const skyUrl = assets.skybox?.url || null;
+      const skyUrl = isEnabled('skybox') ? (assets.skybox?.url || null) : null;
       if (skyUrl !== loaded.skybox) {
         loaded.skybox = skyUrl;
         if (skyUrl) {
@@ -99,8 +111,9 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       }
 
       // ── Priority 3: GLB (Maqueta 3D) ──
-      const glbUrl = assets.glb?.url || null;
-      const proxyUrl = assets.glb_proxy?.url || null;
+      const glbEnabled = isEnabled('glb');
+      const glbUrl = glbEnabled ? (assets.glb?.url || null) : null;
+      const proxyUrl = glbEnabled ? (assets.glb_proxy?.url || null) : null;
       // Captured so the colliders can wait for the maqueta before becoming
       // visible/interactive (they load faster and must not appear first).
       let glbPromise = null;
@@ -122,7 +135,7 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       }
 
       // ── Priority 4: SOG ──
-      const sogUrl = assets.sog?.url || null;
+      const sogUrl = isEnabled('sog') ? (assets.sog?.url || null) : null;
       if (sogUrl !== loaded.sog) {
         loaded.sog = sogUrl;
         if (sogUrl) {
@@ -133,7 +146,9 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       }
 
       // ── Priority 5: Colliders ──
-      const collidersUrl = assets.colliders?.url || null;
+      // Disabling colliders skips loading them entirely → no raycasting/hover,
+      // both in the editor and in /view (the published snapshot carries the flag).
+      const collidersUrl = isEnabled('colliders') ? (assets.colliders?.url || null) : null;
       if (collidersUrl !== loaded.colliders) {
         loaded.colliders = collidersUrl;
         if (collidersUrl) {
@@ -141,7 +156,7 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
           // Load + hide them now, but enable hover/click only AFTER the maqueta
           // (GLB) has loaded — otherwise they'd surface (flash / hover-highlight)
           // over an empty scene before the model is on screen. Both editor and
-          // /view share this behavior; the editor eye toggle can still force-show.
+          // /view share this behavior.
           allPromises.push((async () => {
             await v.loadColliders(collidersUrl);
             v.setCollidersVisible(false);
@@ -176,9 +191,11 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       const introCam = (isMobileEarly && orbit.mobile?.introCamera) ? orbit.mobile.introCamera : orbit.introCamera;
       const finalCam = (isMobileEarly && orbit.mobile?.initialCamera) ? orbit.mobile.initialCamera : orbit.initialCamera;
       const startCam = introCam || finalCam;
-      // Only (re)frame on a real (re)load — a plain scene-data edit (allPromises
-      // empty) must not snap the camera back to the configured pose.
-      if (allPromises.length > 0 && startCam) {
+      // Play the cinematic entrance only on the FIRST real load of this mount.
+      // A later asset (re)load — e.g. re-enabling a toggled-off element — also
+      // pushes promises, but must not re-snap the camera or replay the intro.
+      const playIntro = allPromises.length > 0 && !cinematicPlayedRef.current;
+      if (playIntro && startCam) {
         v.setInitialCameraPosition?.(startCam, { animate: false });
       }
       // Reveal the canvas (open the curtain) once the framing pose is painted.
@@ -186,8 +203,8 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
 
       // ── Intro FX ──
       // Blur + low contrast on the environment while the scene loads; faded out
-      // below once the maqueta (GLB) + SOG are in. Only on a real (re)load.
-      if (allPromises.length > 0 && scene.introFx?.enabled) {
+      // below once the maqueta (GLB) + SOG are in. Only on the first load.
+      if (playIntro && scene.introFx?.enabled) {
         v.setIntroFx?.(scene.introFx);
       }
 
@@ -212,15 +229,10 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
         }
       }
 
-      // ── Apply persisted asset visibility (published show/hide per asset) ──
-      // Colliders are intentionally excluded: both editor and /view keep them
-      // hidden + hover-enabled for click targeting, regardless of the toggle.
-      const vis = scene.visibility;
-      if (vis) {
-        for (const type of ['glb', 'sog', 'skybox', 'floor']) {
-          v.setAssetVisible?.(type, vis[type] !== false);
-        }
-      }
+      // Note: per-asset show/hide is no longer applied here. Assets are either
+      // enabled (loaded → visible) or disabled (never loaded), so there's no
+      // "loaded but hidden" state to reconcile. Colliders remain hidden + hover
+      // enabled via the load block above.
 
       // ── Camera: settle into the final framing once everything has loaded ──
       // Only on a real (re)load (allPromises>0) so editor edits don't snap the
@@ -229,7 +241,9 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       // snap straight to the final pose (fitCamera has already run by now).
       // The floor stays hidden until the camera has come to rest (revealFloor),
       // so it never appears to slide while the camera is moving/reframing.
-      if (allPromises.length > 0) {
+      if (playIntro) {
+        // First load of this mount: run the cinematic entrance once.
+        cinematicPlayedRef.current = true;
         if (introCam && finalCam) {
           const durationMs = Math.max(0, (orbit.introDuration ?? 2) * 1000);
           clearTimeout(introTimerRef.current);
@@ -254,8 +268,10 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
           viewerRef.current?.fadeOutIntroFx(scene.introFx.duration ?? 1.5);
         }
       } else {
-        // Nothing (re)loaded this pass (e.g. a scene-data edit, or a scene with
-        // no assets) — make sure the floor is shown rather than stuck hidden.
+        // Either nothing (re)loaded this pass (a plain scene-data edit), or an
+        // incremental (re)load after the cinematic already played (e.g. re-
+        // enabling a toggled-off element). Reveal the floor (idempotent) without
+        // touching the camera, so the user's current view is preserved.
         viewerRef.current?.revealFloor();
       }
 
@@ -289,7 +305,10 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
   // Re-arm the reveal curtain whenever the viewer tears down (e.g. AR remount),
   // so it masks the next load instead of staying open on the default pose.
   useEffect(() => {
-    if (!viewerReady) setFramed(false);
+    if (!viewerReady) {
+      setFramed(false);
+      cinematicPlayedRef.current = false;
+    }
   }, [viewerReady]);
 
   // ── Apply transforms when they change from Firebase ──

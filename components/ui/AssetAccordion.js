@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 
 /**
  * A single collapsible asset section (inner accordion).
- * Optionally shows a visibility eye toggle in the header.
+ * Optionally shows an enable/disable (power) toggle in the header. A disabled
+ * asset is not loaded into the scene at all (no download, no GPU, no colliders).
  */
-export function AssetAccordion({ title, icon, open, onToggle, children, visible, onVisibilityToggle, selected, tris }) {
+export function AssetAccordion({ title, icon, open, onToggle, children, enabled, onToggleEnabled, selected, tris }) {
   return (
-    <div className={`asset-accordion ${open ? 'open' : ''} ${selected ? 'selected' : ''}`}>
+    <div className={`asset-accordion ${open ? 'open' : ''} ${selected ? 'selected' : ''} ${enabled === false ? 'disabled-asset' : ''}`}>
       <div className="asset-accordion-header">
         <span className="asset-accordion-title" onClick={onToggle}>
           <span className="asset-accordion-icon">{icon}</span>
@@ -16,25 +17,15 @@ export function AssetAccordion({ title, icon, open, onToggle, children, visible,
           {tris > 0 && <span className="asset-tris-badge">{(tris / 1000).toFixed(0)}K tris</span>}
         </span>
         <span className="asset-accordion-actions">
-          {onVisibilityToggle && (
+          {onToggleEnabled && (
             <button
-              className={`asset-eye-btn ${visible === false ? 'hidden-asset' : ''}`}
-              onClick={(e) => { e.stopPropagation(); onVisibilityToggle(!visible); }}
-              title={visible === false ? 'Mostrar' : 'Ocultar'}
+              className={`asset-eye-btn ${enabled === false ? 'hidden-asset' : ''}`}
+              onClick={(e) => { e.stopPropagation(); onToggleEnabled(!enabled); }}
+              title={enabled === false ? 'Habilitar (cargar en la escena)' : 'Deshabilitar (no cargar)'}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {visible === false ? (
-                  <>
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </>
-                ) : (
-                  <>
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </>
-                )}
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                <line x1="12" y1="2" x2="12" y2="12" />
               </svg>
             </button>
           )}

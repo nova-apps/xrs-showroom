@@ -45,9 +45,10 @@ export default function ScenePage() {
 
   const [modalUnit, setModalUnit] = useState(null);
   const [modalAmenity, setModalAmenity] = useState(null);
-  // Colliders default to hidden: they only surface on hover/select (matching
-  // the published view). The eye toggle force-shows all of them while editing.
-  const [assetVisibility, setAssetVisibility] = useState({ glb: true, colliders: false, sog: true, skybox: true, floor: true });
+  // Per-asset enabled (loaded) state. A disabled asset is never loaded into the
+  // scene (no download, no GPU memory, no raycasting). Everything defaults to
+  // enabled; the loader picks up changes via scene.enabled and loads/unloads.
+  const [assetEnabled, setAssetEnabled] = useState({ glb: true, colliders: true, sog: true, skybox: true, floor: true });
   const [gizmoMode, setGizmoMode] = useState('select');
   const [gizmoAsset, setGizmoAsset] = useState('glb');
   const [hdriFromSkybox, setHdriFromSkybox] = useState(false);
@@ -74,7 +75,7 @@ export default function ScenePage() {
     updateGlbSettings,
     updateSplatSettings,
     updateCollidersVisible,
-    updateVisibility,
+    updateEnabled,
     publish,
     discardChanges,
     restoreVersion,
@@ -143,13 +144,14 @@ export default function ScenePage() {
         updateLighting(lighting);
       },
     },
-    visibility: {
-      apply: (assetType, visible) => {
-        setAssetVisibility((prev) => ({ ...prev, [assetType]: visible }));
-        if (viewerRef.current) viewerRef.current.setAssetVisible(assetType, visible);
+    enabled: {
+      apply: (assetType, enabled) => {
+        // Update the toggle UI; the loader reacts to the persisted scene.enabled
+        // change below and loads/unloads the asset.
+        setAssetEnabled((prev) => ({ ...prev, [assetType]: enabled }));
       },
-      save: (assetType, visible) => {
-        updateVisibility(assetType, visible);
+      save: (assetType, enabled) => {
+        updateEnabled(assetType, enabled);
       },
     },
   });
@@ -379,28 +381,26 @@ export default function ScenePage() {
     [removeAsset, resetLoadedAsset]
   );
 
-  // Sync the eye-toggle state from the persisted scene.visibility on load, so
-  // saved show/hide states survive a refresh (defaults fill any unset asset).
+  // Sync the toggle state from the persisted scene.enabled on load, so saved
+  // enable/disable states survive a refresh (defaults fill any unset asset).
   useEffect(() => {
-    if (!scene?.visibility) return;
-    setAssetVisibility((prev) => ({ ...prev, ...scene.visibility }));
-  }, [scene?.visibility]);
+    if (!scene?.enabled) return;
+    setAssetEnabled((prev) => ({ ...prev, ...scene.enabled }));
+  }, [scene?.enabled]);
 
-  // Handle asset visibility toggle (with history)
-  const handleVisibilityChange = useCallback((assetType, visible) => {
-    const prevVisible = assetVisibility[assetType] !== false;
+  // Handle asset enable/disable toggle (with history). Persisting to Firebase is
+  // enough — useSceneLoader watches scene.enabled and loads/unloads the asset.
+  const handleEnabledChange = useCallback((assetType, enabled) => {
+    const prevEnabled = assetEnabled[assetType] !== false;
     history.push({
-      type: 'visibility',
+      type: 'enabled',
       key: assetType,
-      before: prevVisible,
-      after: visible,
+      before: prevEnabled,
+      after: enabled,
     });
-    setAssetVisibility((prev) => ({ ...prev, [assetType]: visible }));
-    if (viewerRef.current) {
-      viewerRef.current.setAssetVisible(assetType, visible);
-    }
-    updateVisibility(assetType, visible);
-  }, [assetVisibility, history, updateVisibility]);
+    setAssetEnabled((prev) => ({ ...prev, [assetType]: enabled }));
+    updateEnabled(assetType, enabled);
+  }, [assetEnabled, history, updateEnabled]);
 
   // Handle active section change — update gizmo target
   const handleActiveSectionChange = useCallback((section) => {
@@ -654,8 +654,8 @@ export default function ScenePage() {
                 onRemove={handleRemove}
                 onTransformChange={handleTransformChange}
                 onApplyTransform={handleApplyTransform}
-                onVisibilityChange={handleVisibilityChange}
-                visibility={assetVisibility}
+                onEnabledChange={handleEnabledChange}
+                enabled={assetEnabled}
                 onActiveSectionChange={handleActiveSectionChange}
                 viewerRef={viewerRef}
                 viewerReady={viewerReady}

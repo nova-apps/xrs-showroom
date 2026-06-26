@@ -584,6 +584,12 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
+/* Disabled asset (not loaded into the scene): dim the title/icon so it reads
+   as inactive. The power button keeps its own styling so it stays clickable. */
+.asset-accordion.disabled-asset > .asset-accordion-header .asset-accordion-title {
+  opacity: 0.4;
+}
+
 /* ─── Compass HUD ─── */
 .compass {
   position: relative;

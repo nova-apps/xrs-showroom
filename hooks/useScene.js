@@ -17,6 +17,7 @@ import {
   updatePanoramaSettings as dbUpdatePanoramaSettings,
   updateCollidersVisible as dbUpdateCollidersVisible,
   updateVisibility as dbUpdateVisibility,
+  updateEnabled as dbUpdateEnabled,
   updateLighting as dbUpdateLighting,
   updateTint as dbUpdateTint,
   updateSaturation as dbUpdateSaturation,
@@ -127,6 +128,19 @@ export function useScene(sceneId) {
     (type, visible) => {
       if (!sceneId) return;
       dbUpdateVisibility(sceneId, type, visible).catch(console.error);
+    },
+    [sceneId]
+  );
+
+  /**
+   * Persist a single asset's enabled (loaded) state (immediate, no debounce).
+   * Disabled assets are skipped by the loader entirely — not downloaded, not
+   * added to the scene. type ∈ glb|colliders|sog|skybox|floor.
+   */
+  const updateEnabled = useCallback(
+    (type, enabled) => {
+      if (!sceneId) return;
+      dbUpdateEnabled(sceneId, type, enabled).catch(console.error);
     },
     [sceneId]
   );
@@ -265,6 +279,7 @@ export function useScene(sceneId) {
     updateSplatSettings,
     updateCollidersVisible,
     updateVisibility,
+    updateEnabled,
     publish,
     discardChanges,
     restoreVersion,
