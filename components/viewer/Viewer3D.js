@@ -217,6 +217,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     if (s.collidersModel) s.collidersModel.visible = true;
     s.colliderHover.hoveredMesh = null;
     s.colliderHover.originalState.clear();
+    s.colliderHover.pinned?.clear();
   }
 
   function restoreCollidersToHiddenState(s) {
@@ -226,6 +227,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
       mesh.visible = prev.visible;
     }
     ch.originalState.clear();
+    ch.pinned?.clear();
     ch.hoveredMesh = null;
     ch.selectedMesh = null;
     hideColliderTooltip(s);
@@ -296,9 +298,13 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
 
     if (hit === ch.hoveredMesh) return;
 
-    // Clear the previously hovered mesh — but keep it highlighted if it's
-    // the persistent "selected" one.
-    if (ch.hoveredMesh && ch.hoveredMesh !== ch.selectedMesh) {
+    // Clear the previously hovered mesh — but keep it highlighted if it's the
+    // persistent "selected" one or a "pinned" one (unit-cameras selection).
+    if (
+      ch.hoveredMesh &&
+      ch.hoveredMesh !== ch.selectedMesh &&
+      !(ch.pinned && ch.pinned.has(ch.hoveredMesh))
+    ) {
       clearColliderHighlight(s, ch.hoveredMesh);
     }
     // Highlight the newly hovered one (idempotent if it's already the selected).
@@ -890,6 +896,57 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
       }
       ch.selectedMesh = newMesh;
       if (newMesh) applyColliderHighlight(s, newMesh);
+    },
+    /**
+     * Multi-highlight ("pin") a set of collider meshes by name with a distinct
+     * amber tint — used by the editor's "unit cameras" tool to show which units
+     * are selected for a bulk camera-pose assignment. Pinned meshes are
+     * integrated into the hover lifecycle (`ch.pinned`): the hover code never
+     * clears them, so the tint persists once the cursor moves away (unlike the
+     * transient cyan hover highlight). Pass an empty array to clear.
+     */
+    setHighlightedColliders: (names) => {
+      const s = stateRef.current;
+      const THREE = s.THREE;
+      if (!THREE || !s.collidersModel) return;
+      const ch = s.colliderHover;
+      if (!ch.pinned) ch.pinned = new Set();
+      if (!ch.pinnedMat) {
+        ch.pinnedMat = new THREE.MeshBasicMaterial({
+          color: 0xffb020,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        });
+      }
+      const norm = (v) => String(v ?? '').replace(/-/g, '').toLowerCase().trim();
+      const targets = new Set((names || []).map(norm).filter(Boolean));
+
+      // Unpin meshes that are no longer selected → restore their original
+      // (typically invisible) state via the shared hover bookkeeping.
+      for (const mesh of Array.from(ch.pinned)) {
+        if (!targets.has(norm(mesh.name))) {
+          ch.pinned.delete(mesh);
+          clearColliderHighlight(s, mesh);
+          if (mesh === ch.hoveredMesh) ch.hoveredMesh = null;
+        }
+      }
+
+      // Pin newly-selected meshes. Capture the true original ONCE (so a mesh
+      // touched first by hover keeps its real material), then apply amber.
+      if (targets.size) {
+        s.collidersModel.traverse((c) => {
+          if (c.isMesh && targets.has(norm(c.name)) && !ch.pinned.has(c)) {
+            ch.pinned.add(c);
+            if (!ch.originalState.has(c)) {
+              ch.originalState.set(c, { material: c.material, visible: c.visible });
+            }
+            c.material = ch.pinnedMat;
+            c.visible = true;
+          }
+        });
+      }
     },
     /**
      * Enable hover-highlight on colliders: the wrapper renders, but every

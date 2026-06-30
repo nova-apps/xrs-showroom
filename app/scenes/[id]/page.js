@@ -22,6 +22,7 @@ import PublishPanel from '@/components/panels/PublishPanel';
 
 import OrbitPanel from '@/components/panels/OrbitPanel';
 import UnidadesPanel from '@/components/panels/UnidadesPanel';
+import UnitCamerasPanel from '@/components/panels/UnitCamerasPanel';
 import ProyectoPanel from '@/components/panels/ProyectoPanel';
 import RenderPanel from '@/components/panels/RenderPanel';
 import PanoramicasPanel from '@/components/panels/PanoramicasPanel';
@@ -54,6 +55,15 @@ export default function ScenePage() {
   const [hdriFromSkybox, setHdriFromSkybox] = useState(false);
   const [cameraInfo, setCameraInfo] = useState({ pitch: 0, yaw: 0, zoom: 0 });
   const cameraSelectorRef = useRef(null);
+
+  // ─── Unit-cameras tool ───
+  // Active right-panel section + the set of unit ids currently selected for a
+  // bulk camera-pose assignment. Selection mode is on while the "unitcams"
+  // section is open; clicking a collider then toggles its unit in/out instead
+  // of opening the detail modal.
+  const [activePanel, setActivePanel] = useState(null);
+  const [selectedUnitCamIds, setSelectedUnitCamIds] = useState([]);
+  const unitCamMode = activePanel === 'unitcams';
 
   const {
     scene,
@@ -416,11 +426,17 @@ export default function ScenePage() {
     }
   }, [gizmoMode]);
 
-  // Leaving the Assets panel — hide the transform gizmo (and reset the tool)
+  // Leaving the Assets panel — hide the transform gizmo (and reset the tool).
+  // Also track the active section so the unit-cameras tool knows when it's on,
+  // and drop its selection when the operator navigates away.
   const handleActivePanelChange = useCallback((panel) => {
+    setActivePanel(panel);
     if (panel !== 'assets') {
       setGizmoMode('select');
       viewerRef.current?.detachGizmo();
+    }
+    if (panel !== 'unitcams') {
+      setSelectedUnitCamIds([]);
     }
   }, []);
 
@@ -499,13 +515,60 @@ export default function ScenePage() {
     }
   }, []);
 
+  // Move the camera to a unit: use its saved pose if one exists (set via the
+  // unit-cameras tool), otherwise fall back to the auto-computed framing.
+  const focusUnit = useCallback((unitId) => {
+    const v = viewerRef.current;
+    if (!v || unitId == null) return;
+    const pose = scene?.orbit?.unitCameras?.[String(unitId)];
+    if (pose) v.setInitialCameraPosition(pose, { animate: true });
+    else v.focusOnCollider(String(unitId));
+  }, [scene?.orbit?.unitCameras]);
+
   // Handle unit selection — trigger camera animation, open modal when done
   const handleSelectUnit = useCallback((unit) => {
     setModalUnit((prev) => prev?.id === unit?.id ? null : unit);
-    if (viewerRef.current && unit?.id) {
-      viewerRef.current.focusOnCollider(String(unit.id));
-    }
+    if (unit?.id) focusUnit(unit.id);
+  }, [focusUnit]);
+
+  // ── Unit-cameras tool handlers ──
+  const handleToggleUnitCamSelect = useCallback((id) => {
+    const key = String(id);
+    setSelectedUnitCamIds((prev) =>
+      prev.includes(key) ? prev.filter((x) => x !== key) : [...prev, key]
+    );
   }, []);
+
+  const handleSelectAllUnitCams = useCallback((ids) => {
+    setSelectedUnitCamIds(ids.map(String));
+  }, []);
+
+  const handleClearUnitCamSelection = useCallback(() => {
+    setSelectedUnitCamIds([]);
+  }, []);
+
+  // Capture the live camera pose and assign it to every selected unit.
+  const handleCaptureUnitCamera = useCallback(() => {
+    if (!viewerRef.current || selectedUnitCamIds.length === 0) return;
+    const pose = viewerRef.current.getCameraState();
+    if (!pose) return;
+    const next = { ...(scene?.orbit?.unitCameras || {}) };
+    selectedUnitCamIds.forEach((id) => { next[String(id)] = pose; });
+    updateOrbit({ ...(scene?.orbit || {}), unitCameras: next });
+  }, [selectedUnitCamIds, scene?.orbit, updateOrbit]);
+
+  // Remove the saved pose from every selected unit.
+  const handleClearUnitCamPoses = useCallback(() => {
+    const next = { ...(scene?.orbit?.unitCameras || {}) };
+    selectedUnitCamIds.forEach((id) => { delete next[String(id)]; });
+    updateOrbit({ ...(scene?.orbit || {}), unitCameras: next });
+  }, [selectedUnitCamIds, scene?.orbit, updateOrbit]);
+
+  // Keep the 3D amber multi-highlight in sync with the tool's selection.
+  useEffect(() => {
+    if (!viewerReady) return;
+    viewerRef.current?.setHighlightedColliders?.(unitCamMode ? selectedUnitCamIds : []);
+  }, [unitCamMode, selectedUnitCamIds, viewerReady]);
 
   // Keep the 3D collider tint in sync with the currently-open unit modal —
   // selecting from the list or clicking a collider both run through modalUnit,
@@ -525,11 +588,15 @@ export default function ScenePage() {
     if (!target) return;
     const unit = (scene?.unidades?.items || []).find((u) => norm(u.id) === target);
     if (!unit) return;
-    setModalUnit(unit);
-    if (viewerRef.current && unit.id != null) {
-      viewerRef.current.focusOnCollider(String(unit.id));
+    // Unit-cameras tool active: a collider tap toggles the unit's selection
+    // instead of opening the detail modal.
+    if (unitCamMode) {
+      handleToggleUnitCamSelect(String(unit.id));
+      return;
     }
-  }, [scene, gizmoMode]);
+    setModalUnit(unit);
+    if (unit.id != null) focusUnit(unit.id);
+  }, [scene, gizmoMode, unitCamMode, handleToggleUnitCamSelect, focusUnit]);
 
   const handleSelectTab = useCallback((tabId, { isMobile }) => {
     if (!isMobile || tabId !== 'unidades') return;
@@ -628,6 +695,7 @@ export default function ScenePage() {
           { id: 'render', label: 'Render y visuales', icon: '🎨' },
           { id: 'orbit', label: 'Cámara y órbita', icon: '🎥' },
           { id: 'unidades', label: scene?.type === 'terreno' ? 'Barrios y lotes' : 'Unidades y amenities', icon: '📋' },
+          ...(scene?.type !== 'terreno' ? [{ id: 'unitcams', label: 'Cámaras de unidad', icon: '🎯' }] : []),
           ...(scene?.type !== 'terreno' ? [{ id: 'panoramicas', label: 'Panorámicas', icon: '🌐' }] : []),
           { id: 'proyecto', label: 'Proyecto', icon: '🏷️' },
         ]}
@@ -731,6 +799,23 @@ export default function ScenePage() {
                 onToggle={() => {}}
               />
             </div>
+
+            {scene?.type !== 'terreno' && (
+              <div className="rps-section" data-section="unitcams" data-active={activePanel === 'unitcams' || undefined}>
+                <UnitCamerasPanel
+                  units={scene?.unidades?.items || []}
+                  unitCameras={scene?.orbit?.unitCameras || {}}
+                  selectedIds={selectedUnitCamIds}
+                  onToggleSelect={handleToggleUnitCamSelect}
+                  onSelectAll={handleSelectAllUnitCams}
+                  onClearSelection={handleClearUnitCamSelection}
+                  onCapture={handleCaptureUnitCamera}
+                  onClearPoses={handleClearUnitCamPoses}
+                  collapsed={false}
+                  onToggle={() => {}}
+                />
+              </div>
+            )}
 
             {scene?.type !== 'terreno' && (
               <div className="rps-section" data-section="panoramicas" data-active={activePanel === 'panoramicas' || undefined}>

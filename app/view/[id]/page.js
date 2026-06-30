@@ -133,14 +133,22 @@ export default function ViewPage() {
     setHighlightedLote(null);
   }, [highlightedUnit, highlightedLote, resetCameraToInitial]);
 
+  // Move the camera to a unit: use its operator-saved pose when present
+  // (set via the editor's unit-cameras tool), else the auto-computed framing.
+  const focusUnit = useCallback((unitId) => {
+    const v = viewerRef.current;
+    if (!v || unitId == null) return;
+    const pose = scene?.orbit?.unitCameras?.[String(unitId)];
+    if (pose) v.setInitialCameraPosition(pose, { animate: true });
+    else v.focusOnCollider(String(unitId));
+  }, [scene?.orbit?.unitCameras]);
+
   const handleSelectUnit = useCallback((unit) => {
     // Row tap in the panel always opens detail (both desktop and mobile).
     setHighlightedUnit(unit ?? null);
     setModalUnit((prev) => prev?.id === unit?.id ? null : unit);
-    if (viewerRef.current && unit?.id) {
-      viewerRef.current.focusOnCollider(String(unit.id));
-    }
-  }, []);
+    if (unit?.id) focusUnit(unit.id);
+  }, [focusUnit]);
 
   const handleSelectLote = useCallback((lote) => {
     setHighlightedLote(lote ?? null);
@@ -204,11 +212,9 @@ export default function ViewPage() {
     if (!unit) return;
     setHighlightedUnit(unit);
     panelRef.current?.expand?.('unidades');
-    if (viewerRef.current && unit.id != null) {
-      viewerRef.current.focusOnCollider(String(unit.id));
-    }
+    if (unit.id != null) focusUnit(unit.id);
     if (!isMobile) setModalUnit(unit);
-  }, [scene, isTerreno]);
+  }, [scene, isTerreno, focusUnit]);
 
   const tabs = isTerreno
     ? [{ id: 'lotes', label: 'Lotes' }]
