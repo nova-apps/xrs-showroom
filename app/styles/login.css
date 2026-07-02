@@ -19,7 +19,7 @@
   position: fixed;
   bottom: 12px;
   right: 14px;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
   color: var(--text-muted, rgba(255, 255, 255, 0.3));
   background: rgba(255, 255, 255, 0.04);

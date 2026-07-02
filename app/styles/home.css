@@ -86,7 +86,7 @@
   color: var(--text-muted);
   cursor: pointer;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   transition: all var(--transition-fast);
   flex-shrink: 0;
 }
@@ -134,7 +134,7 @@
   color: var(--text-muted);
   cursor: pointer;
   border-radius: 4px;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   transition: all var(--transition-fast);
   flex-shrink: 0;
 }
@@ -146,6 +146,17 @@
 .scene-item .scene-rename-btn:hover {
   color: var(--accent-yellow);
   background: rgba(252, 196, 25, 0.1);
+}
+
+/* Touch devices have no hover: the per-item actions (view / rename / delete)
+   would otherwise be permanently invisible and unreachable. Reveal them by
+   default wherever a fine hover pointer is unavailable. */
+@media (hover: none) {
+  .scene-item .scene-delete,
+  .scene-item .scene-view,
+  .scene-item .scene-rename-btn {
+    opacity: 1;
+  }
 }
 
 /* ─── Create Scene ─── */
@@ -404,7 +415,7 @@
   border-radius: 50%;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast);
 }
@@ -461,7 +472,7 @@
 }
 
 .library-filter-label {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -512,7 +523,7 @@
   min-width: 18px;
   height: 18px;
   padding: 0 6px;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 600;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.07);
@@ -605,7 +616,7 @@
   top: 10px;
   right: 10px;
   padding: 3px 9px;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   border-radius: 999px;
@@ -656,7 +667,7 @@
 
 .library-card-domain {
   margin-top: 8px;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;

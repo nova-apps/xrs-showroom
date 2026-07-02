@@ -27,7 +27,7 @@
   border-radius: 9px;
   background: rgba(68, 136, 255, 0.15);
   color: var(--accent-blue);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   font-weight: 700;
   margin-left: 4px;
 }
@@ -68,7 +68,7 @@
   border-radius: var(--radius-sm);
   background: var(--bg-input);
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-family: var(--font-sans);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -115,7 +115,7 @@
 
 .mat-accordion-title {
   flex: 1;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
@@ -135,7 +135,7 @@
 }
 
 .mat-accordion-badge {
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   font-weight: 600;
   font-family: var(--font-mono);
   letter-spacing: 0.02em;
@@ -145,7 +145,7 @@
 }
 
 .mat-accordion-chevron {
-  font-size: 0.45rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   transition: transform var(--transition);
   flex-shrink: 0;
@@ -162,7 +162,7 @@
 
 /* ─── Section title inside material ─── */
 .mat-section-title {
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -190,7 +190,7 @@
 
 .mat-param-label {
   width: 70px;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 500;
   color: var(--text-secondary);
   flex-shrink: 0;
@@ -227,7 +227,7 @@
   border: 1px solid var(--border-input);
   border-radius: 4px;
   color: var(--text-primary);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
   text-align: right;
   outline: none;
@@ -260,7 +260,7 @@
 }
 
 .mat-param-hex {
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
   flex-shrink: 0;
@@ -312,7 +312,7 @@
 }
 
 .mat-param-value-label {
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -325,7 +325,7 @@
   border: 1px solid var(--border-input);
   border-radius: 4px;
   color: var(--text-primary);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-family: var(--font-sans);
   outline: none;
   cursor: pointer;
@@ -354,7 +354,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
   letter-spacing: 0.02em;
@@ -377,7 +377,7 @@
   border: 1px solid var(--border-color);
   border-radius: 4px;
   color: var(--text-color, #e6e6e6);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
   cursor: pointer;
 }
@@ -388,7 +388,7 @@
 
 .mat-dilate-status {
   margin-top: 5px;
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
 }
 

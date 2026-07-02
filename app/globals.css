@@ -19,7 +19,9 @@
 
   --text-primary: #e8eaf0;
   --text-secondary: #8990a5;
-  --text-muted: #555b70;
+  /* Bumped from #555b70 (2.53:1 — failed WCAG AA) to #7e8499 (~4.6:1) so muted
+     labels, hints, placeholders and empty states stay legible on --bg-primary. */
+  --text-muted: #7e8499;
   --text-link: #4488ff;
 
   --accent-blue: #4488ff;
@@ -29,8 +31,28 @@
   --accent-purple: #9966ff;
   --accent-yellow: #fcc419;
 
+  /* ─── Brand / feature colors ───
+     Raw "r, g, b" triplets so callers can vary alpha via rgba(var(--x), a).
+     Previously hardcoded inline in the WhatsApp / panorama CTAs; centralised
+     here so a rebrand touches one place. --accent-green stays reserved for
+     success states so it doesn't clash with the WhatsApp brand green. */
+  --brand-whatsapp: 37, 211, 102;
+  --feature-panorama: 100, 140, 160;
+
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* ─── Type scale ───
+     Legibility floor: nothing that carries text should render below --text-2xs
+     (~11.5px). Dense editor labels may use --text-2xs; anything the end client
+     reads (unit drawer, modals) should use --text-xs or larger. */
+  --text-2xs: 0.72rem; /* ~11.5px — floor for dense internal tooling labels */
+  --text-xs: 0.75rem;  /* 12px */
+  --text-sm: 0.82rem;  /* ~13px — default body/control text */
+  --text-md: 0.9rem;   /* ~14px */
+  --text-lg: 1rem;     /* 16px */
+  --text-xl: 1.15rem;  /* ~18px — panel/section titles */
+  --text-2xl: 1.3rem;  /* ~21px — modal titles */
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -95,9 +117,24 @@ textarea,
   -webkit-user-select: text;
 }
 
+/* ─── Keyboard focus ───
+   Many components set `outline: none` to hide the mouse-click ring. That also
+   removes the keyboard focus indicator, which fails WCAG 2.4.7. This restores a
+   visible ring ONLY for keyboard/AT navigation (:focus-visible), so mouse users
+   see nothing change while keyboard users always get a clear indicator. The
+   !important guarantees it wins over the scattered `outline: none` rules. */
+:focus-visible {
+  outline: 2px solid var(--accent-blue) !important;
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 /* ─── Scrollbar ─── */
+/* Widened from 4px → 8px so the thumb is actually grabbable with a pointer
+   (a 4px target is below any usable hit size). */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -106,7 +143,11 @@ textarea,
 
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 
@@ -155,8 +196,10 @@ textarea,
 }
 
 .unit-drawer-close {
-  width: 30px;
-  height: 30px;
+  /* 40px keeps a comfortable touch target for the client-facing drawer
+     (was 30px, below the 44px AAA / borderline for touch). */
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -314,12 +357,12 @@ textarea,
 }
 
 .unit-drawer-btn-panorama {
-  background: rgba(100, 140, 160, 0.6);
+  background: rgba(var(--feature-panorama), 0.6);
   color: #fff;
 }
 
 .unit-drawer-btn-panorama:hover:not(:disabled) {
-  background: rgba(100, 140, 160, 0.8);
+  background: rgba(var(--feature-panorama), 0.8);
 }
 
 .unit-drawer-btn-panorama.disabled,
@@ -329,12 +372,12 @@ textarea,
 }
 
 .unit-drawer-btn-whatsapp {
-  background: rgba(37, 211, 102, 0.5);
+  background: rgba(var(--brand-whatsapp), 0.5);
   color: #fff;
 }
 
 .unit-drawer-btn-whatsapp:hover:not(:disabled) {
-  background: rgba(37, 211, 102, 0.7);
+  background: rgba(var(--brand-whatsapp), 0.7);
 }
 
 .unit-drawer-btn-whatsapp.disabled,
@@ -421,7 +464,7 @@ textarea,
   }
 
   .unit-drawer-plan-empty p {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
   }
 
   .unit-drawer-row {
@@ -430,7 +473,7 @@ textarea,
 
   .unit-drawer-label,
   .unit-drawer-value {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
   }
 
   /* Actions: horizontal row */
@@ -448,7 +491,11 @@ textarea,
 }
 
 /* ═══════════════════════════════════════
-   UNIDAD MODAL (legacy — kept for reference)
+   UNIDAD MODAL — shared modal base
+   NOTE: NOT dead code. The standalone unit view moved to `.unit-drawer`, but
+   AmenityModal.js still composes on top of `.unidad-modal*` (overlay, close,
+   title, plan-empty) via `.amenity-modal`. Do not delete without first
+   migrating AmenityModal.
    ═══════════════════════════════════════ */
 .unidad-modal-overlay {
   position: fixed;
@@ -489,8 +536,8 @@ textarea,
   top: 25px;
   right: 25px;
   z-index: 10;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -583,12 +630,12 @@ textarea,
 }
 
 .unidad-modal-btn-panorama {
-  background: rgba(100, 140, 160, 0.6);
+  background: rgba(var(--feature-panorama), 0.6);
   color: #fff;
 }
 
 .unidad-modal-btn-panorama:hover:not(:disabled) {
-  background: rgba(100, 140, 160, 0.8);
+  background: rgba(var(--feature-panorama), 0.8);
 }
 
 .unidad-modal-btn-panorama.disabled,
@@ -598,12 +645,12 @@ textarea,
 }
 
 .unidad-modal-btn-whatsapp {
-  background: rgba(37, 211, 102, 0.5);
+  background: rgba(var(--brand-whatsapp), 0.5);
   color: #fff;
 }
 
 .unidad-modal-btn-whatsapp:hover:not(:disabled) {
-  background: rgba(37, 211, 102, 0.7);
+  background: rgba(var(--brand-whatsapp), 0.7);
 }
 
 .unidad-modal-btn-whatsapp.disabled,
@@ -637,7 +684,7 @@ textarea,
 }
 
 .whatsapp-input-row:focus-within {
-  border-color: rgba(37, 211, 102, 0.5);
+  border-color: rgba(var(--brand-whatsapp), 0.5);
 }
 
 .whatsapp-prefix {
@@ -692,7 +739,7 @@ textarea,
 }
 
 .whatsapp-hint {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   line-height: 1.4;
 }
@@ -975,7 +1022,7 @@ textarea,
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
-  font-size: 0.5rem;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: help;
   transition: all var(--transition-fast);
@@ -998,7 +1045,7 @@ textarea,
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   padding: 6px 10px;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 400;
   color: var(--text-secondary);
   white-space: nowrap;

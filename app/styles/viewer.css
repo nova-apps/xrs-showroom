@@ -76,7 +76,7 @@
 }
 
 .loader-phase {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -106,7 +106,7 @@
   border: none;
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -123,7 +123,7 @@
 .perf-compact-label {
   color: var(--text-muted);
   text-transform: uppercase;
-  font-size: 0.5rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -131,7 +131,7 @@
 .perf-compact-stat {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 0.62rem;
+  font-size: 0.72rem;
 }
 
 .perf-compact-sep {
@@ -142,7 +142,7 @@
 }
 
 .perf-compact-chevron {
-  font-size: 0.45rem;
+  font-size: 0.72rem;
   margin-left: 4px;
   transition: transform 0.2s ease;
   color: var(--text-muted);
@@ -168,7 +168,7 @@
 }
 
 .perf-section-title-compact {
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -177,7 +177,7 @@
 }
 
 .perf-gpu-name-compact {
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -188,7 +188,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
 }
 
@@ -201,7 +201,7 @@
 .perf-asset-row-compact {
   display: flex;
   justify-content: space-between;
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   padding: 1px 0;
 }
@@ -214,7 +214,7 @@
 /* Adaptive Quality Badge */
 .perf-quality-badge {
   font-weight: 700;
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
   padding: 1px 4px;
   border-radius: 3px;
@@ -231,7 +231,7 @@
 
 .perf-adaptive-level {
   font-weight: 700;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   letter-spacing: 0.05em;
 }
 
@@ -239,7 +239,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   cursor: pointer;
 }
@@ -252,7 +252,7 @@
 }
 
 .perf-adaptive-hint {
-  font-size: 0.5rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 2px;
   line-height: 1.4;
@@ -411,7 +411,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   user-select: none;
 }
@@ -426,7 +426,7 @@
   color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   letter-spacing: 0.06em;
 }
 
@@ -472,7 +472,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -614,7 +614,7 @@
 
 .compass-mark {
   position: absolute;
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.5);
