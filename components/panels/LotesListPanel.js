@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import Icon from '../ui/Icon';
 
 const ESTADO_LABELS = {
   disponible: 'Disponible',
@@ -165,15 +166,18 @@ export default function LotesListPanel({
       </div>
 
       <div className="unidad-filter-section">
-        <div
+        <button
+          type="button"
           className="unidad-filter-header"
           onClick={() => setShowMetraje(!showMetraje)}
+          aria-expanded={showMetraje}
+          aria-controls="filtro-lote-metraje"
         >
           <span>Sup. total</span>
-          <span className={`unidad-filter-chevron ${showMetraje ? 'open' : ''}`}>▾</span>
-        </div>
+          <span className={`unidad-filter-chevron ${showMetraje ? 'open' : ''}`} aria-hidden="true">▾</span>
+        </button>
         {showMetraje && (
-          <>
+          <div id="filtro-lote-metraje">
             <div className="unidad-range-slider">
               <input
                 type="range"
@@ -181,6 +185,8 @@ export default function LotesListPanel({
                 max={metrajeMinMax[1]}
                 step={5}
                 value={metrajeRange[0]}
+                aria-label="Superficie mínima"
+                aria-valuetext={`${metrajeRange[0]} m²`}
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   setMetrajeRange([Math.min(v, metrajeRange[1]), metrajeRange[1]]);
@@ -192,6 +198,8 @@ export default function LotesListPanel({
                 max={metrajeMinMax[1]}
                 step={5}
                 value={metrajeRange[1]}
+                aria-label="Superficie máxima"
+                aria-valuetext={`${metrajeRange[1]} m²`}
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   setMetrajeRange([metrajeRange[0], Math.max(v, metrajeRange[0])]);
@@ -202,7 +210,7 @@ export default function LotesListPanel({
               <span>{metrajeRange[0]}m²</span>
               <span>{metrajeRange[1]}m²</span>
             </div>
-          </>
+          </div>
         )}
       </div>
 
@@ -217,11 +225,12 @@ export default function LotesListPanel({
   const renderSearch = () => (
     <div className="sidebar-search unidades-search">
       <div className="sidebar-search-wrapper">
-        <span className="sidebar-search-icon">🔍</span>
+        <span className="sidebar-search-icon" aria-hidden="true"><Icon name="search" /></span>
         <input
           type="text"
           className="sidebar-search-input"
           placeholder="Buscar lote..."
+          aria-label="Buscar lote"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -230,6 +239,7 @@ export default function LotesListPanel({
             className="sidebar-search-clear"
             onClick={() => setSearchQuery('')}
             title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
           >
             ✕
           </button>
@@ -307,8 +317,8 @@ export default function LotesListPanel({
     <div className="tab-content-body">
       {items.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">📐</div>
-          <p>Sin datos.<br />Cargá lotes desde el panel Configuración en el editor.</p>
+          <div className="empty-icon" aria-hidden="true"><Icon name="ruler" /></div>
+          <p>Todavía no hay lotes para mostrar.</p>
         </div>
       ) : isMobile ? (
         <>
@@ -332,8 +342,9 @@ export default function LotesListPanel({
                 <button
                   className="mobile-filters-btn"
                   onClick={() => setMobileFiltersOpen(true)}
+                  aria-label="Abrir filtros"
                 >
-                  <span className="mobile-filters-btn-icon">⚙</span>
+                  <span className="mobile-filters-btn-icon" aria-hidden="true"><Icon name="filters" /></span>
                   Filtros
                   {hasActiveFilters && <span className="mobile-filters-badge" />}
                 </button>

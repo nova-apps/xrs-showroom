@@ -907,6 +907,22 @@
   color: var(--lp-text-dim);
 }
 
+/* Precio in the list card — omitted when empty (FLO-1). */
+.unidad-price {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.left-panel-stack .unidad-price {
+  font-size: 13px;
+  color: var(--lp-text);
+}
+
 /* ═══════════════════════════════════════
    UNIDAD FILTERS
 /* ═══════════════════════════════════════
@@ -933,6 +949,12 @@
 }
 
 .unidad-filter-header {
+  /* Rendered as a <button> for keyboard/AT access (ACC-2). These resets keep
+     it visually identical to the <div> it replaced (full width, left-aligned,
+     inherited font) since the UA button defaults would otherwise center it. */
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-sans);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2084,6 +2106,34 @@
 .lote-estado-vendido {
   background: rgba(244, 63, 94, 0.18);
   color: rgb(252, 165, 165);
+}
+
+/* Generic availability badge — shared by the unit card, unit drawer, and any
+   future estado surface. Same palette as the lote tags but a legible floor
+   size (0.72rem) and pill shape. */
+.estado-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.estado-badge-disponible { background: rgba(34, 197, 94, 0.18);  color: rgb(134, 239, 172); }
+.estado-badge-reservado  { background: rgba(252, 196, 25, 0.18); color: rgb(252, 211, 77); }
+.estado-badge-vendido    { background: rgba(244, 63, 94, 0.18);  color: rgb(252, 165, 165); }
+
+/* Drawer estado row — sits under the header, above the price. */
+.unit-drawer-estado {
+  padding: 12px 24px 0;
+}
+
+/* Card estado badge sits on its own line under the meta/price. */
+.unidad-card .estado-badge {
+  margin-top: 4px;
 }
 /* ═══════════════ Amenity 360° tours ═══════════════ */
 

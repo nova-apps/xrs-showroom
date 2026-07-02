@@ -2,8 +2,16 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import LazyImage from '../ui/LazyImage';
+import Icon from '../ui/Icon';
 
 const ORIENTACIONES = ['N', 'S', 'E', 'O', 'NE', 'NO', 'SE', 'SO'];
+
+/** A field counts as "present" only when it has a non-blank value. Empty
+ *  fields are omitted from the client UI (label + value), never shown as "—". */
+const hasVal = (v) => v != null && String(v).trim() !== '';
+
+const ESTADO_LABELS = { disponible: 'Disponible', reservado: 'Reservado', vendido: 'Vendido' };
+const ESTADO_ORDER = ['disponible', 'reservado', 'vendido'];
 
 /**
  * UnidadesListPanel — left-side panel with filters + unit list.
@@ -19,9 +27,11 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
   // Filter state
   const [selectedAmb, setSelectedAmb] = useState(new Set()); // empty = all
   const [selectedOrient, setSelectedOrient] = useState(new Set());
+  const [selectedEstados, setSelectedEstados] = useState(new Set());
   const [metrajeRange, setMetrajeRange] = useState([0, 300]);
   const [showAmbientes, setShowAmbientes] = useState(false);
   const [showOrient, setShowOrient] = useState(false);
+  const [showEstado, setShowEstado] = useState(false);
   const [showMetraje, setShowMetraje] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -86,6 +96,12 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     return ORIENTACIONES.filter((o) => present.has(o));
   }, [items]);
 
+  // Only the estados actually present in the data, in canonical order.
+  const estadoOptions = useMemo(() => {
+    const present = new Set(items.map((u) => u.estado).filter(Boolean));
+    return ESTADO_ORDER.filter((e) => present.has(e));
+  }, [items]);
+
   // Filter items
   const filtered = useMemo(() => {
     return items.filter((u) => {
@@ -113,12 +129,16 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
       if (selectedOrient.size > 0) {
         if (!selectedOrient.has(u.orientacion)) return false;
       }
+      // Estado filter (multi-select — match ANY selected)
+      if (selectedEstados.size > 0) {
+        if (!selectedEstados.has(u.estado)) return false;
+      }
       // Metraje filter
       const sup = Number(u.superficie_total) || 0;
       if (sup < metrajeRange[0] || sup > metrajeRange[1]) return false;
       return true;
     });
-  }, [items, selectedAmb, selectedOrient, metrajeRange, searchQuery]);
+  }, [items, selectedAmb, selectedOrient, selectedEstados, metrajeRange, searchQuery]);
 
   const toggleAmb = useCallback((val) => {
     setSelectedAmb((prev) => {
@@ -138,15 +158,26 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     });
   }, []);
 
+  const toggleEstado = useCallback((val) => {
+    setSelectedEstados((prev) => {
+      const next = new Set(prev);
+      if (next.has(val)) next.delete(val);
+      else next.add(val);
+      return next;
+    });
+  }, []);
+
   const clearFilters = useCallback(() => {
     setSelectedAmb(new Set());
     setSelectedOrient(new Set());
+    setSelectedEstados(new Set());
     setMetrajeRange(metrajeMinMax);
     setSearchQuery('');
   }, [metrajeMinMax]);
 
   const hasActiveFilters = selectedAmb.size > 0 ||
     selectedOrient.size > 0 ||
+    selectedEstados.size > 0 ||
     metrajeRange[0] !== metrajeMinMax[0] ||
     metrajeRange[1] !== metrajeMinMax[1] ||
     searchQuery.length > 0;
@@ -156,15 +187,18 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     <div className="unidad-filters">
       {/* Ambientes */}
       <div className="unidad-filter-section">
-        <div
+        <button
+          type="button"
           className="unidad-filter-header"
           onClick={() => setShowAmbientes(!showAmbientes)}
+          aria-expanded={showAmbientes}
+          aria-controls="filtro-ambientes"
         >
           <span>Ambientes</span>
-          <span className={`unidad-filter-chevron ${showAmbientes ? 'open' : ''}`}>▾</span>
-        </div>
+          <span className={`unidad-filter-chevron ${showAmbientes ? 'open' : ''}`} aria-hidden="true">▾</span>
+        </button>
         {showAmbientes && (
-          <div className="unidad-filter-pills">
+          <div className="unidad-filter-pills" id="filtro-ambientes">
             {[1, 2, 3, 4].map((n) => (
               <button
                 key={n}
@@ -187,15 +221,18 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
       {/* Orientacion — only the values that actually appear in the data */}
       {orientOptions.length > 0 && (
         <div className="unidad-filter-section">
-          <div
+          <button
+            type="button"
             className="unidad-filter-header"
             onClick={() => setShowOrient(!showOrient)}
+            aria-expanded={showOrient}
+            aria-controls="filtro-orientacion"
           >
             <span>Orientación</span>
-            <span className={`unidad-filter-chevron ${showOrient ? 'open' : ''}`}>▾</span>
-          </div>
+            <span className={`unidad-filter-chevron ${showOrient ? 'open' : ''}`} aria-hidden="true">▾</span>
+          </button>
           {showOrient && (
-            <div className="unidad-filter-pills">
+            <div className="unidad-filter-pills" id="filtro-orientacion">
               {orientOptions.map((o) => (
                 <button
                   key={o}
@@ -210,17 +247,49 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
         </div>
       )}
 
+      {/* Estado — only when the data carries availability */}
+      {estadoOptions.length > 0 && (
+        <div className="unidad-filter-section">
+          <button
+            type="button"
+            className="unidad-filter-header"
+            onClick={() => setShowEstado(!showEstado)}
+            aria-expanded={showEstado}
+            aria-controls="filtro-estado"
+          >
+            <span>Estado</span>
+            <span className={`unidad-filter-chevron ${showEstado ? 'open' : ''}`} aria-hidden="true">▾</span>
+          </button>
+          {showEstado && (
+            <div className="unidad-filter-pills" id="filtro-estado">
+              {estadoOptions.map((e) => (
+                <button
+                  key={e}
+                  className={`unidad-pill ${selectedEstados.has(e) ? 'active' : ''}`}
+                  onClick={() => toggleEstado(e)}
+                >
+                  {ESTADO_LABELS[e]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Metraje */}
       <div className="unidad-filter-section">
-        <div
+        <button
+          type="button"
           className="unidad-filter-header"
           onClick={() => setShowMetraje(!showMetraje)}
+          aria-expanded={showMetraje}
+          aria-controls="filtro-metraje"
         >
           <span>Metraje</span>
-          <span className={`unidad-filter-chevron ${showMetraje ? 'open' : ''}`}>▾</span>
-        </div>
+          <span className={`unidad-filter-chevron ${showMetraje ? 'open' : ''}`} aria-hidden="true">▾</span>
+        </button>
         {showMetraje && (
-          <>
+          <div id="filtro-metraje">
             <div className="unidad-range-slider">
               <input
                 type="range"
@@ -228,6 +297,8 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
                 max={metrajeMinMax[1]}
                 step={5}
                 value={metrajeRange[0]}
+                aria-label="Metraje mínimo"
+                aria-valuetext={`${metrajeRange[0]} m²`}
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   setMetrajeRange([Math.min(v, metrajeRange[1]), metrajeRange[1]]);
@@ -239,6 +310,8 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
                 max={metrajeMinMax[1]}
                 step={5}
                 value={metrajeRange[1]}
+                aria-label="Metraje máximo"
+                aria-valuetext={`${metrajeRange[1]} m²`}
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   setMetrajeRange([metrajeRange[0], Math.max(v, metrajeRange[0])]);
@@ -249,7 +322,7 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
               <span>{metrajeRange[0]}m²</span>
               <span>{metrajeRange[1]}m²</span>
             </div>
-          </>
+          </div>
         )}
       </div>
 
@@ -265,12 +338,13 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
   const renderSearch = () => (
     <div className="sidebar-search unidades-search">
       <div className="sidebar-search-wrapper">
-        <span className="sidebar-search-icon">🔍</span>
+        <span className="sidebar-search-icon" aria-hidden="true"><Icon name="search" /></span>
         <input
           id="sidebar-unit-search"
           type="text"
           className="sidebar-search-input"
           placeholder="Buscar unidad..."
+          aria-label="Buscar unidad"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -279,6 +353,7 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
             className="sidebar-search-clear"
             onClick={() => setSearchQuery('')}
             title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
           >
             ✕
           </button>
@@ -315,17 +390,28 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
                 {unit.imagen_plano ? (
                   <LazyImage src={unit.imagen_plano} alt={unit.id || ''} />
                 ) : (
-                  <div className="unidad-thumb-placeholder">🏠</div>
+                  <div className="unidad-thumb-placeholder" aria-hidden="true"><Icon name="image" /></div>
                 )}
               </div>
             )}
             <div className="unidad-info">
               <div className="unidad-title">
-                Piso {unit.piso || '—'} · {unit.id || 'Sin ID'}
+                {hasVal(unit.piso) ? `Piso ${unit.piso} · ` : ''}{unit.id || 'Sin ID'}
               </div>
-              <div className="unidad-meta">
-                {unit.ambientes || '—'} amb · {unit.superficie_total || '—'}m²
-              </div>
+              {(() => {
+                const meta = [];
+                if (hasVal(unit.ambientes)) meta.push(`${unit.ambientes} amb`);
+                if (hasVal(unit.superficie_total)) meta.push(`${unit.superficie_total}m²`);
+                return meta.length > 0 ? <div className="unidad-meta">{meta.join(' · ')}</div> : null;
+              })()}
+              {hasVal(unit.precio) && (
+                <div className="unidad-price">{unit.precio}</div>
+              )}
+              {ESTADO_LABELS[unit.estado] && (
+                <span className={`estado-badge estado-badge-${unit.estado}`}>
+                  {ESTADO_LABELS[unit.estado]}
+                </span>
+              )}
             </div>
           </div>
         ))}
@@ -342,8 +428,8 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     <div className="tab-content-body">
       {items.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📊</div>
-            <p>Sin datos.<br />Cargá unidades desde el panel Unidades en el editor.</p>
+            <div className="empty-icon" aria-hidden="true"><Icon name="empty" /></div>
+            <p>Todavía no hay unidades para mostrar.</p>
           </div>
       ) : isMobile ? (
         /* ─── Mobile layout: toggle between filters and list ─── */
@@ -368,8 +454,9 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
                 <button
                   className="mobile-filters-btn"
                   onClick={() => setMobileFiltersOpen(true)}
+                  aria-label="Abrir filtros"
                 >
-                  <span className="mobile-filters-btn-icon">⚙</span>
+                  <span className="mobile-filters-btn-icon" aria-hidden="true"><Icon name="filters" /></span>
                   Filtros
                   {hasActiveFilters && <span className="mobile-filters-badge" />}
                 </button>

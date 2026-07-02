@@ -4,9 +4,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import LazyImage from '../ui/LazyImage';
+import Icon from '../ui/Icon';
 import { getInitialLon } from '@/lib/panorama';
 
 const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), { ssr: false });
+
+const ESTADO_LABELS = { disponible: 'Disponible', reservado: 'Reservado', vendido: 'Vendido' };
 
 /**
  * UnidadModal — right-side floating panel showing unit details.
@@ -38,6 +41,12 @@ export default function UnidadModal({
   const [mounted, setMounted] = useState(false);
   const [showPanorama, setShowPanorama] = useState(false);
   const drawerRef = useRef(null);
+  // Read inside the keydown handler without re-running the focus effect when
+  // the panorama toggles (see the dialog-a11y effect below).
+  const showPanoramaRef = useRef(showPanorama);
+  useEffect(() => {
+    showPanoramaRef.current = showPanorama;
+  }, [showPanorama]);
 
   useEffect(() => {
     setMounted(true);
@@ -60,6 +69,58 @@ export default function UnidadModal({
     return () => document.removeEventListener('pointerdown', handleClickOutside);
   }, [mounted, unit, onClose]);
 
+  // Dialog accessibility (ACC-3): the drawer is a non-blocking dialog — pointer
+  // users keep interacting with the 3D scene and click-outside closes it — but
+  // keyboard/AT users get modal semantics. On open we move focus in; while open
+  // we trap Tab and close on Escape; on close we restore focus to the trigger.
+  // When the panorama overlay is up it owns Escape/focus, so we no-op.
+  useEffect(() => {
+    if (!mounted || !unit) return;
+    const node = drawerRef.current;
+    if (!node) return;
+
+    const SELECTOR =
+      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = () =>
+      Array.from(node.querySelectorAll(SELECTOR)).filter((el) => el.offsetParent !== null);
+
+    const previouslyFocused = document.activeElement;
+    (focusables()[0] || node).focus();
+
+    const handleKey = (e) => {
+      if (showPanoramaRef.current) return;
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const els = focusables();
+      if (els.length === 0) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      const active = document.activeElement;
+      if (!node.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+        previouslyFocused.focus();
+      }
+    };
+  }, [mounted, unit, onClose]);
+
   if (!unit || !mounted) return null;
 
   const hasPanorama = !!unit.imagen_panoramica;
@@ -77,48 +138,71 @@ export default function UnidadModal({
     }
   };
 
+  // Hide-empty rule: a field with no assigned value shows neither label nor
+  // value (no "—" placeholders). Superficies get the m² suffix only when set.
+  const hasVal = (v) => v != null && String(v).trim() !== '';
+  const specs = [
+    { label: 'Ambientes', value: unit.ambientes },
+    { label: 'Orientación', value: unit.orientacion },
+    { label: 'Sup. cubierta', value: hasVal(unit.superficie_cubierta) ? `${unit.superficie_cubierta} m²` : '' },
+    { label: 'Sup. semicubierta', value: hasVal(unit.superficie_semicubierta) ? `${unit.superficie_semicubierta} m²` : '' },
+    { label: 'Sup. amenities', value: hasVal(unit.superficie_amenities) ? `${unit.superficie_amenities} m²` : '' },
+    { label: 'Sup. total', value: hasVal(unit.superficie_total) ? `${unit.superficie_total} m²` : '', total: true },
+  ].filter((s) => hasVal(s.value));
+
   return createPortal(
     <>
-      <div className="unit-drawer" ref={drawerRef}>
+      <div
+        className="unit-drawer"
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="unit-drawer-title"
+        tabIndex={-1}
+      >
         {/* Scrollable content */}
         <div className="unit-drawer-scroll">
           {/* Title — full width on mobile */}
           <div className="unit-drawer-header">
             <div className="unit-drawer-header-left">
-              <h2 className="unit-drawer-title">Unidad {unit.id || '—'}</h2>
-              <span className="unit-drawer-subtitle">Piso {unit.piso || '—'}</span>
+              <h2 className="unit-drawer-title" id="unit-drawer-title">Unidad {unit.id || '—'}</h2>
+              {hasVal(unit.piso) && (
+                <span className="unit-drawer-subtitle">Piso {unit.piso}</span>
+              )}
             </div>
-            <button className="unit-drawer-close" onClick={onClose} title="Volver a la lista">✕</button>
+            <button className="unit-drawer-close" onClick={onClose} title="Cerrar" aria-label="Cerrar">✕</button>
           </div>
+
+          {/* Estado — availability badge, hidden when unset */}
+          {ESTADO_LABELS[unit.estado] && (
+            <div className="unit-drawer-estado">
+              <span className={`estado-badge estado-badge-${unit.estado}`}>
+                {ESTADO_LABELS[unit.estado]}
+              </span>
+            </div>
+          )}
+
+          {/* Precio — hidden entirely when the scene leaves it empty */}
+          {hasVal(unit.precio) && (
+            <div className="unit-drawer-price">
+              <span className="unit-drawer-price-label">Precio</span>
+              <span className="unit-drawer-price-value">{unit.precio}</span>
+            </div>
+          )}
 
           {/* Body — horizontal on mobile: specs left, plan right */}
           <div className="unit-drawer-body">
-            {/* Specs */}
+            {/* Specs — empty fields are omitted (label + value) */}
             <div className="unit-drawer-specs">
-              <div className="unit-drawer-row">
-                <span className="unit-drawer-label">Ambientes</span>
-                <span className="unit-drawer-value">{unit.ambientes || '—'}</span>
-              </div>
-              <div className="unit-drawer-row">
-                <span className="unit-drawer-label">Orientación</span>
-                <span className="unit-drawer-value">{unit.orientacion || '—'}</span>
-              </div>
-              <div className="unit-drawer-row">
-                <span className="unit-drawer-label">Sup. cubierta</span>
-                <span className="unit-drawer-value">{unit.superficie_cubierta ?? '—'} m²</span>
-              </div>
-              <div className="unit-drawer-row">
-                <span className="unit-drawer-label">Sup. semicubierta</span>
-                <span className="unit-drawer-value">{unit.superficie_semicubierta ?? '—'} m²</span>
-              </div>
-              <div className="unit-drawer-row">
-                <span className="unit-drawer-label">Sup. amenities</span>
-                <span className="unit-drawer-value">{unit.superficie_amenities ?? '—'} m²</span>
-              </div>
-              <div className="unit-drawer-row unit-drawer-row-total">
-                <span className="unit-drawer-label">Sup. total</span>
-                <span className="unit-drawer-value">{unit.superficie_total ?? '—'} m²</span>
-              </div>
+              {specs.map((s) => (
+                <div
+                  key={s.label}
+                  className={`unit-drawer-row${s.total ? ' unit-drawer-row-total' : ''}`}
+                >
+                  <span className="unit-drawer-label">{s.label}</span>
+                  <span className="unit-drawer-value">{s.value}</span>
+                </div>
+              ))}
             </div>
 
             {/* Floor plan */}
@@ -131,7 +215,7 @@ export default function UnidadModal({
                 />
               ) : (
                 <div className="unit-drawer-plan-empty">
-                  <span>🏠</span>
+                  <span aria-hidden="true"><Icon name="image" /></span>
                   <p>Sin plano</p>
                 </div>
               )}
@@ -145,8 +229,9 @@ export default function UnidadModal({
                 className="unit-drawer-btn unit-drawer-btn-panorama"
                 onClick={() => setShowPanorama(true)}
                 title="Ver vista panorámica 360°"
+                aria-label="Ver vista panorámica 360°"
               >
-                🌐 Panorámica
+                <Icon name="globe" /> Panorámica
               </button>
             )}
             <button

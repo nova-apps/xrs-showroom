@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import * as THREE from 'three';
+import Icon from '../ui/Icon';
 
 /**
  * PanoramaViewer — fullscreen interactive 360° panorama viewer.
@@ -393,10 +394,10 @@ export default function PanoramaViewer({
       {/* Header bar */}
       <div className="pano-header">
         <div className="pano-label">
-          <span className="pano-label-icon">🌐</span>
+          <span className="pano-label-icon" aria-hidden="true"><Icon name="globe" /></span>
           <span className="pano-label-text">Unidad {unitId || '—'}</span>
         </div>
-        <button className="pano-close" onClick={onClose} title="Cerrar (Esc)">✕</button>
+        <button className="pano-close" onClick={onClose} title="Cerrar (Esc)" aria-label="Cerrar">✕</button>
       </div>
 
       {canvasArea}
