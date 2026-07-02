@@ -21,6 +21,13 @@ const ORIENTACION_OPTIONS = [
   { value: 'SO', label: 'SO' },
 ];
 
+const ESTADO_OPTIONS = [
+  { value: '',           label: '—' },
+  { value: 'disponible', label: 'Disponible' },
+  { value: 'reservado',  label: 'Reservado' },
+  { value: 'vendido',    label: 'Vendido' },
+];
+
 const COLUMNS = [
   { key: 'id', label: 'ID', type: 'text', placeholder: 'Ej: A-101' },
   { key: 'piso', label: 'Piso', type: 'text', placeholder: 'Ej: 1' },
@@ -30,6 +37,14 @@ const COLUMNS = [
   { key: 'superficie_semicubierta', label: 'Sup. Semi.', type: 'number', placeholder: 'm²' },
   { key: 'superficie_amenities', label: 'Sup. Amen.', type: 'number', placeholder: 'm²' },
   { key: 'superficie_total', label: 'Sup. Total', type: 'number', placeholder: 'm²' },
+  // Free text (not number) so the operator can enter a formatted value
+  // ("USD 145.000", "$95.000.000") or leave it empty. Empty prices are hidden
+  // in the client viewer — label and value both — per the "consultar precio"
+  // policy (a scene may choose not to publish prices at all).
+  { key: 'precio', label: 'Precio', type: 'text', placeholder: 'Ej: USD 145.000' },
+  // Availability. Empty = unknown → no badge shown and the collider keeps its
+  // neutral material in the 3D scene (FLO-1).
+  { key: 'estado', label: 'Estado', type: 'select', options: ESTADO_OPTIONS },
   { key: 'imagen_plano', label: 'Imagen Plano', type: 'file', placeholder: 'Subir imagen...' },
   { key: 'imagen_panoramica', label: 'Panorama 360°', type: 'file', placeholder: 'Subir panorama...' },
 ];
@@ -49,6 +64,20 @@ function normalizeOrientacion(raw) {
     NO: 'NO', NOROESTE: 'NO', NW: 'NO', NORTHWEST: 'NO',
     SE: 'SE', SURESTE: 'SE', SOUTHEAST: 'SE',
     SO: 'SO', SUROESTE: 'SO', SW: 'SO', SOUTHWEST: 'SO',
+  };
+  return MAP[v] || '';
+}
+
+/** Normalize a free-form estado string into one of the enum values. */
+function normalizeEstado(raw) {
+  if (raw == null) return '';
+  const v = String(raw).trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if (!v) return '';
+  const MAP = {
+    disponible: 'disponible', disponibles: 'disponible', libre: 'disponible', available: 'disponible',
+    reservado: 'reservado', reservada: 'reservado', reserved: 'reservado',
+    vendido: 'vendido', vendida: 'vendido', sold: 'vendido',
   };
   return MAP[v] || '';
 }
@@ -82,6 +111,8 @@ function parseCSV(text) {
     superficie_semicubierta: ['superficie_semicubierta', 'sup_semicubierta', 'sup. semi.', 'sup semi', 'semicubierta', 'semi'],
     superficie_amenities: ['superficie_amenities', 'sup_amenities', 'sup. amen.', 'sup amen', 'amenities'],
     superficie_total: ['superficie_total', 'sup_total', 'sup. total', 'sup total', 'total', 'superficie'],
+    precio: ['precio', 'price', 'valor', 'importe', 'costo'],
+    estado: ['estado', 'status', 'disponibilidad', 'state'],
     imagen_plano: ['imagen_plano', 'imagen', 'plano', 'image', 'file', 'url', 'foto'],
     imagen_panoramica: ['imagen_panoramica', 'panorama', 'panoramica', '360', 'panorama_360'],
   };
@@ -127,6 +158,7 @@ function parseCSV(text) {
     }
 
     if (row.orientacion) row.orientacion = normalizeOrientacion(row.orientacion);
+    if (row.estado) row.estado = normalizeEstado(row.estado);
 
     return row;
   }).filter((row) =>
@@ -381,6 +413,7 @@ export default function UnidadesCargaModal({ items = [], sceneId, onSave, onClos
         }
       });
       if (row.orientacion) row.orientacion = normalizeOrientacion(row.orientacion);
+      if (row.estado) row.estado = normalizeEstado(row.estado);
       return row;
     });
 

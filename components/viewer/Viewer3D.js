@@ -249,6 +249,77 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     s.colliderHover.originalState.delete(mesh);
   }
 
+  // Availability tint palette (matches the estado badge colors in the UI).
+  const ESTADO_COLORS = { disponible: 0x22c55e, reservado: 0xfcc419, vendido: 0xf43f5e };
+
+  // Tint unit colliders by availability estado (FLO-1). A tinted collider is the
+  // mesh's *resting* state (visible + translucent color); hover/select still
+  // overlay cyan on top and restore back to the estado tint afterwards. Reads
+  // the desired map from s.colliderEstados; safe to call before colliders load
+  // (re-applied from loadCollidersModel). Units without an estado stay neutral
+  // (invisible), so an unpublished/empty availability adds no visual noise.
+  function applyColliderEstados(s) {
+    const THREE = s.THREE;
+    const ch = s.colliderHover;
+    if (!THREE || !s.collidersModel) return;
+
+    if (!ch.estadoMats) {
+      const mk = (color) => new THREE.MeshBasicMaterial({
+        color, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide,
+      });
+      ch.estadoMats = {
+        disponible: mk(ESTADO_COLORS.disponible),
+        reservado: mk(ESTADO_COLORS.reservado),
+        vendido: mk(ESTADO_COLORS.vendido),
+      };
+    }
+    if (!ch.estadoMeshes) ch.estadoMeshes = new Set();
+    if (!ch.estadoOriginal) ch.estadoOriginal = new Map();
+
+    const norm = (v) => String(v ?? '').replace(/-/g, '').toLowerCase().trim();
+    const byId = {};
+    for (const [k, v] of Object.entries(s.colliderEstados || {})) {
+      if (ch.estadoMats[v]) byId[norm(k)] = v;
+    }
+
+    // Set a mesh's resting state, honoring an active highlight: if it's
+    // currently cyan-highlighted, update what it restores TO rather than
+    // clobbering the live material.
+    const setBase = (mesh, material, visible) => {
+      if (ch.originalState.has(mesh)) {
+        ch.originalState.set(mesh, { material, visible });
+      } else {
+        mesh.material = material;
+        mesh.visible = visible;
+      }
+    };
+
+    const next = new Set();
+    s.collidersModel.traverse((c) => {
+      if (!c.isMesh) return;
+      const est = byId[norm(c.name)];
+      if (!est) return;
+      next.add(c);
+      if (!ch.estadoOriginal.has(c)) {
+        // Capture the true resting state once (prefer a stored highlight
+        // original over the live material, which may be a transient cyan tint).
+        const held = ch.originalState.get(c);
+        ch.estadoOriginal.set(c, held ? { ...held } : { material: c.material, visible: c.visible });
+      }
+      setBase(c, ch.estadoMats[est], true);
+    });
+
+    // Revert meshes that lost their estado back to their captured original.
+    for (const mesh of ch.estadoMeshes) {
+      if (!next.has(mesh)) {
+        const orig = ch.estadoOriginal.get(mesh);
+        if (orig) setBase(mesh, orig.material, orig.visible);
+        ch.estadoOriginal.delete(mesh);
+      }
+    }
+    ch.estadoMeshes = next;
+  }
+
   function ensureColliderTooltip(s) {
     if (s.colliderHover.tooltipEl) return;
     const el = document.createElement('div');
@@ -896,6 +967,18 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
       }
       ch.selectedMesh = newMesh;
       if (newMesh) applyColliderHighlight(s, newMesh);
+    },
+    /**
+     * Tint unit colliders by availability estado so the client reads
+     * disponible/reservado/vendido straight from the maqueta (FLO-1). Pass a map
+     * of { unitId: 'disponible' | 'reservado' | 'vendido' }. Units missing from
+     * the map (or with an empty estado) keep their neutral, invisible collider.
+     * Idempotent and safe to call before the colliders GLB has loaded.
+     */
+    setColliderEstados: (estadoById) => {
+      const s = stateRef.current;
+      s.colliderEstados = estadoById || null;
+      applyColliderEstados(s);
     },
     /**
      * Multi-highlight ("pin") a set of collider meshes by name with a distinct
@@ -1838,6 +1921,9 @@ uniform float uContrast;`
       // If hover-highlight was enabled before the colliders finished
       // loading, apply the hidden-by-default state now.
       if (s.colliderHover.enabled) applyHoverModeToColliders(s);
+
+      // Re-apply any availability tint requested before the GLB was ready.
+      applyColliderEstados(s);
 
       console.log('[Viewer] ✓ Colliders loaded');
       dracoLoader.dispose();

@@ -185,6 +185,23 @@ export default function ViewPage() {
     viewerRef.current?.setSelectedCollider?.(highlightedColliderId);
   }, [highlightedColliderId]);
 
+  // Availability tint: map each unit's estado onto its collider so disponible/
+  // reservado/vendido reads straight from the maqueta (FLO-1). Units without an
+  // estado are omitted → their collider stays neutral/invisible.
+  const colliderEstados = useMemo(() => {
+    if (isTerreno) return {};
+    const map = {};
+    for (const u of (scene?.unidades?.items || [])) {
+      if (u?.id != null && u.estado) map[String(u.id)] = u.estado;
+    }
+    return map;
+  }, [scene?.unidades, isTerreno]);
+
+  useEffect(() => {
+    if (!viewerReady) return;
+    viewerRef.current?.setColliderEstados?.(colliderEstados);
+  }, [viewerReady, colliderEstados, framed]);
+
   const handleColliderClick = useCallback((name) => {
     // Match the same way focusCameraOnCollider does — collider mesh names
     // often have hyphens / different casing than the item IDs.
