@@ -32,9 +32,9 @@
 
 .unidades-manage-btn {
   padding: 6px 12px;
-  border: 1px solid rgba(68, 136, 255, 0.3);
+  border: 1px solid rgba(var(--brand-rgb), 0.3);
   border-radius: var(--radius-sm);
-  background: rgba(68, 136, 255, 0.1);
+  background: rgba(var(--brand-rgb), 0.1);
   color: var(--accent-blue);
   font-size: 0.72rem;
   font-weight: 600;
@@ -45,7 +45,7 @@
 }
 
 .unidades-manage-btn:hover {
-  background: rgba(68, 136, 255, 0.2);
+  background: rgba(var(--brand-rgb), 0.2);
   border-color: var(--accent-blue);
   color: #fff;
 }
@@ -145,9 +145,9 @@
 }
 
 .ucm-save-btn:hover:not(:disabled) {
-  background: #3d7aff;
+  background: var(--brand-light);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(68, 136, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--brand-rgb), 0.3);
 }
 
 .ucm-save-btn.disabled,
@@ -243,7 +243,7 @@
 }
 
 .ucm-row:hover {
-  background: rgba(68, 136, 255, 0.04);
+  background: rgba(var(--brand-rgb), 0.04);
 }
 
 .ucm-row:nth-child(even) {
@@ -251,7 +251,7 @@
 }
 
 .ucm-row:nth-child(even):hover {
-  background: rgba(68, 136, 255, 0.04);
+  background: rgba(var(--brand-rgb), 0.04);
 }
 
 /* Hidden amenity — kept in the data, dimmed in the editor so it reads as
@@ -333,7 +333,7 @@
 .ucm-input:focus {
   background: var(--bg-input);
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 2px rgba(68, 136, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb), 0.15);
 }
 
 .ucm-input::placeholder {
@@ -378,8 +378,8 @@
 }
 
 .ucm-row-dup:hover {
-  background: rgba(68, 136, 255, 0.15);
-  border-color: rgba(68, 136, 255, 0.3);
+  background: rgba(var(--brand-rgb), 0.15);
+  border-color: rgba(var(--brand-rgb), 0.3);
 }
 
 .ucm-row-del:hover {
@@ -399,9 +399,9 @@
 
 .ucm-add-btn {
   padding: 8px 18px;
-  border: 1px dashed rgba(68, 136, 255, 0.4);
+  border: 1px dashed rgba(var(--brand-rgb), 0.4);
   border-radius: var(--radius-sm);
-  background: rgba(68, 136, 255, 0.05);
+  background: rgba(var(--brand-rgb), 0.05);
   color: var(--accent-blue);
   font-size: 0.75rem;
   font-weight: 600;
@@ -413,7 +413,7 @@
 }
 
 .ucm-add-btn:hover {
-  background: rgba(68, 136, 255, 0.12);
+  background: rgba(var(--brand-rgb), 0.12);
   border-color: var(--accent-blue);
   color: #fff;
 }
@@ -532,9 +532,9 @@
 
 .amenity-upload-btn-sm {
   padding: 4px 8px;
-  border: 1px solid rgba(68, 136, 255, 0.3);
+  border: 1px solid rgba(var(--brand-rgb), 0.3);
   border-radius: var(--radius-sm);
-  background: rgba(68, 136, 255, 0.1);
+  background: rgba(var(--brand-rgb), 0.1);
   color: var(--accent-blue);
   font-size: 0.72rem;
   font-weight: 600;
@@ -544,7 +544,7 @@
 }
 
 .amenity-upload-btn-sm:hover {
-  background: rgba(68, 136, 255, 0.18);
+  background: rgba(var(--brand-rgb), 0.18);
   border-color: var(--accent-blue);
 }
 
@@ -1020,8 +1020,8 @@
 }
 
 .unidad-pill:hover {
-  border-color: rgba(68, 136, 255, 0.4);
-  background: rgba(68, 136, 255, 0.1);
+  border-color: rgba(var(--brand-rgb), 0.4);
+  background: rgba(var(--brand-rgb), 0.1);
   color: var(--text-primary);
 }
 
@@ -1033,7 +1033,7 @@
 
 .unidad-pill.active {
   border-color: var(--accent-blue);
-  background: rgba(68, 136, 255, 0.2);
+  background: rgba(var(--brand-rgb), 0.2);
   color: #fff;
 }
 
@@ -1070,7 +1070,7 @@
 
 .unidad-range-slider input[type="range"]::-webkit-slider-runnable-track {
   height: 3px;
-  background: rgba(68, 136, 255, 0.3);
+  background: rgba(var(--brand-rgb), 0.3);
   border-radius: 2px;
 }
 
@@ -2171,7 +2171,7 @@
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 2px solid #fff;
-  background: rgba(68, 136, 255, 0.65);
+  background: rgba(var(--brand-rgb), 0.65);
   cursor: pointer;
   padding: 0;
   transition: all var(--transition-fast);
@@ -2185,7 +2185,7 @@
 .tour-minimap-pin.is-current {
   background: #fff;
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 4px rgba(68, 136, 255, 0.35);
+  box-shadow: 0 0 0 4px rgba(var(--brand-rgb), 0.35);
 }
 
 /* ─── Tour viewer: calibration panel (editor preview only) ─── */
@@ -2341,12 +2341,12 @@
 }
 
 .tour-node-item:hover {
-  border-color: rgba(68, 136, 255, 0.4);
+  border-color: rgba(var(--brand-rgb), 0.4);
 }
 
 .tour-node-item.is-selected {
   border-color: var(--accent-blue);
-  background: rgba(68, 136, 255, 0.08);
+  background: rgba(var(--brand-rgb), 0.08);
 }
 
 .tour-node-thumb {
@@ -2461,7 +2461,7 @@
 }
 
 .tour-plan-links line {
-  stroke: rgba(68, 136, 255, 0.7);
+  stroke: rgba(var(--brand-rgb), 0.7);
   stroke-dasharray: 1.4 1;
   vector-effect: non-scaling-stroke;
   stroke-width: 2px;
@@ -2513,7 +2513,7 @@
   height: 18px;
   border-radius: 50%;
   border: 2px solid #fff;
-  background: rgba(68, 136, 255, 0.75);
+  background: rgba(var(--brand-rgb), 0.75);
   cursor: grab;
   z-index: 2;
   transition: box-shadow var(--transition-fast);
@@ -2526,7 +2526,7 @@
 .tour-plan-pin.is-selected {
   background: #fff;
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 5px rgba(68, 136, 255, 0.35);
+  box-shadow: 0 0 0 5px rgba(var(--brand-rgb), 0.35);
 }
 
 .tour-plan-pin.is-start::after {
@@ -2670,9 +2670,9 @@
   align-items: center;
   gap: 6px;
   padding: 12px 22px;
-  border: 1px dashed rgba(68, 136, 255, 0.55);
+  border: 1px dashed rgba(var(--brand-rgb), 0.55);
   border-radius: var(--radius-sm);
-  background: rgba(68, 136, 255, 0.1);
+  background: rgba(var(--brand-rgb), 0.1);
   color: var(--accent-blue);
   font-size: 0.8rem;
   font-weight: 600;
@@ -2682,7 +2682,7 @@
 }
 
 .tour-plan-upload-cta:hover {
-  background: rgba(68, 136, 255, 0.2);
+  background: rgba(var(--brand-rgb), 0.2);
   border-color: var(--accent-blue);
 }
 

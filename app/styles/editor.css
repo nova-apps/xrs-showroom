@@ -24,13 +24,13 @@
 }
 
 .btn-primary {
-  background: rgba(68, 136, 255, 0.15);
-  border-color: rgba(68, 136, 255, 0.3);
+  background: rgba(var(--brand-rgb), 0.15);
+  border-color: rgba(var(--brand-rgb), 0.3);
   color: var(--accent-blue);
 }
 
 .btn-primary:hover {
-  background: rgba(68, 136, 255, 0.25);
+  background: rgba(var(--brand-rgb), 0.25);
 }
 
 .btn-danger {
@@ -87,12 +87,12 @@
 }
 
 .asset-accordion.open {
-  border-color: rgba(68, 136, 255, 0.15);
+  border-color: rgba(var(--brand-rgb), 0.15);
 }
 
 .asset-accordion.selected>.asset-accordion-header {
-  background: rgba(68, 136, 255, 0.1);
-  border-left: 2px solid rgba(68, 136, 255, 0.6);
+  background: rgba(var(--brand-rgb), 0.1);
+  border-left: 2px solid rgba(var(--brand-rgb), 0.6);
 }
 
 .asset-accordion-header {
@@ -220,7 +220,7 @@
 
 .splat-select:focus {
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 2px rgba(68, 136, 255, 0.12);
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb), 0.12);
 }
 
 .splat-select option {
@@ -312,7 +312,7 @@
 }
 
 .sub-accordion.open {
-  border-color: rgba(68, 136, 255, 0.12);
+  border-color: rgba(var(--brand-rgb), 0.12);
 }
 
 .sub-accordion-header {
@@ -403,7 +403,7 @@
 .upload-zone:hover,
 .upload-zone.dragging {
   border-color: var(--accent-blue);
-  background: rgba(68, 136, 255, 0.06);
+  background: rgba(var(--brand-rgb), 0.06);
 }
 
 .upload-zone .upload-icon {
@@ -519,8 +519,8 @@
   width: 100%;
   padding: 8px 10px;
   margin-top: 6px;
-  background: rgba(68, 136, 255, 0.08);
-  border: 1px dashed rgba(68, 136, 255, 0.3);
+  background: rgba(var(--brand-rgb), 0.08);
+  border: 1px dashed rgba(var(--brand-rgb), 0.3);
   border-radius: var(--radius-md);
   color: var(--accent-blue);
   font-size: 0.72rem;
@@ -530,7 +530,7 @@
 }
 
 .satellite-gen-toggle:hover {
-  background: rgba(68, 136, 255, 0.14);
+  background: rgba(var(--brand-rgb), 0.14);
   border-color: var(--accent-blue);
 }
 
@@ -651,7 +651,7 @@
 }
 
 .sat-url-go:hover {
-  background: rgba(68, 136, 255, 0.1);
+  background: rgba(var(--brand-rgb), 0.1);
 }
 
 .sat-map-container {
@@ -680,7 +680,7 @@
 .sat-crosshair::after {
   content: '';
   position: absolute;
-  background: #4488ff;
+  background: var(--brand);
 }
 
 .sat-crosshair::before {
@@ -795,7 +795,7 @@
 }
 
 .sat-size-btn.active {
-  background: rgba(68, 136, 255, 0.15);
+  background: rgba(var(--brand-rgb), 0.15);
   border-color: var(--accent-blue);
 }
 
@@ -1064,8 +1064,8 @@
 .pre-upload-panel {
   margin: 6px 0;
   padding: 8px;
-  background: rgba(68, 136, 255, 0.06);
-  border: 1px solid rgba(68, 136, 255, 0.2);
+  background: rgba(var(--brand-rgb), 0.06);
+  border: 1px solid rgba(var(--brand-rgb), 0.2);
   border-radius: 6px;
 }
 
@@ -1157,7 +1157,7 @@
 .initial-camera-btn:hover {
   border-color: var(--accent-blue);
   color: var(--text-primary);
-  background: rgba(68, 136, 255, 0.08);
+  background: rgba(var(--brand-rgb), 0.08);
 }
 
 .initial-camera-btn.saved {
@@ -1246,8 +1246,8 @@
 .mobile-override-block {
   margin-top: 6px;
   padding: 10px 12px;
-  background: rgba(68, 136, 255, 0.05);
-  border: 1px solid rgba(68, 136, 255, 0.2);
+  background: rgba(var(--brand-rgb), 0.05);
+  border: 1px solid rgba(var(--brand-rgb), 0.2);
   border-radius: var(--radius-sm);
 }
 
@@ -1581,14 +1581,14 @@
 }
 
 .publish-panel-btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), #5a99ff);
+  background: linear-gradient(135deg, var(--accent-blue), var(--brand-light));
   color: #fff;
-  box-shadow: 0 4px 12px rgba(68, 136, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(var(--brand-rgb), 0.25);
 }
 
 .publish-panel-btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(68, 136, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(var(--brand-rgb), 0.4);
 }
 
 .publish-panel-btn-primary.is-success {
@@ -1615,8 +1615,8 @@
 }
 
 .publish-panel-btn-ghost:hover:not(:disabled) {
-  background: rgba(68, 136, 255, 0.1);
-  border-color: rgba(68, 136, 255, 0.35);
+  background: rgba(var(--brand-rgb), 0.1);
+  border-color: rgba(var(--brand-rgb), 0.35);
   color: var(--accent-blue);
 }
 
@@ -1685,7 +1685,7 @@
 
 .publish-version-card:hover,
 .publish-version-card.is-open {
-  border-color: rgba(68, 136, 255, 0.35);
+  border-color: rgba(var(--brand-rgb), 0.35);
 }
 
 .publish-version-header {
@@ -1763,8 +1763,8 @@
 }
 
 .publish-version-restore:hover:not(:disabled) {
-  background: rgba(68, 136, 255, 0.1);
-  border-color: rgba(68, 136, 255, 0.35);
+  background: rgba(var(--brand-rgb), 0.1);
+  border-color: rgba(var(--brand-rgb), 0.35);
   color: var(--accent-blue);
 }
 

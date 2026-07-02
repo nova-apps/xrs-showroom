@@ -59,7 +59,7 @@
 .login-bg-glow-2 {
   width: 400px;
   height: 400px;
-  background: var(--accent-purple);
+  background: var(--brand);
   bottom: -100px;
   right: -60px;
   animation: loginGlow2 10s ease-in-out infinite alternate;
@@ -83,7 +83,7 @@
   -webkit-backdrop-filter: blur(24px) saturate(1.5);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-panel), 0 0 60px rgba(68, 136, 255, 0.04);
+  box-shadow: var(--shadow-panel), 0 0 60px rgba(var(--brand-rgb), 0.04);
   width: 380px;
   max-width: calc(100vw - 32px);
   overflow: hidden;
@@ -105,7 +105,7 @@
 .login-header h1 {
   font-size: 1.3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -157,7 +157,7 @@
 
 .login-field input:focus {
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(68, 136, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.12);
 }
 
 .login-field input:disabled {
@@ -186,7 +186,7 @@
 .login-btn {
   width: 100%;
   padding: 12px;
-  background: linear-gradient(135deg, var(--accent-blue), #5a6fff);
+  background: linear-gradient(135deg, var(--accent-blue), var(--brand-light));
   border: none;
   border-radius: var(--radius-md);
   color: #fff;
@@ -218,7 +218,7 @@
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(68, 136, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(var(--brand-rgb), 0.3);
 }
 
 .login-btn:active:not(:disabled) {

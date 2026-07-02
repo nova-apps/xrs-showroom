@@ -888,7 +888,7 @@
 
 .rps-menu-item:hover {
   background: var(--bg-hover);
-  border-color: rgba(68, 136, 255, 0.25);
+  border-color: rgba(var(--brand-rgb), 0.25);
 }
 
 .rps-menu-item-icon {

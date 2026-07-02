@@ -82,8 +82,8 @@ function LoginForm() {
               />
               <defs>
                 <linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32">
-                  <stop stopColor="#4488ff" />
-                  <stop offset="1" stopColor="#9966ff" />
+                  <stop stopColor="#ab8869" />
+                  <stop offset="1" stopColor="#c2a184" />
                 </linearGradient>
               </defs>
             </svg>

@@ -276,10 +276,10 @@
 .loader-progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple, #a855f7));
+  background: linear-gradient(90deg, var(--accent-blue), var(--brand-light));
   border-radius: 2px;
   transition: width 0.3s ease;
-  box-shadow: 0 0 8px rgba(68, 136, 255, 0.4);
+  box-shadow: 0 0 8px rgba(var(--brand-rgb), 0.4);
 }
 
 /* ═══════════════════════════════════════
@@ -486,15 +486,15 @@
 }
 
 .viewcube-face.hovered {
-  background: rgba(68, 136, 255, 0.2);
+  background: rgba(var(--brand-rgb), 0.2);
   color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(68, 136, 255, 0.4);
+  border-color: rgba(var(--brand-rgb), 0.4);
 }
 
 .viewcube-face.active {
-  background: rgba(68, 136, 255, 0.3);
+  background: rgba(var(--brand-rgb), 0.3);
   color: #fff;
-  border-color: rgba(68, 136, 255, 0.6);
+  border-color: rgba(var(--brand-rgb), 0.6);
 }
 
 .viewcube-front {
@@ -541,9 +541,9 @@
 }
 
 .gizmo-btn.active {
-  background: rgba(68, 136, 255, 0.15);
+  background: rgba(var(--brand-rgb), 0.15);
   color: var(--accent-blue);
-  border-color: rgba(68, 136, 255, 0.3);
+  border-color: rgba(var(--brand-rgb), 0.3);
 }
 
 /* ═══════════════════════════════════════

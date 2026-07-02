@@ -25,7 +25,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 9px;
-  background: rgba(68, 136, 255, 0.15);
+  background: rgba(var(--brand-rgb), 0.15);
   color: var(--accent-blue);
   font-size: 0.72rem;
   font-weight: 700;
@@ -55,8 +55,8 @@
 
 .mat-refresh-btn:hover {
   color: var(--accent-blue);
-  border-color: rgba(68, 136, 255, 0.3);
-  background: rgba(68, 136, 255, 0.1);
+  border-color: rgba(var(--brand-rgb), 0.3);
+  background: rgba(var(--brand-rgb), 0.1);
 }
 
 .mat-refresh-btn-inline {
@@ -77,8 +77,8 @@
 
 .mat-refresh-btn-inline:hover {
   color: var(--accent-blue);
-  border-color: rgba(68, 136, 255, 0.3);
-  background: rgba(68, 136, 255, 0.1);
+  border-color: rgba(var(--brand-rgb), 0.3);
+  background: rgba(var(--brand-rgb), 0.1);
 }
 
 /* ─── Material accordion items ─── */
@@ -95,7 +95,7 @@
 }
 
 .mat-accordion.open {
-  border-color: rgba(68, 136, 255, 0.2);
+  border-color: rgba(var(--brand-rgb), 0.2);
 }
 
 .mat-accordion-header {
@@ -303,7 +303,7 @@
 }
 
 .mat-toggle input:checked+.mat-toggle-slider {
-  background: rgba(68, 136, 255, 0.3);
+  background: rgba(var(--brand-rgb), 0.3);
 }
 
 .mat-toggle input:checked+.mat-toggle-slider::before {

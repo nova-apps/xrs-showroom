@@ -6,38 +6,51 @@
 
 /* ─── CSS Custom Properties ─── */
 :root {
+  /* Warm neutral base (VIS-1): every surface derives from the same warm dark
+     as the "Nomada" left panel, so the drawer/modals/panorama no longer read as
+     a second, blue-tinted product. */
   --bg-primary: #1c1c1c;
-  --bg-secondary: #0f1019;
-  --bg-panel: rgba(12, 13, 24, 0.88);
-  --bg-glass: rgba(18, 20, 35, 0.72);
+  --bg-secondary: #17140f;
+  --bg-panel: rgba(24, 22, 19, 0.9);
+  --bg-glass: rgba(30, 27, 23, 0.74);
   --bg-input: rgba(255, 255, 255, 0.04);
   --bg-hover: rgba(255, 255, 255, 0.06);
 
   --border-color: rgba(255, 255, 255, 0.07);
-  --border-glow: rgba(68, 136, 255, 0.25);
+  --border-glow: rgba(var(--brand-rgb), 0.25);
   --border-input: rgba(255, 255, 255, 0.1);
 
-  --text-primary: #e8eaf0;
-  --text-secondary: #8990a5;
-  /* Bumped from #555b70 (2.53:1 — failed WCAG AA) to #7e8499 (~4.6:1) so muted
-     labels, hints, placeholders and empty states stay legible on --bg-primary. */
-  --text-muted: #7e8499;
-  --text-link: #4488ff;
+  /* Warm text ramp (was a cool blue-grey ramp). */
+  --text-primary: #e9e4da;
+  --text-secondary: #a49a8c;
+  /* Warm muted kept at ~4.7:1 on --bg-primary so labels/hints/placeholders
+     stay above WCAG AA. */
+  --text-muted: #8f857a;
+  --text-link: var(--brand);
 
-  --accent-blue: #4488ff;
+  /* ─── Brand accent (VIS-1/2) ───
+     ONE unified accent across viewer + editor: warm bronze. Everything that
+     used to be blue (#4488ff) or Nomada sage (#7d8e6e) now points here, so a
+     rebrand is a single edit. `--accent-blue` keeps its name only for backwards
+     compatibility with existing call sites — its value is the bronze brand. */
+  --brand: #ab8869;
+  --brand-light: #c2a184;
+  --brand-rgb: 171, 136, 105;
+
+  --accent-blue: var(--brand);
   --accent-green: #00e87b;
   --accent-orange: #ff8844;
   --accent-red: #ff4466;
   --accent-purple: #9966ff;
   --accent-yellow: #fcc419;
 
-  /* ─── Brand / feature colors ───
+  /* ─── Feature / action colors ───
      Raw "r, g, b" triplets so callers can vary alpha via rgba(var(--x), a).
-     Previously hardcoded inline in the WhatsApp / panorama CTAs; centralised
-     here so a rebrand touches one place. --accent-green stays reserved for
-     success states so it doesn't clash with the WhatsApp brand green. */
+     WhatsApp keeps its own brand green (a recognised action color); the former
+     slate-blue panorama tint now derives from the brand so no stray accent
+     survives. --accent-green stays reserved for success states. */
   --brand-whatsapp: 37, 211, 102;
-  --feature-panorama: 100, 140, 160;
+  --feature-panorama: var(--brand-rgb);
 
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
@@ -60,7 +73,7 @@
   --radius-xl: 18px;
 
   --shadow-panel: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.05);
-  --shadow-glow: 0 0 20px rgba(68, 136, 255, 0.08);
+  --shadow-glow: 0 0 20px rgba(var(--brand-rgb), 0.1);
 
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -69,12 +82,15 @@
   --lp-bg: #1c1c1c;
   --lp-bg-light: #2a2a2a;
   --lp-text: #e8e4de;
-  --lp-text-dim: rgba(255, 255, 255, 0.45);
-  --lp-text-muted: rgba(255, 255, 255, 0.35);
+  /* Bumped from 0.45/0.35 (~3.6:1 / ~2.7:1 — failed AA) to 0.62/0.55 (~4.5:1+)
+     so unit meta, counters, labels and placeholders stay legible (ACC-1). */
+  --lp-text-dim: rgba(255, 255, 255, 0.62);
+  --lp-text-muted: rgba(255, 255, 255, 0.55);
   --lp-border: rgba(255, 255, 255, 0.06);
   --lp-hover: rgba(255, 255, 255, 0.07);
-  --lp-accent: #7d8e6e;
-  --lp-accent-light: #96a888;
+  /* Left panel shares the single brand accent (was sage #7d8e6e). */
+  --lp-accent: var(--brand);
+  --lp-accent-light: var(--brand-light);
   --lp-input-bg: rgba(255, 255, 255, 0.06);
   --lp-input-border: rgba(255, 255, 255, 0.1);
   --lp-card-bg: rgba(22, 22, 22, 0.88);
@@ -1030,8 +1046,8 @@ textarea,
 }
 
 .help-tooltip:hover .help-icon {
-  background: rgba(68, 136, 255, 0.15);
-  border-color: rgba(68, 136, 255, 0.3);
+  background: rgba(var(--brand-rgb), 0.15);
+  border-color: rgba(var(--brand-rgb), 0.3);
   color: var(--accent-blue);
 }
 
