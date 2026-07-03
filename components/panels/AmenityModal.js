@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { tourHasNodes } from '@/lib/tour';
 import TourViewer from './TourViewer';
+import CloseButton from '../ui/CloseButton';
 
 /**
  * Build the ordered, de-duplicated image list for an amenity.
@@ -90,9 +91,7 @@ export default function AmenityModal({ amenity, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
-        <button className="unidad-modal-close" onClick={onClose} title="Cerrar">
-          ✕
-        </button>
+        <CloseButton onClick={onClose} className="amenity-modal-close" />
 
         {/* Name + description */}
         <div className="amenity-modal-header">

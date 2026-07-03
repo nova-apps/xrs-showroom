@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import LazyImage from '../ui/LazyImage';
 import Icon from '../ui/Icon';
+import CloseButton from '../ui/CloseButton';
 import { getInitialLon } from '@/lib/panorama';
 
 const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), { ssr: false });
@@ -170,7 +171,7 @@ export default function UnidadModal({
                 <span className="unit-drawer-subtitle">Piso {unit.piso}</span>
               )}
             </div>
-            <button className="unit-drawer-close" onClick={onClose} title="Cerrar" aria-label="Cerrar">✕</button>
+            <CloseButton onClick={onClose} />
           </div>
 
           {/* Estado — availability badge, hidden when unset */}

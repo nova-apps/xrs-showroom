@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import Icon from '../ui/Icon';
+import CloseButton from '../ui/CloseButton';
 
 /**
  * PanoramaViewer — fullscreen interactive 360° panorama viewer.
@@ -397,7 +398,7 @@ export default function PanoramaViewer({
           <span className="pano-label-icon" aria-hidden="true"><Icon name="globe" /></span>
           <span className="pano-label-text">Unidad {unitId || '—'}</span>
         </div>
-        <button className="pano-close" onClick={onClose} title="Cerrar (Esc)" aria-label="Cerrar">✕</button>
+        <CloseButton onClick={onClose} overlay title="Cerrar (Esc)" />
       </div>
 
       {canvasArea}

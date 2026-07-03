@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import CloseButton from '../ui/CloseButton';
 
 const ESTADO_LABELS = {
   disponible: 'Disponible',
@@ -115,7 +116,7 @@ export default function LoteModal({ lote, barrio, onClose, whatsappNumber, proje
               </span>
             )}
           </div>
-          <button className="unit-drawer-close" onClick={onClose} title="Cerrar" aria-label="Cerrar">✕</button>
+          <CloseButton onClick={onClose} />
         </div>
 
         <div className="unit-drawer-body">

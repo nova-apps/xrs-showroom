@@ -1677,12 +1677,9 @@
     border-radius: 16px;
   }
 
-  .unidad-modal-close {
+  .amenity-modal-close {
     top: 9px;
     right: 14px;
-    width: 32px;
-    height: 32px;
-    font-size: 0.8rem;
   }
 
   .unidad-modal-info {

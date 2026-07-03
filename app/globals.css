@@ -145,6 +145,49 @@ textarea,
   border-radius: var(--radius-sm);
 }
 
+/* ─── Close control (CON-1) ─── */
+/* One consistent close button everywhere. Default sits on a panel; the
+   `overlay` variant sits over media/canvas (panorama, tour). */
+.close-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.close-btn:hover {
+  background: rgba(255, 68, 102, 0.2);
+  border-color: rgba(255, 68, 102, 0.4);
+  color: var(--accent-red);
+}
+
+.close-btn-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
+}
+
+.close-btn-overlay {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  pointer-events: auto;
+}
+
+.close-btn-overlay:hover {
+  transform: scale(1.05);
+}
+
 /* ─── Scrollbar ─── */
 /* Widened from 4px → 8px so the thumb is actually grabbable with a pointer
    (a 4px target is below any usable hit size). */
@@ -211,29 +254,7 @@ textarea,
   }
 }
 
-.unit-drawer-close {
-  /* 40px keeps a comfortable touch target for the client-facing drawer
-     (was 30px, below the 44px AAA / borderline for touch). */
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.unit-drawer-close:hover {
-  background: rgba(255, 68, 102, 0.2);
-  border-color: rgba(255, 68, 102, 0.4);
-  color: var(--accent-red);
-}
+/* (close button consolidated into .close-btn / CloseButton — see CON-1 above) */
 
 .unit-drawer-scroll {
   flex: 1;
@@ -580,29 +601,12 @@ textarea,
 
 
 
-.unidad-modal-close {
+/* Amenity modal close: shared .close-btn (CON-1); only positioning is bespoke. */
+.amenity-modal-close {
   position: absolute;
-  top: 25px;
-  right: 25px;
+  top: 16px;
+  right: 16px;
   z-index: 10;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.unidad-modal-close:hover {
-  background: rgba(255, 68, 102, 0.2);
-  border-color: rgba(255, 68, 102, 0.4);
-  color: var(--accent-red);
 }
 
 /* Left: Info panel */

@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import Icon from '../ui/Icon';
+import CloseButton from '../ui/CloseButton';
 import { normalizeTour, hotspotLon, arrivalLon, hotspotLonFromCam, isHotspotCalibrated } from '@/lib/tour';
 
 /**
@@ -636,7 +637,7 @@ export default function TourViewer({
             </button>
           )
         ) : (
-          <button className="pano-close" onClick={onClose} title="Cerrar (Esc)" aria-label="Cerrar">✕</button>
+          <CloseButton onClick={onClose} overlay title="Cerrar (Esc)" />
         )}
       </div>
 
