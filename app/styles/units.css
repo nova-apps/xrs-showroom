@@ -1361,7 +1361,9 @@
     min-height: 0;
     max-height: none;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    /* Wider cards (was 120px) so the title/meta the client scans to compare
+       units fit at a legible size (SIZ-2). */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     grid-auto-rows: min-content;
     align-content: start;
     overflow-x: hidden;
@@ -1403,7 +1405,7 @@
   }
 
   .left-panel-stack .unidad-card-grid-item .unidad-title {
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -1412,7 +1414,7 @@
   }
 
   .left-panel-stack .unidad-card-grid-item .unidad-meta {
-    font-size: 10px;
+    font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
