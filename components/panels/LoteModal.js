@@ -143,7 +143,7 @@ export default function LoteModal({ lote, barrio, onClose, whatsappNumber, proje
             disabled={!whatsappUrl}
             title={whatsappUrl ? 'Abrir WhatsApp' : 'Número de WhatsApp no configurado'}
           >
-            WhatsApp
+            Consultar por WhatsApp
           </button>
         </div>
       </div>

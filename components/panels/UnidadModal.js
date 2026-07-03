@@ -232,7 +232,7 @@ export default function UnidadModal({
                 title="Ver vista panorámica 360°"
                 aria-label="Ver vista panorámica 360°"
               >
-                <Icon name="globe" /> Panorámica
+                <Icon name="globe" /> Ver panorámica 360°
               </button>
             )}
             <button
@@ -241,7 +241,7 @@ export default function UnidadModal({
               disabled={!whatsappUrl}
               title={whatsappUrl ? 'Abrir WhatsApp' : 'Número de WhatsApp no configurado'}
             >
-              WhatsApp
+              Consultar por WhatsApp
             </button>
           </div>
         </div>
