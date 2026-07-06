@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import AmenityModal from './AmenityModal';
+import AmenityModal, { amenityGallery } from './AmenityModal';
+import { tourHasNodes } from '@/lib/tour';
+import Icon from '../ui/Icon';
 
 /**
  * AmenitiesListPanel — left-side panel listing amenities.
@@ -21,8 +23,8 @@ export default function AmenitiesListPanel({
       <div className="tab-content-body">
         {items.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🏊</div>
-            <p>Sin amenities.<br />Cargá amenities desde Configuración.</p>
+            <div className="empty-icon" aria-hidden="true"><Icon name="empty" /></div>
+            <p>Todavía no hay amenities para mostrar.</p>
           </div>
         ) : (
           <div className="unidades-list">
@@ -30,8 +32,11 @@ export default function AmenitiesListPanel({
               {items.map((amenity, index) => {
                 // Prefer the dedicated thumbnail, then the cover image, then
                 // the first gallery image. Old amenities only have `plano`.
-                const gallery = Array.isArray(amenity.imagenes) ? amenity.imagenes : [];
+                const gallery = amenityGallery(amenity);
                 const cover = amenity.thumbnail || amenity.plano || gallery[0] || '';
+                // What's inside — so the click is intentional, not a lottery (AMN-1).
+                const hasTour = tourHasNodes(amenity.tour);
+                const photoCount = gallery.length;
                 return (
                 <div
                   key={amenity.nombre || index}
@@ -49,13 +54,20 @@ export default function AmenitiesListPanel({
                         style={{ objectFit: 'cover' }}
                       />
                     ) : (
-                      <div className="unidad-thumb-placeholder">🏔</div>
+                      <div className="unidad-thumb-placeholder" aria-hidden="true"><Icon name="image" /></div>
                     )}
                   </div>
                   <div className="unidad-info amenity-card-info">
                     <div className="unidad-title amenity-card-name">
                       {amenity.nombre || 'Sin nombre'}
                     </div>
+                    {hasTour ? (
+                      <div className="amenity-card-meta amenity-card-meta-360">
+                        <Icon name="globe" /> Recorrido 360°
+                      </div>
+                    ) : photoCount > 1 ? (
+                      <div className="amenity-card-meta">{photoCount} fotos</div>
+                    ) : null}
                   </div>
                 </div>
                 );

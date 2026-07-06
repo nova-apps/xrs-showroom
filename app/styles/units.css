@@ -835,6 +835,24 @@
   border: 1px solid var(--border-color);
 }
 
+/* Amenity content indicator (AMN-1): tells the client what's inside — a 360°
+   tour or an N-photo gallery — so opening a card is intentional, not a lottery.
+   Rendered as a meta line under the name so it reads in both the desktop row
+   and the mobile grid (a corner overlay is illegible on the 60px desktop thumb). */
+.amenity-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.amenity-card-meta-360 {
+  color: var(--brand-light);
+}
+
 .left-panel-stack .unidad-thumb {
   width: 48px;
   height: 48px;
