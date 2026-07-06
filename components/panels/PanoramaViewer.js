@@ -83,6 +83,8 @@ export default function PanoramaViewer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savedFlash, setSavedFlash] = useState(false);
+  // Hint stays until the first interaction, then fades (REC-3).
+  const [hintVisible, setHintVisible] = useState(true);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -363,7 +365,7 @@ export default function PanoramaViewer({
       )}
 
       {!loading && !error && (
-        <div className="pano-hint">
+        <div className={`pano-hint${hintVisible ? '' : ' pano-hint-hidden'}`}>
           {calibrationEnabled
             ? 'Arrastrá hasta dejar la unidad bien orientada, después guardá'
             : 'Arrastrá para explorar · Scroll para zoom'}
@@ -391,7 +393,7 @@ export default function PanoramaViewer({
   }
 
   return createPortal(
-    <div className="pano-overlay" onMouseDown={handleOverlayMouseDown} onMouseUp={handleOverlayMouseUp} onClick={(e) => e.stopPropagation()}>
+    <div className="pano-overlay" onMouseDown={handleOverlayMouseDown} onMouseUp={handleOverlayMouseUp} onClick={(e) => e.stopPropagation()} onPointerDown={() => setHintVisible(false)}>
       {/* Header bar */}
       <div className="pano-header">
         <div className="pano-label">

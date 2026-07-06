@@ -87,6 +87,8 @@ export default function TourViewer({
   const [error, setError] = useState(null);
   const [calibTarget, setCalibTarget] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
+  // Hint stays until the first interaction, then fades (REC-3).
+  const [hintVisible, setHintVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   // True while a click-to-navigate is waiting on a texture that wasn't
   // preloaded yet — drives the spinner so the click never feels dead.
@@ -615,6 +617,7 @@ export default function TourViewer({
       ref={rootRef}
       className={embedded ? 'pano-overlay pano-embedded' : 'pano-overlay'}
       onClick={(e) => e.stopPropagation()}
+      onPointerDown={() => setHintVisible(false)}
     >
       {/* Header */}
       <div className="pano-header">
@@ -679,7 +682,7 @@ export default function TourViewer({
       )}
 
       {!loading && !error && (
-        <div className="pano-hint">
+        <div className={`pano-hint${hintVisible ? '' : ' pano-hint-hidden'}`}>
           Arrastrá para mirar · Tocá las flechas para moverte
         </div>
       )}

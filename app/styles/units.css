@@ -1962,19 +1962,14 @@
   font-size: 0.75rem;
   white-space: nowrap;
   pointer-events: none;
-  animation: panoHintFade 4s ease forwards;
+  /* Persists until the first interaction (REC-3) — no blind timer. The viewer
+     toggles .pano-hint-hidden on the first drag/tap. */
+  opacity: 1;
+  transition: opacity 0.5s ease;
 }
 
-@keyframes panoHintFade {
-
-  0%,
-  70% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
+.pano-hint-hidden {
+  opacity: 0;
 }
 
 /* Editor-only "save orientation" control — sits above the (fading) hint. */
