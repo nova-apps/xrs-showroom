@@ -85,6 +85,23 @@ export default function PanoramaViewer({
   const [savedFlash, setSavedFlash] = useState(false);
   // Hint stays until the first interaction, then fades (REC-3).
   const [hintVisible, setHintVisible] = useState(true);
+  // Double-tap / double-click resets the zoom to the default FOV (REC-6).
+  // Pinch-safe: releases while >1 pointer was down are ignored.
+  const tapRef = useRef({ last: 0, down: 0, pinched: false });
+  const handleViewerPointerDown = useCallback(() => {
+    setHintVisible(false);
+    const s = tapRef.current;
+    s.down += 1;
+    if (s.down > 1) s.pinched = true;
+  }, []);
+  const handleViewerPointerUp = useCallback((e) => {
+    const s = tapRef.current;
+    s.down = Math.max(0, s.down - 1);
+    if (s.down !== 0) return;
+    if (s.pinched) { s.pinched = false; return; }
+    if (e.timeStamp - s.last < 300) { fovRef.current = 75; s.last = 0; }
+    else s.last = e.timeStamp;
+  }, []);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -393,7 +410,7 @@ export default function PanoramaViewer({
   }
 
   return createPortal(
-    <div className="pano-overlay" onMouseDown={handleOverlayMouseDown} onMouseUp={handleOverlayMouseUp} onClick={(e) => e.stopPropagation()} onPointerDown={() => setHintVisible(false)}>
+    <div className="pano-overlay" onMouseDown={handleOverlayMouseDown} onMouseUp={handleOverlayMouseUp} onClick={(e) => e.stopPropagation()} onPointerDown={handleViewerPointerDown} onPointerUp={handleViewerPointerUp}>
       {/* Header bar */}
       <div className="pano-header">
         <div className="pano-label">
