@@ -2239,6 +2239,19 @@
   transition: all var(--transition-fast);
 }
 
+/* Expand the touch target to ~28px without enlarging the visible dot (REC-1) —
+   the transparent halo is part of the button's hit area. */
+.tour-minimap-pin::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
 .tour-minimap-pin:hover {
   background: var(--accent-blue);
   transform: translate(-50%, -50%) scale(1.25);
