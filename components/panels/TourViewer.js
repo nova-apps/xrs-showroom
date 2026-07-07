@@ -654,7 +654,7 @@ export default function TourViewer({
               title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
               aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
             >
-              {isFullscreen ? '⤡' : '⤢'}
+              <Icon name={isFullscreen ? 'collapse' : 'expand'} />
             </button>
           )
         ) : (
