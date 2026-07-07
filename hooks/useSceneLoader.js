@@ -90,6 +90,11 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
 
       // ── Priority 1: Floor ──
       const floorUrl = isEnabled('floor') ? (assets.floor?.url || null) : null;
+      // El plano de piso por defecto (opaco, en y=-0.5) solo tiene sentido cuando
+      // hay una textura asignada. Sin textura ocluiría la mitad inferior del
+      // skybox, así que su visibilidad sigue a la presencia de piso. Esto permite
+      // ver la esfera completa en escenas cuyo piso vive en el GLB por debajo de 0.
+      v.setAssetVisible?.('floor', !!floorUrl);
       if (floorUrl !== loaded.floor) {
         loaded.floor = floorUrl;
         if (floorUrl) {
