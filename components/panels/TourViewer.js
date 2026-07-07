@@ -722,6 +722,25 @@ export default function TourViewer({
         </div>
       )}
 
+      {/* Persistent position list (REC-2): when the tour has no floor plan there's
+          no minimap, so moving would depend on spotting a hotspot sprite. This
+          always-visible list of positions guarantees a way to jump between nodes. */}
+      {!calibrationEnabled && !normalized.plano && nodeList.length > 1 && !loading && (
+        <nav className="tour-nav-list" aria-label="Posiciones del recorrido">
+          {nodeList.map((n) => (
+            <button
+              key={n.id}
+              type="button"
+              className={`tour-nav-chip${n.id === currentId ? ' is-current' : ''}`}
+              aria-current={n.id === currentId ? 'true' : undefined}
+              onClick={() => navigate(n.id)}
+            >
+              {n.nombre || 'Posición'}
+            </button>
+          ))}
+        </nav>
+      )}
+
       {/* Calibration (editor only): aim the crosshair at one neighbor and save.
           Each arrow is calibrated independently. */}
       {calibrationEnabled && !loading && !error && (

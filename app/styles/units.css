@@ -2261,6 +2261,48 @@
   box-shadow: 0 0 0 4px rgba(var(--brand-rgb), 0.35);
 }
 
+/* ─── Tour viewer: persistent position list (REC-2) ─── */
+/* Shown when the tour has no floor plan (no minimap); occupies the free
+   bottom-right so moving never depends on finding a hotspot. */
+.tour-nav-list {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-height: 62%;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.tour-nav-chip {
+  min-height: 34px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(15, 18, 24, 0.85);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tour-nav-chip:hover {
+  border-color: var(--brand-light);
+}
+
+.tour-nav-chip.is-current {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
 /* ─── Tour viewer: calibration panel (editor preview only) ─── */
 
 /* Crosshair pinned to the exact center of the view — the reference the
