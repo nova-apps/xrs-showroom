@@ -158,24 +158,20 @@ export default function ViewPage() {
     }
   }, []);
 
-  // Closing a detail on mobile is also a deselect: clear the highlight and
-  // return the camera to its initial framing. On desktop the modal is a side
-  // panel, so closing it just dismisses the panel (camera/highlight untouched).
+  // Closing a detail means the same thing on every device (FLO-4): dismiss it,
+  // deselect the unit/lote, and return the camera to its initial framing. One
+  // rule, no desktop/mobile divergence.
   const handleCloseUnitModal = useCallback(() => {
     setModalUnit(null);
-    if (isMobile) {
-      setHighlightedUnit(null);
-      resetCameraToInitial();
-    }
-  }, [isMobile, resetCameraToInitial]);
+    setHighlightedUnit(null);
+    resetCameraToInitial();
+  }, [resetCameraToInitial]);
 
   const handleCloseLoteModal = useCallback(() => {
     setModalLote(null);
-    if (isMobile) {
-      setHighlightedLote(null);
-      resetCameraToInitial();
-    }
-  }, [isMobile, resetCameraToInitial]);
+    setHighlightedLote(null);
+    resetCameraToInitial();
+  }, [resetCameraToInitial]);
 
   // Keep the 3D collider tint in sync with whatever the user is currently
   // pointing at — either via row tap or collider tap (mobile or desktop).
