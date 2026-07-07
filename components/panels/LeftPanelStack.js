@@ -54,13 +54,12 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     }
   }, [isMobile, snapState, activeTab, onSelectTab]);
 
-  // Tapping the drag handle cycles: collapsed → compact → tall → collapsed
+  // Tapping the handle toggles between the two expanded heights — "ver más /
+  // ver menos" (FLO-2). It never collapses, so a tap always has one predictable
+  // meaning (the chevron shows which). Closing is a separate intent: drag down,
+  // tap outside, or tap the active tab.
   const handleToggle = useCallback(() => {
-    setSnapState((prev) => {
-      if (prev === SNAP.COLLAPSED) return SNAP.COMPACT;
-      if (prev === SNAP.COMPACT)   return SNAP.TALL;
-      return SNAP.COLLAPSED;
-    });
+    setSnapState((prev) => (prev === SNAP.TALL ? SNAP.COMPACT : SNAP.TALL));
     setMobileTabChosen(true);
   }, []);
 
@@ -282,11 +281,7 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
           onPointerMove={onHandlePointerMove}
           onPointerUp={onHandlePointerUp}
           onPointerCancel={onHandlePointerCancel}
-          aria-label={
-            snapState === SNAP.COLLAPSED ? 'Expandir panel'
-            : snapState === SNAP.COMPACT  ? 'Expandir más'
-            : 'Contraer panel'
-          }
+          aria-label={snapState === SNAP.TALL ? 'Ver menos' : 'Ver más'}
         >
           <span className="mobile-panel-handle-bar" />
         </button>
