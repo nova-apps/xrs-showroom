@@ -871,6 +871,9 @@ textarea,
   max-width: 640px;
   max-height: 85vh;
   align-items: stretch;
+  /* Modal scrolls as a whole so the description below the image is reachable
+     without a cramped nested scroll (AMN-3). */
+  overflow-y: auto;
 }
 
 /* When the modal hosts a 360° tour, give it far more room on desktop and a
@@ -925,6 +928,13 @@ textarea,
   background: rgba(0, 0, 0, 0.15);
   overflow: hidden;
   min-height: 0;
+}
+
+/* Gallery (non-tour): cap the image so the description reads below it and the
+   modal scrolls if needed. The tour variant keeps flex:1 to fill its 16/9 box. */
+.amenity-modal:not(.amenity-modal-tour) .amenity-modal-image {
+  flex: 0 0 auto;
+  height: 52vh;
 }
 
 .amenity-modal-img {

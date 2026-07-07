@@ -572,13 +572,11 @@
 /* Amenity detail modal description — lives in the header, under the title,
    so all the text reads as one block instead of dangling below the image. */
 .amenity-modal-desc {
-  margin: 8px 0 0;
-  padding: 0;
-  font-size: 0.8rem;
+  margin: 0;
+  padding: 16px 28px 24px;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  line-height: 1.55;
-  max-height: 18vh;
-  overflow-y: auto;
+  line-height: 1.6;
 }
 
 /* ─── Amenity gallery carousel (detail modal) ─── */

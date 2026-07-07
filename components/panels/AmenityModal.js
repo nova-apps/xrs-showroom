@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { tourHasNodes } from '@/lib/tour';
 import TourViewer from './TourViewer';
 import CloseButton from '../ui/CloseButton';
+import Icon from '../ui/Icon';
 
 /**
  * Build the ordered, de-duplicated image list for an amenity.
@@ -93,12 +94,9 @@ export default function AmenityModal({ amenity, onClose }) {
         {/* Close button */}
         <CloseButton onClick={onClose} className="amenity-modal-close" />
 
-        {/* Name + description */}
+        {/* Name */}
         <div className="amenity-modal-header">
           <h2 className="unidad-modal-title">{amenity.nombre || 'Amenity'}</h2>
-          {amenity.descripcion && (
-            <p className="amenity-modal-desc">{amenity.descripcion}</p>
-          )}
         </div>
 
         {/* 360° tour takes over the media area when present — loaded inline,
@@ -170,11 +168,17 @@ export default function AmenityModal({ amenity, onClose }) {
             </>
           ) : (
             <div className="unidad-modal-plan-empty">
-              <span>🏔</span>
+              <span aria-hidden="true"><Icon name="image" /></span>
               <p>Sin imagen disponible</p>
             </div>
           )}
         </div>
+        )}
+
+        {/* Description — full reading spot below the media, using the modal's
+            own scroll (AMN-3), instead of a cramped nested scroll in the header. */}
+        {amenity.descripcion && (
+          <p className="amenity-modal-desc">{amenity.descripcion}</p>
         )}
       </div>
     </div>,
