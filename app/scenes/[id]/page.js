@@ -848,6 +848,8 @@ export default function ScenePage() {
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
           panoramaSettings={scene?.panoramaSettings}
+          fichaEnabled={!!scene?.fichaEnabled}
+          logoUrl={scene?.panelLogoUrl || ''}
           calibrationEnabled
           onSaveCalibration={handleSaveCalibration}
         />

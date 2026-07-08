@@ -440,6 +440,22 @@ textarea,
   cursor: not-allowed;
 }
 
+/* Descargar ficha = secondary (ghost), same weight as Panorámica (FLO-3). */
+.unit-drawer-btn-ficha {
+  background: transparent;
+  color: var(--brand-light);
+  border: 1px solid rgba(var(--brand-rgb), 0.5);
+}
+
+.unit-drawer-btn-ficha:hover:not(:disabled) {
+  background: rgba(var(--brand-rgb), 0.12);
+}
+
+.unit-drawer-btn-ficha:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 /* WhatsApp = primary action: solid, dominant. */
 .unit-drawer-btn-whatsapp {
   background: rgba(var(--brand-whatsapp), 0.9);

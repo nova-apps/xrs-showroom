@@ -7,6 +7,7 @@ import LazyImage from '../ui/LazyImage';
 import Icon from '../ui/Icon';
 import CloseButton from '../ui/CloseButton';
 import { getInitialLon } from '@/lib/panorama';
+import { generateUnitFichaPdf } from '@/lib/unitFicha';
 
 const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), { ssr: false });
 
@@ -34,6 +35,10 @@ export default function UnidadModal({
   // already the main view (e.g. the /view/[id]/panoramas route), so the
   // button would be redundant.
   hidePanoramaButton = false,
+  // Per-scene toggle (FLO-3): show a "Descargar ficha" button that generates a
+  // PDF with the unit's visible data + the floor plan. logoUrl brands the PDF.
+  fichaEnabled = false,
+  logoUrl = '',
   // Editor-only: enables the panorama viewer's "save orientation" control.
   // Called with (unit, lon) when the operator saves a calibration.
   calibrationEnabled = false,
@@ -41,6 +46,7 @@ export default function UnidadModal({
 }) {
   const [mounted, setMounted] = useState(false);
   const [showPanorama, setShowPanorama] = useState(false);
+  const [fichaDownloading, setFichaDownloading] = useState(false);
   const drawerRef = useRef(null);
   // Read inside the keydown handler without re-running the focus effect when
   // the panorama toggles (see the dialog-a11y effect below).
@@ -139,6 +145,18 @@ export default function UnidadModal({
     }
   };
 
+  const handleDownloadFicha = async () => {
+    if (fichaDownloading) return;
+    setFichaDownloading(true);
+    try {
+      await generateUnitFichaPdf(unit, { projectName, logoUrl });
+    } catch (err) {
+      console.error('[Ficha] No se pudo generar el PDF:', err);
+    } finally {
+      setFichaDownloading(false);
+    }
+  };
+
   // Hide-empty rule: a field with no assigned value shows neither label nor
   // value (no "—" placeholders). Superficies get the m² suffix only when set.
   const hasVal = (v) => v != null && String(v).trim() !== '';
@@ -233,6 +251,17 @@ export default function UnidadModal({
                 aria-label="Ver vista panorámica 360°"
               >
                 <Icon name="globe" /> Ver panorámica 360°
+              </button>
+            )}
+            {fichaEnabled && (
+              <button
+                className="unit-drawer-btn unit-drawer-btn-ficha"
+                onClick={handleDownloadFicha}
+                disabled={fichaDownloading}
+                title="Descargar ficha en PDF"
+                aria-label="Descargar ficha en PDF"
+              >
+                <Icon name="download" /> {fichaDownloading ? 'Generando…' : 'Descargar ficha'}
               </button>
             )}
             <button

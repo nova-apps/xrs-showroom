@@ -21,6 +21,7 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
   const [customDomain, setCustomDomain] = useState('');
   const [customDomainStatus, setCustomDomainStatus] = useState({ type: 'idle', message: '' });
   const [showArButton, setShowArButton] = useState(true);
+  const [fichaEnabled, setFichaEnabled] = useState(false);
   const whatsappTimer = useRef(null);
   const logoInputRef = useRef(null);
   const customDomainTimer = useRef(null);
@@ -58,6 +59,13 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
     }
   }, [scene?.showArButton]);
 
+  // Ficha técnica (descargar PDF) — off por defecto (feature nueva, opt-in).
+  useEffect(() => {
+    if (scene?.fichaEnabled !== undefined) {
+      setFichaEnabled(!!scene.fichaEnabled);
+    }
+  }, [scene?.fichaEnabled]);
+
   // ── Handlers ──
   const handleWhatsappChange = useCallback((value) => {
     setWhatsappNumber(value);
@@ -72,6 +80,12 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
     setShowArButton(value);
     if (!sceneId) return;
     updateScene(sceneId, { showArButton: value }).catch(console.error);
+  }, [sceneId]);
+
+  const handleFichaEnabledChange = useCallback((value) => {
+    setFichaEnabled(value);
+    if (!sceneId) return;
+    updateScene(sceneId, { fichaEnabled: value }).catch(console.error);
   }, [sceneId]);
 
   const handleLogoUpload = useCallback(async (e) => {
@@ -254,6 +268,28 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
           </label>
           <span className="whatsapp-hint">
             El botón solo aparece en dispositivos móviles y cuando la escena tiene una maqueta 3D (GLB).
+          </span>
+        </div>
+      </SubAccordion>
+
+      <SubAccordion
+        title="Ficha técnica"
+        icon="📄"
+        open={openSection === 'ficha'}
+        onToggle={() => toggleSection('ficha')}
+      >
+        <div className="whatsapp-config">
+          <label className="hdri-checkbox-row">
+            <input
+              type="checkbox"
+              checked={fichaEnabled}
+              onChange={(e) => handleFichaEnabledChange(e.target.checked)}
+            />
+            <span>Mostrar botón "Descargar ficha"</span>
+          </label>
+          <span className="whatsapp-hint">
+            Agrega en el detalle de cada unidad un botón que descarga un PDF con
+            sus datos (los que estén cargados) y el plano. Convive con WhatsApp.
           </span>
         </div>
       </SubAccordion>

@@ -317,6 +317,8 @@ export default function ViewPage() {
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
           panoramaSettings={scene?.panoramaSettings}
+          fichaEnabled={!!scene?.fichaEnabled}
+          logoUrl={scene?.panelLogoUrl || ''}
         />
       )}
 

@@ -162,6 +162,8 @@ export default function PanoramasPage() {
           whatsappNumber={scene?.whatsappNumber || ''}
           projectName={scene?.name || ''}
           panoramaSettings={scene?.panoramaSettings}
+          fichaEnabled={!!scene?.fichaEnabled}
+          logoUrl={scene?.panelLogoUrl || ''}
           // The panorama is already on screen in this route, so the modal's
           // "Panorámica" CTA would duplicate what the user is already seeing.
           hidePanoramaButton
