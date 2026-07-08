@@ -48,3 +48,5 @@ next-env.d.ts
 *.csv
 # local 3D model artifacts
 /*.glb
+
+.claude/
