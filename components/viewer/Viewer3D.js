@@ -2685,6 +2685,15 @@ uniform float uContrast;`
       controls.maxDistance = Infinity;
       controls.target.set(0, 0, 0);
 
+      // Right mouse must NOT pan the scene: this is an orbit viewer around the
+      // building, and an accidental right-drag displacing it off-center reads as
+      // a bug. Keep left = rotate, middle = zoom; unbind right.
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: null,
+      };
+
       // ─── Mobile: disable two-finger pan, keep pinch zoom + rotate ───
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
