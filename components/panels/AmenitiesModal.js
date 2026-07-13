@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import Icon from '@/components/ui/Icon';
 import { db, storage } from '@/lib/firebase';
 import { ref as dbRef, get } from 'firebase/database';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -598,14 +599,14 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
               onChange={(e) => { importCSV(e.target.files?.[0], 'replace'); e.target.value = ''; }}
             />
             <button className="ucm-csv-btn" onClick={handleCSVExport} title="Descargar CSV con todas las amenities">
-              ⬇ Descargar CSV
+              <Icon name="download" /> Descargar CSV
             </button>
             <button
               className="ucm-csv-btn"
               onClick={() => importInputRef.current?.click()}
               title="Agregar amenities desde CSV (se suman a las existentes)"
             >
-              📄 Importar CSV
+              <Icon name="doc" /> Importar CSV
             </button>
             <button
               className="ucm-csv-btn ucm-csv-btn-replace"
@@ -616,14 +617,14 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
               }}
               title="Reemplazar todas las amenities con un nuevo CSV"
             >
-              🔄 Reemplazar CSV
+              <Icon name="refresh" /> Reemplazar CSV
             </button>
             <button
               className={`ucm-save-btn ${saving ? 'saving' : ''} ${!hasChanges ? 'disabled' : ''}`}
               onClick={handleSave}
               disabled={saving || !hasChanges}
             >
-              {saving ? '⏳ Guardando…' : '💾 Guardar'}
+              {saving ? '⏳ Guardando…' : <><Icon name="save" /> Guardar</>}
             </button>
             <button className="ucm-close-btn" onClick={handleClose} title="Cerrar">✕</button>
           </div>
@@ -685,7 +686,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                           ? (uploadingCell.mode === 'recompress'
                               ? (uploadProgress > 0 ? `🗜️ ${uploadProgress}%` : '🗜️ …')
                               : `${uploadProgress}%`)
-                          : row.plano ? '🔄' : '📁 Subir'}
+                          : row.plano ? <Icon name="refresh" /> : <><Icon name="upload" /> Subir</>}
                         <input
                           type="file"
                           accept="image/*,.pdf"
@@ -750,7 +751,7 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                         </a>
                       ) : null}
                       <label className="amenity-upload-btn-sm">
-                        {cellUploading && uploadingCell.field === 'thumbnail' ? `${uploadProgress}%` : row.thumbnail ? '🔄' : '📁 Subir'}
+                        {cellUploading && uploadingCell.field === 'thumbnail' ? `${uploadProgress}%` : row.thumbnail ? <Icon name="refresh" /> : <><Icon name="upload" /> Subir</>}
                         <input
                           type="file"
                           accept="image/*"
@@ -794,8 +795,8 @@ export default function AmenitiesModal({ items = [], sceneId, onSave, onClose })
                     >
                       {row.oculto ? '🙈' : '👁️'}
                     </button>
-                    <button className="ucm-action-btn" onClick={() => duplicateRow(rowIdx)} title="Duplicar">📋</button>
-                    <button className="ucm-action-btn ucm-action-btn-delete" onClick={() => removeRow(rowIdx)} title="Eliminar">🗑️</button>
+                    <button className="ucm-action-btn" onClick={() => duplicateRow(rowIdx)} title="Duplicar"><Icon name="copy" /></button>
+                    <button className="ucm-action-btn ucm-action-btn-delete" onClick={() => removeRow(rowIdx)} title="Eliminar"><Icon name="trash" /></button>
                   </td>
                 </tr>
                 );

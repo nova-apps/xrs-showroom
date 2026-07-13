@@ -65,6 +65,24 @@ const PATHS = {
   collapse: <path d="M3 8h3a2 2 0 0 0 2-2V3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M21 16h-3a2 2 0 0 0-2 2v3" />,
   // download — tray with a down arrow
   download: <><path d="M12 3v12" /><path d="m7 11 5 4 5-4" /><path d="M5 21h14" /></>,
+  // upload — tray with an up arrow
+  upload: <><path d="M12 21V9" /><path d="m7 13 5-4 5 4" /><path d="M5 3h14" /></>,
+  // save — floppy disk
+  save: <><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M8 3v5h7" /><path d="M8 21v-6h8v6" /></>,
+  // refresh / replace — circular arrow
+  refresh: <><path d="M20 11a8 8 0 1 0-1.8 6" /><path d="M20 4v6h-6" /></>,
+  // copy / duplicate — two overlapping sheets
+  copy: <><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></>,
+  // trash — delete
+  trash: <><path d="M4 7h16" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></>,
+  // doc — file with a folded corner
+  doc: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /></>,
+  // phone — mobile device
+  phone: <><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 18h2" /></>,
+  // cube — 3D / AR
+  cube: <><path d="M12 3 3 8v8l9 5 9-5V8Z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
+  // settings — gear
+  settings: <><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></>,
   // map pin — calibration / location
   pin: (
     <>

@@ -21,6 +21,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Icon from '../ui/Icon';
 
 export default function RightPanelStack({ sceneName, sections = [], children, onActivePanelChange }) {
   const [activePanel, setActivePanel] = useState(null);
@@ -44,8 +45,9 @@ export default function RightPanelStack({ sceneName, sections = [], children, on
         className={`right-panel-stack-toggle${visible ? ' toggle-visible' : ''}`}
         onClick={() => setVisible(true)}
         title="Mostrar ajustes"
+        aria-label="Mostrar ajustes"
       >
-        ⚙
+        <Icon name="settings" />
       </button>
 
       <div className={`right-panel-stack${visible ? '' : ' stack-hidden'}${activePanel ? ' rps-detail' : ' rps-menu'}`}>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import Icon from '@/components/ui/Icon';
 
 const ESTADO_OPTIONS = [
   { value: 'disponible', label: 'Disponible' },
@@ -322,14 +323,14 @@ export default function LotesCargaModal({ items = [], barrios = [], onSave, onCl
               onChange={(e) => importCSV(e, true)}
             />
             <button className="ucm-csv-btn" onClick={handleCSVExport} title="Descargar CSV">
-              ⬇ Descargar CSV
+              <Icon name="download" /> Descargar CSV
             </button>
             <button
               className="ucm-csv-btn"
               onClick={() => fileInputRef.current?.click()}
               title="Agregar lotes desde CSV"
             >
-              📄 Importar CSV
+              <Icon name="doc" /> Importar CSV
             </button>
             <button
               className="ucm-csv-btn ucm-csv-btn-replace"
@@ -341,14 +342,14 @@ export default function LotesCargaModal({ items = [], barrios = [], onSave, onCl
               }}
               title="Reemplazar todos los lotes con un nuevo CSV"
             >
-              🔄 Reemplazar CSV
+              <Icon name="refresh" /> Reemplazar CSV
             </button>
             <button
               className={`ucm-save-btn ${saving ? 'saving' : ''} ${!hasChanges ? 'disabled' : ''}`}
               onClick={handleSave}
               disabled={saving || !hasChanges}
             >
-              {saving ? '⏳ Guardando…' : '💾 Guardar'}
+              {saving ? '⏳ Guardando…' : <><Icon name="save" /> Guardar</>}
             </button>
             <button className="ucm-close-btn" onClick={handleClose} title="Cerrar">
               ✕
@@ -424,14 +425,14 @@ export default function LotesCargaModal({ items = [], barrios = [], onSave, onCl
                       onClick={() => duplicateRow(ri)}
                       title="Duplicar fila"
                     >
-                      📋
+                      <Icon name="copy" />
                     </button>
                     <button
                       className="ucm-row-btn ucm-row-del"
                       onClick={() => removeRow(ri)}
                       title="Eliminar fila"
                     >
-                      🗑
+                      <Icon name="trash" />
                     </button>
                   </td>
                 </tr>

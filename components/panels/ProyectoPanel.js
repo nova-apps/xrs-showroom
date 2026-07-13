@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import FloatingPanel from './FloatingPanel';
 import { SubAccordion } from '@/components/ui/AssetAccordion';
+import Icon from '@/components/ui/Icon';
 import { updateScene, updateCustomDomain } from '@/lib/scenes';
 import { uploadAsset as storageUpload, deleteAsset as storageDelete } from '@/lib/storage';
 import { normalizeDomain, isValidDomain, isReservedHost } from '@/lib/customDomain';
@@ -169,7 +170,7 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
     >
       <SubAccordion
         title="WhatsApp"
-        icon="📱"
+        icon={<Icon name="phone" />}
         open={openSection === 'whatsapp'}
         onToggle={() => toggleSection('whatsapp')}
       >
@@ -194,7 +195,7 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
 
       <SubAccordion
         title="Logo del panel"
-        icon="🖼️"
+        icon={<Icon name="image" />}
         open={openSection === 'logo'}
         onToggle={() => toggleSection('logo')}
       >
@@ -253,7 +254,7 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
 
       <SubAccordion
         title="Realidad aumentada"
-        icon="📱"
+        icon={<Icon name="cube" />}
         open={openSection === 'ar'}
         onToggle={() => toggleSection('ar')}
       >
@@ -274,7 +275,7 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
 
       <SubAccordion
         title="Ficha técnica"
-        icon="📄"
+        icon={<Icon name="doc" />}
         open={openSection === 'ficha'}
         onToggle={() => toggleSection('ficha')}
       >
@@ -296,7 +297,7 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
 
       <SubAccordion
         title="Dominio personalizado"
-        icon="🌐"
+        icon={<Icon name="globe" />}
         open={openSection === 'domain'}
         onToggle={() => toggleSection('domain')}
       >

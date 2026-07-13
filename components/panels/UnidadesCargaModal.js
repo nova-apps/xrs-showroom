@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import Icon from '@/components/ui/Icon';
 import { storage } from '@/lib/firebase';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
@@ -500,14 +501,14 @@ export default function UnidadesCargaModal({ items = [], sceneId, onSave, onClos
               onClick={handleCSVExport}
               title="Descargar CSV con todas las unidades"
             >
-              ⬇ Descargar CSV
+              <Icon name="download" /> Descargar CSV
             </button>
             <button
               className="ucm-csv-btn"
               onClick={() => fileInputRef.current?.click()}
               title="Agregar unidades desde CSV (se suman a las existentes)"
             >
-              📄 Importar CSV
+              <Icon name="doc" /> Importar CSV
             </button>
             <button
               className="ucm-csv-btn ucm-csv-btn-replace"
@@ -519,14 +520,14 @@ export default function UnidadesCargaModal({ items = [], sceneId, onSave, onClos
               }}
               title="Reemplazar todas las unidades con un nuevo CSV"
             >
-              🔄 Reemplazar CSV
+              <Icon name="refresh" /> Reemplazar CSV
             </button>
             <button
               className={`ucm-save-btn ${saving ? 'saving' : ''} ${!hasChanges ? 'disabled' : ''}`}
               onClick={handleSave}
               disabled={saving || !hasChanges}
             >
-              {saving ? '⏳ Guardando…' : '💾 Guardar'}
+              {saving ? '⏳ Guardando…' : <><Icon name="save" /> Guardar</>}
             </button>
             <button className="ucm-close-btn" onClick={handleClose} title="Cerrar">
               ✕
@@ -583,8 +584,8 @@ export default function UnidadesCargaModal({ items = [], sceneId, onSave, onClos
                             {uploadingCell?.rowIdx === ri && uploadingCell?.colKey === col.key
                               ? `${uploadProgress}%`
                               : row[col.key]
-                                ? '🔄'
-                                : '📁 Subir'}
+                                ? <Icon name="refresh" />
+                                : <><Icon name="upload" /> Subir</>}
                             <input
                               type="file"
                               accept="image/*,.pdf"
@@ -634,14 +635,14 @@ export default function UnidadesCargaModal({ items = [], sceneId, onSave, onClos
                       onClick={() => duplicateRow(ri)}
                       title="Duplicar fila"
                     >
-                      📋
+                      <Icon name="copy" />
                     </button>
                     <button
                       className="ucm-row-btn ucm-row-del"
                       onClick={() => removeRow(ri)}
                       title="Eliminar fila"
                     >
-                      🗑
+                      <Icon name="trash" />
                     </button>
                   </td>
                 </tr>
