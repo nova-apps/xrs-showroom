@@ -1698,54 +1698,12 @@
     right: 14px;
   }
 
-  .unidad-modal-info {
-    width: 100%;
-    flex-shrink: 0;
-    padding: 16px 18px 12px;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-  }
-
   .unidad-modal-title {
     font-size: 1.05rem;
     margin-bottom: 20px;
     padding-right: 40px;
   }
 
-  .unidad-modal-divider {
-    margin: 8px 0;
-  }
-
-  .unidad-modal-row {
-    padding: 3px 0;
-  }
-
-  .unidad-modal-label,
-  .unidad-modal-value {
-    font-size: 0.74rem;
-  }
-
-  .unidad-modal-actions {
-    flex-direction: row;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .unidad-modal-btn {
-    padding: 10px 12px;
-    font-size: 0.76rem;
-  }
-
-  .unidad-modal-plan {
-    flex: 1;
-    min-height: 0;
-    padding: 12px;
-  }
-
-  .unidad-modal-plan img {
-    max-height: 60vh;
-    width: 100%;
-  }
 }
 
 /* ═══════════════════════════════════════

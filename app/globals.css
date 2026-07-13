@@ -582,11 +582,13 @@ textarea,
 }
 
 /* ═══════════════════════════════════════
-   UNIDAD MODAL — shared modal base
-   NOTE: NOT dead code. The standalone unit view moved to `.unit-drawer`, but
-   AmenityModal.js still composes on top of `.unidad-modal*` (overlay, close,
-   title, plan-empty) via `.amenity-modal`. Do not delete without first
-   migrating AmenityModal.
+   UNIDAD MODAL — shared centered-modal base (CON-2)
+   Naming note: the unit *detail* view is NOT a modal — UnidadModal.js/LoteModal.js
+   render `.unit-drawer` (a floating side panel). This `.unidad-modal*` base is
+   the shared centered-modal chrome, and today its ONLY consumer is AmenityModal
+   (via `.amenity-modal`), which uses just: -overlay, the base, -title and
+   -plan-empty. The old modal's specs/rows/actions/buttons/info/plan rules were
+   dead after the drawer migration and were removed.
    ═══════════════════════════════════════ */
 .unidad-modal-overlay {
   position: fixed;
@@ -630,107 +632,11 @@ textarea,
   z-index: 10;
 }
 
-/* Left: Info panel */
-.unidad-modal-info {
-  width: 280px;
-  flex-shrink: 0;
-  padding: 28px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-right: 1px solid var(--border-color);
-  overflow-y: auto;
-}
-
 .unidad-modal-title {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
-}
-
-.unidad-modal-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin: 12px 0;
-}
-
-.unidad-modal-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 5px 0;
-}
-
-.unidad-modal-row-total {
-  font-weight: 700;
-}
-
-.unidad-modal-label {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-}
-
-.unidad-modal-row-total .unidad-modal-label {
-  color: var(--text-primary);
-}
-
-.unidad-modal-value {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-align: right;
-}
-
-/* Action buttons */
-.unidad-modal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.unidad-modal-btn {
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  text-align: center;
-}
-
-.unidad-modal-btn-panorama {
-  background: rgba(var(--feature-panorama), 0.6);
-  color: #fff;
-}
-
-.unidad-modal-btn-panorama:hover:not(:disabled) {
-  background: rgba(var(--feature-panorama), 0.8);
-}
-
-.unidad-modal-btn-panorama.disabled,
-.unidad-modal-btn-panorama:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.unidad-modal-btn-whatsapp {
-  background: rgba(var(--brand-whatsapp), 0.5);
-  color: #fff;
-}
-
-.unidad-modal-btn-whatsapp:hover:not(:disabled) {
-  background: rgba(var(--brand-whatsapp), 0.7);
-}
-
-.unidad-modal-btn-whatsapp.disabled,
-.unidad-modal-btn-whatsapp:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* ─── WhatsApp Config Input ─── */
@@ -845,24 +751,6 @@ textarea,
   margin-left: auto;
   color: var(--text-muted);
   font-size: 0.85rem;
-}
-
-/* Right: Floor plan */
-.unidad-modal-plan {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  min-height: 400px;
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.unidad-modal-plan img {
-  max-width: 100%;
-  max-height: 75vh;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
 }
 
 .unidad-modal-plan-empty {
