@@ -472,7 +472,7 @@ textarea,
   cursor: not-allowed;
 }
 
-/* Mobile: compact bottom-sheet with horizontal body */
+/* Mobile: bottom-sheet at ~3/4 height, vertical body (data on top, plan below) */
 @media (max-width: 768px) {
   .unit-drawer {
     top: auto;
@@ -481,9 +481,9 @@ textarea,
     left: 0;
     width: 100vw;
     max-width: 100vw;
-    /* Was 28vh — too cramped once specs + price/estado + full-size CTAs stack
-       (SIZ-5). Taller sheet; the inner .unit-drawer-scroll handles overflow. */
-    max-height: calc(52vh + 36px);
+    /* ~3/4 of the screen so the specs read on top and the floor plan gets real
+       room below; the inner .unit-drawer-scroll handles any overflow. */
+    max-height: 75vh;
     border-radius: 18px 18px 0 0;
     /* Lighter blur on mobile (VIS-4): blur(20px) over a moving canvas is
        GPU-costly on phones; the 0.9-opaque panel already carries legibility,
@@ -519,31 +519,31 @@ textarea,
     color: var(--text-muted);
   }
 
-  /* Body: horizontal — specs left, plan right */
+  /* Body: vertical — data on top, plan below */
   .unit-drawer-body {
-    flex-direction: row;
+    flex-direction: column;
     border-bottom: 1px solid var(--border-color);
   }
 
   .unit-drawer-specs {
-    flex: 1;
+    flex: none;
     min-width: 0;
     padding: 10px 14px;
     gap: 0;
   }
 
   .unit-drawer-plan {
-    width: 140px;
-    flex-shrink: 0;
-    min-height: auto;
-    padding: 10px;
-    border-top: none;
-    border-left: 1px solid var(--border-color);
+    width: auto;
+    flex: 1;
+    min-height: 30vh;
+    padding: 12px 14px 16px;
+    border-top: 1px solid var(--border-color);
+    border-left: none;
     background: rgba(0, 0, 0, 0.05);
   }
 
   .unit-drawer-plan img {
-    max-height: 120px;
+    max-height: 38vh;
     max-width: 100%;
   }
 
