@@ -6,6 +6,61 @@ Formato: [Versionado Semántico](https://semver.org/lang/es/) · Fechas en AAAA-
 
 ---
 
+## [0.13.22] — 2026-07-13
+
+### ✨ Features
+- botón "Descargar ficha" (PDF) activable por escena (FLO-3)
+- lista de posiciones persistente en el recorrido (REC-2)
+- doble-tap/doble-click resetea el zoom (REC-6)
+- indicador de contenido en las cards (AMN-1)
+- los CTAs nombran la acción, no el canal (FLO-3 copy)
+- precio/estado + accesibilidad de diálogos, teclado y ARIA
+- sistema visual bronce unificado + set de íconos SVG (VIS-1/2/3)
+- datos de precio/estado y tinte de colliders (FLO-1)
+- cámaras de unidad — pose de cámara guardada por unidad
+- habilitar/deshabilitar elementos (no se cargan si están off)
+- versionado de publicaciones con restauración
+- entrada cinematográfica — blur + bajo contraste al cargar
+
+### 🐛 Fixes
+- drawer de unidad a 3/4 de alto, datos arriba y plano abajo
+- el botón derecho ya no desplaza (pan) la escena
+- embeber el plano y el logo en la ficha PDF (FLO-3)
+- ficha en formato apaisado a dos columnas (FLO-3)
+- piso por defecto no oculta el skybox sin textura
+- gesto del bottom-sheet predecible (FLO-2)
+- regla única de cierre en desktop y mobile (FLO-4)
+- íconos claros de pantalla completa en el recorrido (REC-5)
+- descripción con lugar de lectura completo (AMN-3)
+- área táctil de los pines del minimapa ≥28px (REC-1)
+- el hint se mantiene hasta la primera interacción (REC-3)
+- jerarquía de CTA, drawer mobile y legibilidad de cards (SIZ-2/4/5)
+- foco visible, contraste AA, piso tipográfico y touch targets
+- vista no se resetea al transformar + UX del panel
+- inercia en el giro táctil en mobile (recorridos y paneles 360)
+- no mostrar los colliders hasta que cargue la maqueta (GLB)
+- deshabilitar selección de texto en toda la app
+
+### 🔧 Refactors
+- eliminar CSS muerto del modal legacy y documentar naming (CON-2)
+- botón cerrar unificado en un solo componente (CON-1)
+
+### ⚡ Performance
+- blur más liviano en el drawer mobile (VIS-4)
+
+### 💅 Style
+- íconos SVG en secciones y botones de acción (VIS-3, dirigido)
+- ficha PDF con estética de la UI (tema oscuro) (FLO-3)
+
+### 📦 Chores
+- ignorar el directorio .claude/ (config local del harness)
+- v0.13.21
+
+### 📚 Docs
+- registrar investigación de shimmer en barandas (M_Grid)
+
+---
+
 ## [0.13.21] — 2026-06-24
 
 ### ✨ Features

@@ -1,9 +1,20 @@
 {
-  "version": "0.13.21",
-  "buildDate": "2026-06-24",
-  "commitHash": "2be3399",
+  "version": "0.13.22",
+  "buildDate": "2026-07-13",
+  "commitHash": "ea9808c",
   "environment": "production",
   "features": [
-    "cámara de entrada animada + fix del salto del piso al cargar"
+    "botón \"Descargar ficha\" (PDF) activable por escena (FLO-3)",
+    "lista de posiciones persistente en el recorrido (REC-2)",
+    "doble-tap/doble-click resetea el zoom (REC-6)",
+    "indicador de contenido en las cards (AMN-1)",
+    "los CTAs nombran la acción, no el canal (FLO-3 copy)",
+    "precio/estado + accesibilidad de diálogos, teclado y ARIA",
+    "sistema visual bronce unificado + set de íconos SVG (VIS-1/2/3)",
+    "datos de precio/estado y tinte de colliders (FLO-1)",
+    "cámaras de unidad — pose de cámara guardada por unidad",
+    "habilitar/deshabilitar elementos (no se cargan si están off)",
+    "versionado de publicaciones con restauración",
+    "entrada cinematográfica — blur + bajo contraste al cargar"
   ]
 }
