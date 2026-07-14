@@ -108,6 +108,18 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     splatColor: { brightness: 1, contrast: 1, maxStdDev: null },
     splatBrightnessU: null,
     splatContrastU: null,
+    // Near-fade de cámara: oculta las gaussianas que quedan ENTRE la cámara y la
+    // maqueta al orbitar, para no ver el splat "por dentro" tapando el GLB. En vez
+    // de una esfera (que borraría todo el SOG), es un recorte por profundidad a lo
+    // largo del eje de vista: se ocultan los splats delante de la cámara hasta una
+    // fracción `depth` del camino al target (modelo); el contexto lejano se queda.
+    // `depth`/`falloff` son fracciones (0..1) de la distancia cámara→target.
+    splatNearFade: { enabled: false, depth: 0.85, falloff: 0.1 },
+    camNearLocalU: null,
+    splatViewDirU: null,
+    splatNearCutU: null,
+    splatNearEdgeU: null,
+    splatNearEnableU: null,
     // Collider hover-highlight: shows only the collider mesh under the
     // cursor with a translucent overlay; everything else stays invisible.
     colliderHover: {
@@ -480,7 +492,18 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     setGlbSettings: (settings) => { stateRef.current.glbSettings = settings; },
     loadColliders: (url) => loadCollidersModel(url),
     loadSog: (url, settings) => loadSogModel(url, settings),
-    setSplatSettings: (settings) => { stateRef.current.splatSettings = settings; },
+    setSplatSettings: (settings) => {
+      const s = stateRef.current;
+      s.splatSettings = settings;
+      // Near-fade en vivo: enable se aplica al uniform ya; depth/falloff son
+      // fracciones del camino cámara→target y se resuelven a unidades locales en
+      // el render loop, así que solo guardamos la config aquí.
+      const enabled = settings?.nearFadeEnabled === true;
+      const depth = Number.isFinite(settings?.nearFadeDepth) ? settings.nearFadeDepth : (s.splatNearFade?.depth ?? 0.85);
+      const falloff = Number.isFinite(settings?.nearFadeFalloff) ? settings.nearFadeFalloff : (s.splatNearFade?.falloff ?? 0.1);
+      s.splatNearFade = { enabled, depth, falloff };
+      if (s.splatNearEnableU) s.splatNearEnableU.value = enabled ? 1.0 : 0.0;
+    },
     loadSkyboxTexture: (url) => loadSkyboxTexture(url),
     loadFloorTexture: (url) => loadFloorTexture(url),
     loadModelHdri: (url) => loadModelHdri(url),
@@ -1951,7 +1974,7 @@ uniform float uContrast;`
     try {
       const spark = await import('@sparkjsdev/spark');
       const { SparkRenderer, SplatMesh } = spark;
-      const { DynoFloat, dynoBlock, splitGsplat, combineGsplat, mul, mix, min, vec3, split: splitVec, Gsplat, length: dynoLength, smoothstep, sub, dynoConst, dot } = spark.dyno;
+      const { DynoFloat, DynoVec3, dynoBlock, splitGsplat, combineGsplat, mul, mix, min, vec3, split: splitVec, Gsplat, length: dynoLength, smoothstep, sub, dynoConst, dot } = spark.dyno;
 
       // Ensure SparkRenderer exists in the scene (required by Spark 2.0)
       if (!s.sparkRenderer) {
@@ -2007,6 +2030,25 @@ uniform float uContrast;`
       const contrastU = new DynoFloat({ value: s.splatColor?.contrast ?? 1 });
       const midGray = dynoConst('vec3', [0.5, 0.5, 0.5]);
 
+      // ── Near-fade de cámara (recorte por profundidad hacia la maqueta) ──
+      // Oculta las gaussianas que caen ENTRE la cámara y el modelo a lo largo del
+      // eje de vista, para que al orbitar no se vea el splat "por dentro" tapando
+      // el GLB. No es una esfera: solo se recorta hacia adelante, así el contexto
+      // lejano (detrás/alrededor del modelo) se mantiene. La cámara local, la
+      // dirección de vista y el plano de corte se actualizan por frame en tick().
+      const nf = {
+        enabled: cfg.nearFadeEnabled === true,
+        depth: Number.isFinite(cfg.nearFadeDepth) ? cfg.nearFadeDepth : (s.splatNearFade?.depth ?? 0.85),
+        falloff: Number.isFinite(cfg.nearFadeFalloff) ? cfg.nearFadeFalloff : (s.splatNearFade?.falloff ?? 0.1),
+      };
+      s.splatNearFade = nf;
+      // Arranca con corte 0 (nada oculto) hasta que el primer frame lo actualice.
+      const camNearLocalU = new DynoVec3({ value: new s.THREE.Vector3(1e9, 1e9, 1e9) });
+      const viewDirU = new DynoVec3({ value: new s.THREE.Vector3(0, 0, -1) });
+      const nearCutU = new DynoFloat({ value: 0 });
+      const nearEdgeU = new DynoFloat({ value: 1e-4 });
+      const nearEnableU = new DynoFloat({ value: nf.enabled ? 1.0 : 0.0 });
+
       // Dyno modifier: point→splat + radial clip + saturation
       const splatModifier = dynoBlock(
         { gsplat: Gsplat },
@@ -2026,13 +2068,25 @@ uniform float uContrast;`
           const clipFactor = sub(dynoConst('float', 1), smoothstep(fadeStart, clipRadiusU, dist));
           const clippedOpacity = mul(opacity, clipFactor);
 
+          // ── Near-fade de cámara (recorte por profundidad) ──
+          // Profundidad de la gaussiana a lo largo del eje de vista (proyección
+          // sobre la dirección cámara→target). 0 justo en la cámara; crece hacia
+          // el modelo. Se oculta (0) por debajo del plano de corte `nearCut` y se
+          // ve (1) por encima → el foreground desaparece, el fondo se mantiene.
+          // mix con nearEnableU deja el factor en 1 (sin efecto) al estar apagado.
+          const viewDepth = dot(sub(center, camNearLocalU), viewDirU);
+          const nearInner = sub(nearCutU, nearEdgeU);
+          const nearRaw = smoothstep(nearInner, nearCutU, viewDepth);
+          const nearFactor = mix(dynoConst('float', 1), nearRaw, nearEnableU);
+          const finalOpacity = mul(clippedOpacity, nearFactor);
+
           // ── Saturación (mezcla hacia luma) → contraste (alrededor de gris) → brillo ──
           const luma = dot(rgb, lumaCoefs);
           const desatRgb = mix(vec3(luma), rgb, saturationU);
           const contrasted = mix(midGray, desatRgb, contrastU);
           const finalRgb = mul(contrasted, brightnessU);
 
-          return { gsplat: combineGsplat({ gsplat, scales: sized, opacity: clippedOpacity, rgb: finalRgb }) };
+          return { gsplat: combineGsplat({ gsplat, scales: sized, opacity: finalOpacity, rgb: finalRgb }) };
         }
       );
 
@@ -2107,6 +2161,11 @@ uniform float uContrast;`
       s.splatSaturationU = saturationU;
       s.splatBrightnessU = brightnessU;
       s.splatContrastU = contrastU;
+      s.camNearLocalU = camNearLocalU;
+      s.splatViewDirU = viewDirU;
+      s.splatNearCutU = nearCutU;
+      s.splatNearEdgeU = nearEdgeU;
+      s.splatNearEnableU = nearEnableU;
 
       // Hide immediately before first render if any animation
       if (wantAnim || wantClip) {
@@ -2325,6 +2384,11 @@ uniform float uContrast;`
     s.splatSaturationU = null;
     s.splatBrightnessU = null;
     s.splatContrastU = null;
+    s.camNearLocalU = null;
+    s.splatViewDirU = null;
+    s.splatNearCutU = null;
+    s.splatNearEdgeU = null;
+    s.splatNearEnableU = null;
   }, []);
 
   const removeSkyboxTex = useCallback(() => {
@@ -3126,6 +3190,26 @@ uniform float uContrast;`
         handleGlbReveal(s);
         handleSplatFade(s);
         handleSplatClip(s);
+        // ── Near-fade de cámara: recorte por profundidad hacia la maqueta ──
+        // Pasa cámara y target al espacio local del splat, arma la dirección de
+        // vista y ubica el plano de corte a una fracción `depth` del camino. Todo
+        // en unidades locales, así la escala del splat se cancela sola.
+        if (s.splatMesh && s.splatNearFade?.enabled && s.camNearLocalU && s.splatViewDirU) {
+          s.splatMesh.updateMatrixWorld();
+          const camL = s.camNearLocalU.value;
+          camL.copy(camera.position);
+          s.splatMesh.worldToLocal(camL);
+          // Reusamos el vec de dirección como scratch para el target y lo dejamos
+          // convertido en (target - cámara) normalizado (evita asignar por frame).
+          const dirL = s.splatViewDirU.value;
+          dirL.copy(controls.target);
+          s.splatMesh.worldToLocal(dirL);
+          dirL.sub(camL);
+          const tDist = dirL.length() || 1e-4;
+          dirL.multiplyScalar(1 / tDist);
+          if (s.splatNearCutU) s.splatNearCutU.value = s.splatNearFade.depth * tDist;
+          if (s.splatNearEdgeU) s.splatNearEdgeU.value = Math.max(1e-4, s.splatNearFade.falloff * tDist);
+        }
         syncCameraRotation(s);
         // Intro FX fade-out: blur → base, contrast → 1 (easeOutCubic).
         if (s.introFx.fading) {

@@ -25,6 +25,11 @@ const DEFAULT_SPLAT_ANIM = {
   radialClip: true,
   radialClipDuration: 2.5,
   radialClipEasing: 'easeOut',
+  // Near-fade de cámara: oculta el splat entre la cámara y la maqueta al orbitar.
+  // depth/falloff son fracciones (0..1) de la distancia cámara→maqueta.
+  nearFadeEnabled: false,
+  nearFadeDepth: 0.85,
+  nearFadeFalloff: 0.1,
 };
 
 const DEFAULT_SPLAT_COLOR = {
@@ -610,6 +615,51 @@ export default function RenderPanel({
                   ))}
                 </select>
               </div>
+            </>
+          )}
+        </div>
+      </SubAccordion>
+
+      <SubAccordion
+        title="Ocultar splat frente a cámara"
+        icon="👁️"
+        open={openSection === 'nearFade'}
+        onToggle={() => toggleSection('nearFade')}
+      >
+        <div className="asset-transform-section">
+          <div className="splat-setting-row">
+            <label className="splat-checkbox-label">
+              <input
+                type="checkbox"
+                checked={localSplat.nearFadeEnabled === true}
+                onChange={(e) => updateSplatField('nearFadeEnabled', e.target.checked)}
+              />
+              Activar near-fade
+            </label>
+            <HelpTooltip text="Oculta el splat que queda entre la cámara y la maqueta al orbitar (los edificios que pasan por delante), dejando visible el modelo. El contexto lejano detrás del modelo se mantiene." />
+          </div>
+          {localSplat.nearFadeEnabled === true && (
+            <>
+              <TransformRow
+                label="Prof"
+                labelClass="label-r"
+                value={localSplat.nearFadeDepth}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={(v) => updateSplatField('nearFadeDepth', v)}
+                help="Hasta qué fracción del camino cámara→maqueta se oculta el splat. 0.85 = oculta el 85% más cercano y mantiene el último tramo + el fondo. Subilo si todavía se ven edificios por delante; bajalo si recorta el modelo."
+              />
+              <TransformRow
+                label="Borde"
+                labelClass="label-b"
+                value={localSplat.nearFadeFalloff}
+                min={0}
+                max={0.5}
+                step={0.01}
+                onChange={(v) => updateSplatField('nearFadeFalloff', v)}
+                help="Suavidad del borde del recorte (fracción del camino). Más alto = transición más gradual entre oculto y visible."
+              />
             </>
           )}
         </div>
