@@ -22,18 +22,22 @@ import { useState, useCallback, useEffect, useImperativeHandle, useRef, forwardR
 const SNAP = { COLLAPSED: 'collapsed', COMPACT: 'compact', TALL: 'tall' };
 
 const LeftPanelStack = forwardRef(function LeftPanelStack(
-  { children, title, logoUrl, tabs = [], show = true, onSelectTab, onCollapse },
+  { children, title, logoUrl, tabs = [], show = true, onSelectTab, onCollapse,
+    // When a floating top bar owns the branding (mobile), suppress the in-sheet
+    // logo so the project name isn't shown twice.
+    hideMobileBrand = false,
+    // Optional render-prop for the collapsed "peek" summary card (mobile). Gets
+    // the active tab id so the summary can reflect the current list. Tapping it
+    // expands the sheet.
+    renderPeek,
+  },
   ref,
 ) {
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || null);
   // 'collapsed' | 'compact' | 'tall'
   const [snapState, setSnapState] = useState(SNAP.COLLAPSED);
   const [isMobile, setIsMobile] = useState(false);
-  // On mobile, no tab is visually selected until the user taps one
-  const [mobileTabChosen, setMobileTabChosen] = useState(false);
   const panelRef = useRef(null);
-
-  const mobileExpanded = snapState !== SNAP.COLLAPSED;
 
   // On mobile, tapping a tab toggles expanded/collapsed (compact snap)
   const selectTab = useCallback((tabId) => {
@@ -45,7 +49,6 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
         // Tapping a (different) tab → switch + compact expand
         setActiveTab(tabId);
         setSnapState(SNAP.COMPACT);
-        setMobileTabChosen(true);
         onSelectTab?.(tabId, { isMobile: true });
       }
     } else {
@@ -60,7 +63,6 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
   // tap outside, or tap the active tab.
   const handleToggle = useCallback(() => {
     setSnapState((prev) => (prev === SNAP.TALL ? SNAP.COMPACT : SNAP.TALL));
-    setMobileTabChosen(true);
   }, []);
 
   // ─── Drag gesture on the handle ───
@@ -145,7 +147,6 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     else if (ratio < 0.49) next = SNAP.COMPACT;
     else next = SNAP.TALL;
     setSnapState(next);
-    if (next !== SNAP.COLLAPSED) setMobileTabChosen(true);
     // Ensure blackout is removed after the snap transition, even if snapState didn't change
     blackoutCanvas();
   }, [blackoutCanvas]);
@@ -182,15 +183,12 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     return () => mql.removeEventListener('change', handler);
   }, []);
 
-  // Reset "tab chosen" flag whenever the panel collapses on mobile, so the
-  // tabs revert to the button-style first-run look every time. Also notifies
-  // parent so it can clear any state tied to the expanded view (e.g. the
-  // highlighted collider in 3D).
+  // Notify the parent whenever the panel collapses on mobile so it can clear any
+  // state tied to the expanded view (e.g. the highlighted collider in 3D).
   const onCollapseRef = useRef(onCollapse);
   onCollapseRef.current = onCollapse;
   useEffect(() => {
     if (isMobile && snapState === SNAP.COLLAPSED) {
-      setMobileTabChosen(false);
       onCollapseRef.current?.();
     }
   }, [isMobile, snapState]);
@@ -247,19 +245,18 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     collapse: () => setSnapState(SNAP.COLLAPSED),
     // Switch to a tab and expand the panel (mobile bottom-sheet pops up).
     expand: (tabId) => {
-      if (tabId) {
-        setActiveTab(tabId);
-        setMobileTabChosen(true);
-      }
+      if (tabId) setActiveTab(tabId);
       setSnapState((prev) => (prev === SNAP.COLLAPSED ? SNAP.COMPACT : prev));
     },
   }), []);
 
-  // Determine if a tab should look "active" — on mobile, only after user explicitly chose one
-  const isTabActive = (tabId) => {
-    if (isMobile && !mobileTabChosen) return false;
-    return activeTab === tabId;
-  };
+  // The active tab always reads as selected — on mobile it defaults to the first
+  // tab (Unidades) so the sheet starts as a real tab bar, not neutral buttons.
+  const isTabActive = (tabId) => activeTab === tabId;
+
+  // Peek content is computed up front so we can skip the card entirely when a
+  // tab has nothing to summarize (renderPeek returns null) — no empty card.
+  const peekContent = isMobile && renderPeek ? renderPeek(activeTab) : null;
 
   const stackClass = [
     'left-panel-stack',
@@ -267,7 +264,6 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     snapState === SNAP.COMPACT ? 'stack-expanded stack-compact' : '',
     snapState === SNAP.TALL    ? 'stack-expanded stack-tall' : '',
     isMobile && snapState === SNAP.COLLAPSED ? 'stack-tabs-only' : '',
-    isMobile && !mobileTabChosen ? 'tabs-untapped' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -288,7 +284,7 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
       )}
 
       {/* ─── Mobile logo (sits above the tabs via CSS order; hidden when expanded) ─── */}
-      {isMobile && logoUrl && (
+      {isMobile && logoUrl && !hideMobileBrand && (
         <button
           type="button"
           className="sidebar-header-mobile"
@@ -326,6 +322,18 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
             </button>
           ))}
         </div>
+      )}
+
+      {/* ─── Peek summary card — mobile-only, shown only while collapsed (CSS).
+           Tapping it expands the sheet to its compact snap. ─── */}
+      {peekContent && (
+        <button
+          type="button"
+          className="sidebar-peek"
+          onClick={() => activeTab && selectTab(activeTab)}
+        >
+          {peekContent}
+        </button>
       )}
 
       {/* ─── Tab content — always rendered, hidden via CSS media query when collapsed ─── */}

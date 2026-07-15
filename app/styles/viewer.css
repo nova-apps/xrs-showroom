@@ -695,3 +695,103 @@
   background: rgba(255, 255, 255, 0.55);
   transform: translate(-50%, -50%);
 }
+
+/* ═══════════════════════════════════════
+   VIEWER TOP BAR (mobile) — floating brand chip + actions over the canvas
+   ═══════════════════════════════════════ */
+.viewer-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 202;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 0;
+  pointer-events: none; /* let orbit gestures pass through the gaps */
+}
+
+/* The bar itself is mobile-only; desktop keeps the logo inside the side panel. */
+@media (min-width: 769px) {
+  .viewer-topbar { display: none; }
+}
+
+.viewer-topbar-brand {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 5px 14px 5px 5px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  box-shadow: var(--shadow-panel);
+}
+
+.viewer-topbar-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #18120b;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.viewer-topbar-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 44vw;
+}
+
+.viewer-topbar-logo {
+  max-width: 150px;
+  max-height: 30px;
+  padding: 6px 12px;
+  object-fit: contain;
+  display: block;
+}
+
+.viewer-topbar-ar {
+  pointer-events: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--shadow-panel);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.viewer-topbar-ar:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-glow);
+}

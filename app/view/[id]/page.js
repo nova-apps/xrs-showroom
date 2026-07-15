@@ -19,6 +19,7 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { useAmenityTourPrefetch } from '@/hooks/useAmenityTourPrefetch';
 
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
+import ViewerTopBar from '@/components/viewer/ViewerTopBar';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import UnidadModal from '@/components/panels/UnidadModal';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
@@ -233,6 +234,63 @@ export default function ViewPage() {
     ? [{ id: 'lotes', label: 'Lotes' }]
     : [{ id: 'unidades', label: 'Unidades' }, { id: 'amenities', label: 'Amenities' }];
 
+  // Peek summary (mobile collapsed sheet): a one-line title + subtitle per tab
+  // so the collapsed sheet already tells the client what's inside before they
+  // expand it — e.g. «12 unidades disponibles · Desde 41 m² · 1 a 4 ambientes».
+  const peekSummaries = useMemo(() => {
+    const num = (v) => Number(v) || 0;
+    const out = {};
+
+    const unidades = scene?.unidades?.items || [];
+    if (unidades.length) {
+      const withEstado = unidades.some((u) => u.estado);
+      const shown = withEstado ? unidades.filter((u) => u.estado === 'disponible') : unidades;
+      const count = shown.length;
+      const noun = count === 1 ? 'unidad' : 'unidades';
+      const title = withEstado
+        ? `${count} ${noun} ${count === 1 ? 'disponible' : 'disponibles'}`
+        : `${count} ${noun}`;
+      const parts = [];
+      const areas = shown.map((u) => num(u.superficie_total)).filter((v) => v > 0);
+      if (areas.length) parts.push(`Desde ${Math.min(...areas)} m²`);
+      const ambs = shown.map((u) => num(u.ambientes)).filter((v) => v > 0);
+      if (ambs.length) {
+        const lo = Math.min(...ambs), hi = Math.max(...ambs);
+        parts.push(lo === hi ? `${lo} ${lo === 1 ? 'ambiente' : 'ambientes'}` : `${lo} a ${hi} ambientes`);
+      }
+      out.unidades = { title, sub: parts.join(' · ') };
+    }
+
+    const amenities = (scene?.amenities?.items || []).filter((a) => !a?.oculto);
+    if (amenities.length) {
+      out.amenities = {
+        title: `${amenities.length} ${amenities.length === 1 ? 'espacio común' : 'espacios comunes'}`,
+        sub: '',
+      };
+    }
+
+    const lotes = scene?.lotes?.items || [];
+    if (lotes.length) {
+      out.lotes = { title: `${lotes.length} ${lotes.length === 1 ? 'lote' : 'lotes'}`, sub: '' };
+    }
+
+    return out;
+  }, [scene?.unidades, scene?.amenities, scene?.lotes]);
+
+  const renderPeek = useCallback((tabId) => {
+    const s = peekSummaries[tabId];
+    if (!s) return null;
+    return (
+      <>
+        <span className="sidebar-peek-text">
+          <span className="sidebar-peek-title">{s.title}</span>
+          {s.sub && <span className="sidebar-peek-sub">{s.sub}</span>}
+        </span>
+        <span className="sidebar-peek-chevron" aria-hidden="true">›</span>
+      </>
+    );
+  }, [peekSummaries]);
+
   const loteBarrio = modalLote?.barrioId
     ? (scene?.barrios?.items || []).find((b) => b.id === modalLote.barrioId) || null
     : null;
@@ -279,6 +337,8 @@ export default function ViewPage() {
           onSelectTab={handleSelectTab}
           onCollapse={handlePanelCollapse}
           tabs={tabs}
+          hideMobileBrand
+          renderPeek={renderPeek}
         >
         {({ activeTab }) => (
           <>
@@ -332,30 +392,15 @@ export default function ViewPage() {
         />
       )}
 
-      {/* Botón "Ver en AR" — solo mobile, cuando hay maqueta GLB. */}
-      {showArButton && (
-        <button
-          className="xrs-ar-btn"
-          onClick={() => setArOpen(true)}
-          aria-label="Ver en AR"
-          title="Ver en AR"
-          style={{
-            position: 'fixed', right: 16,
-            top: 'calc(env(safe-area-inset-top, 0px) + 12px)', zIndex: 202,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 46, height: 46, borderRadius: 9999,
-            background: '#ab8869', color: '#18120b',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            {/* esquinas tipo visor AR */}
-            <path d="M3 8V5a2 2 0 0 1 2-2h3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M21 16v3a2 2 0 0 1-2 2h-3" />
-            {/* cubo 3D */}
-            <path d="M12 8.2l3.2 1.8v3.6L12 15.4l-3.2-1.8V10z" />
-            <path d="M12 8.2v0M12 11.8l3.2-1.8M12 11.8v3.6M12 11.8L8.8 10" />
-          </svg>
-        </button>
+      {/* Floating top bar — mobile only: brand chip (izq) + toggle tema y RA (der).
+          Se oculta mientras el AR posee la pantalla. */}
+      {scene && !arOpen && isMobile && (
+        <ViewerTopBar
+          projectName={scene.name || ''}
+          logoUrl={scene?.panelLogoUrl || ''}
+          showAr={showArButton}
+          onAr={() => setArOpen(true)}
+        />
       )}
 
       {arOpen && (

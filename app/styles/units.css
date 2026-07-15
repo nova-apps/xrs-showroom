@@ -1371,14 +1371,12 @@
     padding: 8px 12px;
   }
 
-  /* ─── Unit list — horizontal scrolling grid of compact cards ─── */
+  /* ─── List container — grid of compact cards (lotes still use this) ─── */
   .left-panel-stack .unidades-list-items {
     flex: 1;
     min-height: 0;
     max-height: none;
     display: grid;
-    /* Wider cards (was 120px) so the title/meta the client scans to compare
-       units fit at a legible size (SIZ-2). */
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     grid-auto-rows: min-content;
     align-content: start;
@@ -1394,7 +1392,7 @@
     display: none;
   }
 
-  /* ─── Grid card items ─── */
+  /* Compact grid card (lotes) */
   .left-panel-stack .unidad-card-grid-item {
     display: flex;
     flex-direction: column;
@@ -1436,6 +1434,103 @@
     text-overflow: ellipsis;
     width: 100%;
   }
+
+  /* ─── Unidades list — single-column rows (design layout) ─── */
+  .left-panel-stack .unidades-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* ─── Row items: [plan] · [title / subtitle] · [m²] ─── */
+  .left-panel-stack .unidad-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px 9px 13px;
+    border: 1px solid var(--lp-border);
+    border-left: 3px solid transparent; /* turns bronze when selected */
+    border-radius: 10px;
+    background: var(--lp-bg-light);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .left-panel-stack .unidad-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .left-panel-stack .unidad-row.active {
+    background: rgba(255, 255, 255, 0.06);
+    border-left-color: var(--brand);
+  }
+
+  .left-panel-stack .unidad-row-thumb {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+
+  .left-panel-stack .unidad-row-info {
+    flex: 1;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .left-panel-stack .unidad-row-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  .left-panel-stack .unidad-row-sub {
+    font-size: 12.5px;
+    color: var(--lp-text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  .left-panel-stack .unidad-row-metric {
+    flex-shrink: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+
+  .unidad-row-m2-num {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--lp-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .unidad-row-m2-unit {
+    font-size: 11px;
+    color: var(--lp-text-dim);
+  }
+
+  /* Availability dot on the row title */
+  .estado-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .estado-dot-disponible { background: rgb(134, 239, 172); }
+  .estado-dot-reservado  { background: rgb(252, 211, 77); }
+  .estado-dot-vendido    { background: rgb(252, 165, 165); }
   /* ─── Filters compact ─── */
   .left-panel-stack .unidad-filters {
     padding: 6px 0;
@@ -1516,30 +1611,10 @@
   .left-panel-stack .sidebar-tabs { order: 2; }
   .left-panel-stack .sidebar-panels { order: 3; }
 
-  /* ─── First-run mobile: tabs look like real buttons until one is tapped ─── */
-  .left-panel-stack.tabs-untapped .sidebar-tabs {
-    gap: 10px;
-    padding: 18px 16px 16px;
-    border-bottom: none;
-  }
-
-  .left-panel-stack.tabs-untapped .sidebar-tab {
-    padding: 12px 16px;
-    border: 1px solid var(--lp-border);
-    border-radius: 10px;
-    background: var(--lp-bg-light);
-    color: var(--lp-text);
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-  .left-panel-stack.tabs-untapped .sidebar-tab::after {
-    display: none;
-  }
-
-  .left-panel-stack.tabs-untapped .sidebar-tab:active {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: var(--lp-accent);
+  /* Collapsed sheet has no drag handle above the tabs, so give the tab bar a bit
+     of room below the sheet's rounded top edge. */
+  .left-panel-stack.stack-tabs-only .sidebar-tabs {
+    padding-top: 14px;
   }
 
   /* ─── Mobile logo (above tabs) ─── */
@@ -1575,6 +1650,68 @@
     object-fit: contain;
     display: block;
     opacity: 0.9;
+  }
+
+  /* ─── Peek summary card — shown only while the sheet is collapsed ─── */
+  .left-panel-stack .sidebar-peek {
+    display: none;
+  }
+
+  .left-panel-stack.stack-tabs-only .sidebar-peek {
+    order: 3;
+    display: flex;
+    /* The panel is pointer-events:none so the canvas behind stays interactive;
+       opt back in like the tabs/handle do, or taps fall through to the canvas. */
+    pointer-events: auto;
+    align-items: center;
+    gap: 12px;
+    width: calc(100% - 24px);
+    margin: 14px 12px;
+    padding: 13px 16px;
+    border: 1px solid var(--lp-border);
+    border-radius: 14px;
+    background: var(--lp-card-bg);
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .left-panel-stack.stack-tabs-only .sidebar-peek:active {
+    border-color: var(--lp-accent);
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  .sidebar-peek-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sidebar-peek-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--lp-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-peek-sub {
+    font-size: 12.5px;
+    color: var(--lp-text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-peek-chevron {
+    font-size: 22px;
+    line-height: 1;
+    color: var(--lp-accent);
+    flex-shrink: 0;
   }
 
   /* ─── Mobile filter toggle row ─── */

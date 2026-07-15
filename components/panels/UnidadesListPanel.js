@@ -369,52 +369,91 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
           Mostrando {filtered.length} resultados
         </span>
       </div>
-      <div className="unidades-list-items">
-        {filtered.map((unit, index) => (
-          <div
-            key={unit.id || index}
-            ref={(el) => {
-              const key = String(unit.id ?? index);
-              if (el) cardRefs.current.set(key, el);
-              else cardRefs.current.delete(key);
-            }}
-            className={`unidad-card${isMobile ? ' unidad-card-grid-item' : ''}${
-              selectedUnit && String(selectedUnit.id) === String(unit.id) ? ' active' : ''
-            }`}
-            onClick={() => {
-              if (onSelectUnit) onSelectUnit(unit);
-            }}
-          >
-            {!isMobile && (
-              <div className="unidad-thumb">
-                {unit.imagen_plano ? (
-                  <LazyImage src={unit.imagen_plano} alt={unit.id || ''} />
-                ) : (
-                  <div className="unidad-thumb-placeholder" aria-hidden="true"><Icon name="image" /></div>
+      <div className="unidades-list-items unidades-rows">
+        {filtered.map((unit, index) => {
+          const active = selectedUnit && String(selectedUnit.id) === String(unit.id);
+          const setRef = (el) => {
+            const key = String(unit.id ?? index);
+            if (el) cardRefs.current.set(key, el);
+            else cardRefs.current.delete(key);
+          };
+          const plan = unit.imagen_plano ? (
+            <LazyImage src={unit.imagen_plano} alt={unit.id || ''} />
+          ) : (
+            <div className="unidad-thumb-placeholder" aria-hidden="true"><Icon name="image" /></div>
+          );
+
+          // Mobile: single-column rows following the design — leading floor-plan
+          // thumb · title «id · Piso» · subtitle «amb · orientación» · big m² on
+          // the right, an availability dot on the title and a bronze bar when
+          // selected. (Price lives in the detail drawer, not the list row.)
+          if (isMobile) {
+            const sub = [];
+            if (hasVal(unit.ambientes)) sub.push(`${unit.ambientes} amb`);
+            if (hasVal(unit.orientacion)) sub.push(unit.orientacion);
+            return (
+              <div
+                key={unit.id || index}
+                ref={setRef}
+                className={`unidad-card unidad-row${active ? ' active' : ''}`}
+                onClick={() => onSelectUnit?.(unit)}
+              >
+                <div className="unidad-thumb unidad-row-thumb">{plan}</div>
+                <div className="unidad-info unidad-row-info">
+                  <div className="unidad-title unidad-row-title">
+                    {ESTADO_LABELS[unit.estado] && (
+                      <span
+                        className={`estado-dot estado-dot-${unit.estado}`}
+                        title={ESTADO_LABELS[unit.estado]}
+                        aria-label={ESTADO_LABELS[unit.estado]}
+                        role="img"
+                      />
+                    )}
+                    {unit.id || 'Sin ID'}{hasVal(unit.piso) ? ` · Piso ${unit.piso}` : ''}
+                  </div>
+                  {sub.length > 0 && <div className="unidad-meta unidad-row-sub">{sub.join(' · ')}</div>}
+                </div>
+                {hasVal(unit.superficie_total) && (
+                  <div className="unidad-row-metric">
+                    <span className="unidad-row-m2-num">{unit.superficie_total}</span>
+                    <span className="unidad-row-m2-unit">m²</span>
+                  </div>
                 )}
               </div>
-            )}
-            <div className="unidad-info">
-              <div className="unidad-title">
-                {hasVal(unit.piso) ? `Piso ${unit.piso} · ` : ''}{unit.id || 'Sin ID'}
+            );
+          }
+
+          // Desktop: original row with thumb + stacked info (unchanged).
+          return (
+            <div
+              key={unit.id || index}
+              ref={setRef}
+              className={`unidad-card${active ? ' active' : ''}`}
+              onClick={() => onSelectUnit?.(unit)}
+            >
+              <div className="unidad-thumb">{plan}</div>
+              <div className="unidad-info">
+                <div className="unidad-title">
+                  {hasVal(unit.piso) ? `Piso ${unit.piso} · ` : ''}{unit.id || 'Sin ID'}
+                </div>
+                {(() => {
+                  const meta = [];
+                  if (hasVal(unit.ambientes)) meta.push(`${unit.ambientes} amb`);
+                  if (hasVal(unit.superficie_total)) meta.push(`${unit.superficie_total}m²`);
+                  return meta.length > 0 ? <div className="unidad-meta">{meta.join(' · ')}</div> : null;
+                })()}
+                {hasVal(unit.precio) && (
+                  <div className="unidad-price">{unit.precio}</div>
+                )}
+                {ESTADO_LABELS[unit.estado] && (
+                  <span className={`estado-badge estado-badge-${unit.estado}`}>
+                    {ESTADO_LABELS[unit.estado]}
+                  </span>
+                )}
               </div>
-              {(() => {
-                const meta = [];
-                if (hasVal(unit.ambientes)) meta.push(`${unit.ambientes} amb`);
-                if (hasVal(unit.superficie_total)) meta.push(`${unit.superficie_total}m²`);
-                return meta.length > 0 ? <div className="unidad-meta">{meta.join(' · ')}</div> : null;
-              })()}
-              {hasVal(unit.precio) && (
-                <div className="unidad-price">{unit.precio}</div>
-              )}
-              {ESTADO_LABELS[unit.estado] && (
-                <span className={`estado-badge estado-badge-${unit.estado}`}>
-                  {ESTADO_LABELS[unit.estado]}
-                </span>
-              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         {filtered.length === 0 && (
           <div className="empty-state">
             <p>No hay unidades que coincidan con los filtros.</p>
