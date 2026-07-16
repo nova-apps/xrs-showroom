@@ -504,6 +504,19 @@ textarea,
     }
   }
 
+  /* Fit-sin-scroll (SIZ): en mobile el panel entra completo dentro del bottom
+     sheet sin scroll. El scroll pasa a ser una columna flex que NO desborda; el
+     plano (abajo) flexiona para ocupar sólo el espacio sobrante y se achica si
+     hace falta, así el CTA de WhatsApp queda siempre visible. */
+  .unit-drawer-scroll {
+    display: flex;
+    flex-direction: column;
+    /* auto (no hidden): con el plano flexionando todo entra sin scroll, pero
+       queda un fallback por si el contenido no puede achicarse más (p. ej. el
+       LoteModal, que no tiene plano que absorba el sobrante). */
+    overflow-y: auto;
+  }
+
   .unit-drawer-header {
     padding: 12px 14px 10px;
     align-items: center;
@@ -519,8 +532,11 @@ textarea,
     color: var(--text-muted);
   }
 
-  /* Body: vertical — data on top, plan below */
+  /* Body: vertical — data on top, plan below. flex:1 + min-height:0 → absorbe
+     el espacio sobrante y deja que el plano se achique. */
   .unit-drawer-body {
+    flex: 1 1 auto;
+    min-height: 0;
     flex-direction: column;
     border-bottom: 1px solid var(--border-color);
   }
@@ -534,17 +550,29 @@ textarea,
 
   .unit-drawer-plan {
     width: auto;
-    flex: 1;
-    min-height: 30vh;
+    flex: 1 1 auto;
+    min-height: 0; /* clave: permite que el plano se achique para que todo entre */
+    overflow: hidden;
     padding: 12px 14px 16px;
     border-top: 1px solid var(--border-color);
     border-left: none;
     background: rgba(0, 0, 0, 0.05);
   }
 
+  /* El plano ocupa el alto disponible y se contiene dentro (sin aspect-ratio
+     fijo, que lo forzaba alto y empujaba el CTA fuera de pantalla). */
+  .unit-drawer-plan .lazy-img-wrapper.lazy-img-plan {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+  }
+
   .unit-drawer-plan img {
-    max-height: 38vh;
     max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 
   .unit-drawer-plan-empty {
