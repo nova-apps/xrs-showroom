@@ -46,9 +46,10 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
         // Tapping the active tab → collapse
         setSnapState(SNAP.COLLAPSED);
       } else {
-        // Tapping a (different) tab → switch + compact expand
+        // Tapping a tab (or the peek card) opens the list in the expanded snap
+        // so filters + list have room without a second drag-up.
         setActiveTab(tabId);
-        setSnapState(SNAP.COMPACT);
+        setSnapState(SNAP.TALL);
         onSelectTab?.(tabId, { isMobile: true });
       }
     } else {

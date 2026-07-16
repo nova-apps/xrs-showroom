@@ -175,12 +175,18 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     setSearchQuery('');
   }, [metrajeMinMax]);
 
-  const hasActiveFilters = selectedAmb.size > 0 ||
-    selectedOrient.size > 0 ||
-    selectedEstados.size > 0 ||
-    metrajeRange[0] !== metrajeMinMax[0] ||
-    metrajeRange[1] !== metrajeMinMax[1] ||
-    searchQuery.length > 0;
+  const metrajeChanged = metrajeRange[0] !== metrajeMinMax[0] || metrajeRange[1] !== metrajeMinMax[1];
+
+  // Number of active filter categories (not individual pills) — shown as a count
+  // badge on the "Filtros" button so it's clear how many filters are applied.
+  const activeFilterCount =
+    (selectedAmb.size > 0 ? 1 : 0) +
+    (selectedOrient.size > 0 ? 1 : 0) +
+    (selectedEstados.size > 0 ? 1 : 0) +
+    (metrajeChanged ? 1 : 0) +
+    (searchQuery.length > 0 ? 1 : 0);
+
+  const hasActiveFilters = activeFilterCount > 0;
 
   // Shared filter UI (used in both mobile filter view and desktop inline)
   const renderFilters = () => (
@@ -362,6 +368,112 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
     </div>
   );
 
+  // Mobile: filters shown fully deployed — one line per filter (label + pills),
+  // no accordions to expand. Rendered inline above the list when the "Filtros"
+  // button is toggled on.
+  const renderMobileFilters = () => (
+    <div className="unidad-filters-deployed">
+      <div className="filter-row">
+        <span className="filter-row-label">Ambientes</span>
+        <div className="unidad-filter-pills">
+          {[1, 2, 3, 4].map((n) => (
+            <button
+              key={n}
+              className={`unidad-pill ${selectedAmb.has(n) ? 'active' : ''}`}
+              onClick={() => toggleAmb(n)}
+            >
+              {n}
+            </button>
+          ))}
+          <button
+            className={`unidad-pill ${selectedAmb.has('+') ? 'active' : ''}`}
+            onClick={() => toggleAmb('+')}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      {orientOptions.length > 0 && (
+        <div className="filter-row">
+          <span className="filter-row-label">Orientación</span>
+          <div className="unidad-filter-pills">
+            {orientOptions.map((o) => (
+              <button
+                key={o}
+                className={`unidad-pill ${selectedOrient.has(o) ? 'active' : ''}`}
+                onClick={() => toggleOrient(o)}
+              >
+                {o}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {estadoOptions.length > 0 && (
+        <div className="filter-row">
+          <span className="filter-row-label">Estado</span>
+          <div className="unidad-filter-pills">
+            {estadoOptions.map((e) => (
+              <button
+                key={e}
+                className={`unidad-pill ${selectedEstados.has(e) ? 'active' : ''}`}
+                onClick={() => toggleEstado(e)}
+              >
+                {ESTADO_LABELS[e]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="filter-row filter-row-metraje">
+        <span className="filter-row-label">Metraje</span>
+        <div className="filter-row-range">
+          <div className="unidad-range-slider">
+            <input
+              type="range"
+              min={metrajeMinMax[0]}
+              max={metrajeMinMax[1]}
+              step={5}
+              value={metrajeRange[0]}
+              aria-label="Metraje mínimo"
+              aria-valuetext={`${metrajeRange[0]} m²`}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setMetrajeRange([Math.min(v, metrajeRange[1]), metrajeRange[1]]);
+              }}
+            />
+            <input
+              type="range"
+              min={metrajeMinMax[0]}
+              max={metrajeMinMax[1]}
+              step={5}
+              value={metrajeRange[1]}
+              aria-label="Metraje máximo"
+              aria-valuetext={`${metrajeRange[1]} m²`}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setMetrajeRange([metrajeRange[0], Math.max(v, metrajeRange[0])]);
+              }}
+            />
+          </div>
+          <div className="unidad-range-labels">
+            <span>{metrajeRange[0]}m²</span>
+            <span>{metrajeRange[1]}m²</span>
+          </div>
+        </div>
+      </div>
+
+      {hasActiveFilters && (
+        <button className="unidad-clear-filters" onClick={clearFilters}>
+          Limpiar filtros
+        </button>
+      )}
+    </div>
+  );
+
   const renderList = () => (
     <div className="unidades-list">
       <div className="unidades-list-header">
@@ -471,38 +583,34 @@ export default function UnidadesListPanel({ unidades = [], onSelectUnit, selecte
             <p>Todavía no hay unidades para mostrar.</p>
           </div>
       ) : isMobile ? (
-        /* ─── Mobile layout: toggle between filters and list ─── */
+        /* ─── Mobile layout: filters expand inline above the list (never hide it) ─── */
         <>
-          {mobileFiltersOpen ? (
-            <div className="mobile-filters-view">
-              <button
-                className="mobile-filters-back"
-                onClick={() => setMobileFiltersOpen(false)}
-              >
-                ← Volver a unidades
-              </button>
-              {renderSearch()}
-              {renderFilters()}
-            </div>
-          ) : (
-            <>
-              <div className="mobile-filters-toggle-row">
-                <span className="unidades-list-count">
-                  {filtered.length} unidades
+          <div className="mobile-filters-toggle-row">
+            <span className="unidades-list-count">
+              {filtered.length} unidades
+            </span>
+            <button
+              className={`mobile-filters-btn${mobileFiltersOpen ? ' active' : ''}`}
+              onClick={() => setMobileFiltersOpen((v) => !v)}
+              aria-expanded={mobileFiltersOpen}
+              aria-label={mobileFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
+            >
+              <span className="mobile-filters-btn-icon" aria-hidden="true"><Icon name="filters" /></span>
+              Filtros
+              {activeFilterCount > 0 && (
+                <span className="mobile-filters-count" aria-label={`${activeFilterCount} filtros activos`}>
+                  {activeFilterCount}
                 </span>
-                <button
-                  className="mobile-filters-btn"
-                  onClick={() => setMobileFiltersOpen(true)}
-                  aria-label="Abrir filtros"
-                >
-                  <span className="mobile-filters-btn-icon" aria-hidden="true"><Icon name="filters" /></span>
-                  Filtros
-                  {hasActiveFilters && <span className="mobile-filters-badge" />}
-                </button>
-              </div>
-              {renderList()}
-            </>
+              )}
+            </button>
+          </div>
+          {mobileFiltersOpen && (
+            <div className="mobile-filters-inline">
+              {renderSearch()}
+              {renderMobileFilters()}
+            </div>
           )}
+          {renderList()}
         </>
       ) : (
         /* ─── Desktop layout: search + filters + list inline ─── */

@@ -111,12 +111,15 @@ export default function LotesListPanel({
     setSearchQuery('');
   }, [metrajeMinMax]);
 
-  const hasActiveFilters =
-    selectedBarrios.size > 0 ||
-    selectedEstados.size > 0 ||
-    metrajeRange[0] !== metrajeMinMax[0] ||
-    metrajeRange[1] !== metrajeMinMax[1] ||
-    searchQuery.length > 0;
+  // Number of active filter categories — shown as a count badge on the "Filtros"
+  // button so it's clear how many filters are applied (matches the unidades panel).
+  const activeFilterCount =
+    (selectedBarrios.size > 0 ? 1 : 0) +
+    (selectedEstados.size > 0 ? 1 : 0) +
+    ((metrajeRange[0] !== metrajeMinMax[0] || metrajeRange[1] !== metrajeMinMax[1]) ? 1 : 0) +
+    (searchQuery.length > 0 ? 1 : 0);
+
+  const hasActiveFilters = activeFilterCount > 0;
 
   const renderBarrioChips = () => (
     <div className="unidad-filter-pills lote-barrio-chips">
@@ -346,7 +349,11 @@ export default function LotesListPanel({
                 >
                   <span className="mobile-filters-btn-icon" aria-hidden="true"><Icon name="filters" /></span>
                   Filtros
-                  {hasActiveFilters && <span className="mobile-filters-badge" />}
+                  {activeFilterCount > 0 && (
+                    <span className="mobile-filters-count" aria-label={`${activeFilterCount} filtros activos`}>
+                      {activeFilterCount}
+                    </span>
+                  )}
                 </button>
               </div>
               {renderBarrioChipsBar()}
