@@ -957,7 +957,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
     },
     getGlbModel: () => stateRef.current.glbModel,
     getCollidersModel: () => stateRef.current.collidersModel,
-    focusOnCollider: (name, onComplete) => focusCameraOnCollider(name, onComplete),
+    focusOnCollider: (name, onComplete, opts) => focusCameraOnCollider(name, onComplete, opts),
     setCollidersVisible: (visible) => {
       const s = stateRef.current;
       if (!s.collidersModel) return;
@@ -1207,10 +1207,10 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
       s.floorRevealed = true;
       s.floorMesh.visible = s.floorPositioned && s.floorVisibleIntent;
     },
-    setInitialCameraPosition: (initialCamera, { animate = true, durationMs = 0 } = {}) => {
+    setInitialCameraPosition: (initialCamera, { animate = true, durationMs = 0, onComplete = null, lerpOverride = 0.08 } = {}) => {
       const s = stateRef.current;
       const THREE = s.THREE;
-      if (!THREE || !s.camera || !s.controls || !initialCamera) return;
+      if (!THREE || !s.camera || !s.controls || !initialCamera) { onComplete?.(); return; }
       // Convert pitch/yaw/zoom back to spherical
       const phi = (90 - initialCamera.pitch) * DEG2RAD;
       const theta = -initialCamera.yaw * DEG2RAD;
@@ -1232,15 +1232,15 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
         f.targetPhi = sph.phi; f.targetTheta = targetTheta; f.targetRadius = sph.radius;
         f.durationMs = durationMs;
         f.startTime = performance.now();
-        f.onComplete = null;
+        f.onComplete = onComplete;
         f.lerpOverride = null;
         f.state = 'animating-timed';
       } else if (animate) {
         s.focusTarget.targetPhi = sph.phi;
         s.focusTarget.targetTheta = sph.theta;
         s.focusTarget.targetRadius = sph.radius;
-        s.focusTarget.onComplete = null;
-        s.focusTarget.lerpOverride = 0.08;
+        s.focusTarget.onComplete = onComplete;
+        s.focusTarget.lerpOverride = lerpOverride;
         s.focusTarget.state = 'animating';
       } else {
         // Snap directly: OrbitControls' `start` event cancels focus animations,
@@ -1252,6 +1252,7 @@ const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onCol
         // Cancel any in-flight focus animation so it doesn't pull the camera away.
         s.focusTarget.state = 'idle';
         s.focusTarget.lerpOverride = null;
+        if (typeof onComplete === 'function') onComplete();
       }
       // Remember the configured camera so fitCamera (called when the GLB
       // finishes loading) can re-apply it relative to the GLB center,
@@ -2515,10 +2516,10 @@ uniform float uContrast;`
   }, []);
 
   /* ─── Focus Camera on Collider ─── */
-  const focusCameraOnCollider = useCallback((name, onComplete) => {
+  const focusCameraOnCollider = useCallback((name, onComplete, { lerpOverride = null } = {}) => {
     const s = stateRef.current;
     const THREE = s.THREE;
-    if (!THREE || !s.collidersModel || !s.camera || !s.controls) return;
+    if (!THREE || !s.collidersModel || !s.camera || !s.controls) { onComplete?.(); return; }
 
     const sanitizedName = name.replace(/-/g, '').toLowerCase();
 
@@ -2534,6 +2535,7 @@ uniform float uContrast;`
 
     if (!targetMesh) {
       console.warn(`[Viewer] Collider mesh "${name}" not found`);
+      onComplete?.();
       return;
     }
 
@@ -2581,11 +2583,15 @@ uniform float uContrast;`
 
     sph.makeSafe();
 
-    s.focusTarget.targetPhi = sph.phi;
-    s.focusTarget.targetTheta = sph.theta;
-    s.focusTarget.targetRadius = sph.radius;
-    s.focusTarget.onComplete = onComplete || null;
-    s.focusTarget.state = 'animating';
+    const f = s.focusTarget;
+    f.targetPhi = sph.phi;
+    f.targetTheta = sph.theta;
+    f.targetRadius = sph.radius;
+    f.onComplete = onComplete || null;
+    // null → use the scene's configured focusSpeed; a value → snappier move
+    // (mobile unit tap wants a quick fly-to before the detail sheet opens).
+    f.lerpOverride = lerpOverride;
+    f.state = 'animating';
   }, []);
 
   /* ─── Fit Camera ─── */

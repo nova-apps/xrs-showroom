@@ -268,6 +268,17 @@ export function handleFocusAnimation(s) {
     const dTheta = Math.abs(current.theta - focus.targetTheta);
     const dRadius = Math.abs(current.radius - focus.targetRadius);
 
+    // Fire the completion callback as soon as the move is visually settled — the
+    // remaining lerp tail (~last few degrees) is imperceptible, so UI sequenced
+    // on it (e.g. opening a unit-detail sheet) fires right when the camera looks
+    // arrived instead of ~300ms later at exact convergence. Radius tolerance is
+    // relative so it scales with the model/orbit size.
+    if (typeof focus.onComplete === 'function' &&
+        dPhi < 0.08 && dTheta < 0.08 && dRadius < Math.max(1.0, focus.targetRadius * 0.03)) {
+      focus.onComplete();
+      focus.onComplete = null;
+    }
+
     if (dPhi < 0.002 && dTheta < 0.002 && dRadius < 0.05) {
       current.phi = focus.targetPhi;
       current.theta = focus.targetTheta;

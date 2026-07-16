@@ -136,20 +136,45 @@ export default function ViewPage() {
 
   // Move the camera to a unit: use its operator-saved pose when present
   // (set via the editor's unit-cameras tool), else the auto-computed framing.
-  const focusUnit = useCallback((unitId) => {
+  // `onDone` fires when the move is visually settled. `snappy` (mobile) uses a
+  // quicker lerp so the fly-to lands fast before the detail sheet opens.
+  const focusUnit = useCallback((unitId, onDone, snappy = false) => {
     const v = viewerRef.current;
-    if (!v || unitId == null) return;
+    if (!v || unitId == null) { onDone?.(); return; }
     const pose = scene?.orbit?.unitCameras?.[String(unitId)];
-    if (pose) v.setInitialCameraPosition(pose, { animate: true });
-    else v.focusOnCollider(String(unitId));
+    if (pose) v.setInitialCameraPosition(pose, { animate: true, onComplete: onDone, lerpOverride: snappy ? 0.15 : 0.08 });
+    else v.focusOnCollider(String(unitId), onDone, { lerpOverride: snappy ? 0.15 : null });
   }, [scene?.orbit?.unitCameras]);
 
   const handleSelectUnit = useCallback((unit) => {
-    // Row tap in the panel always opens detail (both desktop and mobile).
     setHighlightedUnit(unit ?? null);
-    setModalUnit((prev) => prev?.id === unit?.id ? null : unit);
-    if (unit?.id) focusUnit(unit.id);
-  }, [focusUnit]);
+
+    // Re-tapping the unit that's already open closes it (no camera move).
+    if (modalUnit?.id != null && modalUnit.id === unit?.id) {
+      setModalUnit(null);
+      return;
+    }
+
+    if (!unit?.id) { setModalUnit(unit ?? null); return; }
+
+    const onSmall = typeof window !== 'undefined'
+      && window.matchMedia('(max-width: 768px)').matches;
+
+    if (!onSmall) {
+      // Desktop: open the detail immediately and fly the camera in parallel.
+      setModalUnit(unit);
+      focusUnit(unit.id);
+      return;
+    }
+
+    // Mobile: fly the camera to the unit (snappy lerp), then open the detail
+    // sheet once the move is visually settled. The fallback covers the case
+    // where the animation is interrupted (user grabs the canvas mid-flight).
+    let opened = false;
+    const open = () => { if (!opened) { opened = true; setModalUnit(unit); } };
+    focusUnit(unit.id, open, true);
+    window.setTimeout(open, 900);
+  }, [focusUnit, modalUnit]);
 
   const handleSelectLote = useCallback((lote) => {
     setHighlightedLote(lote ?? null);
@@ -224,11 +249,12 @@ export default function ViewPage() {
 
     const unit = (scene?.unidades?.items || []).find((u) => norm(u.id) === target);
     if (!unit) return;
-    setHighlightedUnit(unit);
-    panelRef.current?.expand?.('unidades');
-    if (unit.id != null) focusUnit(unit.id);
-    if (!isMobile) setModalUnit(unit);
-  }, [scene, isTerreno, focusUnit]);
+    // Tapping a collider behaves like tapping its row: on mobile the camera flies
+    // to the unit and the detail sheet opens once it lands; on desktop it opens
+    // immediately. Desktop also switches to the units tab so the row is in view.
+    if (!isMobile) panelRef.current?.expand?.('unidades');
+    handleSelectUnit(unit);
+  }, [scene, isTerreno, handleSelectUnit]);
 
   const tabs = isTerreno
     ? [{ id: 'lotes', label: 'Lotes' }]
