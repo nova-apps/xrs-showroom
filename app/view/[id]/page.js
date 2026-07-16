@@ -20,6 +20,7 @@ import { useAmenityTourPrefetch } from '@/hooks/useAmenityTourPrefetch';
 
 import LeftPanelStack from '@/components/panels/LeftPanelStack';
 import ViewerTopBar from '@/components/viewer/ViewerTopBar';
+import WelcomeModal from '@/components/viewer/WelcomeModal';
 import UnidadesListPanel from '@/components/panels/UnidadesListPanel';
 import UnidadModal from '@/components/panels/UnidadModal';
 import AmenitiesListPanel from '@/components/panels/AmenitiesListPanel';
@@ -44,6 +45,7 @@ export default function ViewPage() {
   const [highlightedLote, setHighlightedLote] = useState(null);
   const [arOpen, setArOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
 
   // El botón "Ver en AR" solo se muestra en mobile (la cámara/SLAM viven en el teléfono).
   useEffect(() => {
@@ -347,6 +349,22 @@ export default function ViewPage() {
         <div className="canvas-curtain-half canvas-curtain-top" />
         <div className="canvas-curtain-half canvas-curtain-bottom" />
       </div>
+
+      {/* Cartel de bienvenida — aparece apenas hay metadata de la escena (para
+          cubrir la carga del GLB/splat que ocurre detrás) y revela su contenido
+          de a poco. La cortina (`revealed`) enmascara lo que reste cargar si el
+          usuario toca "Comenzar" antes de tiempo. Oculto durante el AR. */}
+      {scene && !welcomeDismissed && !arOpen && (
+        <WelcomeModal
+          projectName={scene.name || ''}
+          logoUrl={scene?.panelLogoUrl || ''}
+          description={scene?.welcomeMessage}
+          isMobile={isMobile}
+          itemNoun={isTerreno ? 'un lote' : 'una unidad'}
+          showAr={showArButton}
+          onStart={() => setWelcomeDismissed(true)}
+        />
+      )}
 
       {/* Left Sidebar — list panel; content swaps by scene.type.
           Se oculta mientras el AR posee la pantalla. */}

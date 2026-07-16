@@ -795,3 +795,194 @@
   background: var(--bg-hover);
   border-color: var(--border-glow);
 }
+
+/* ═══════════════════════════════════════
+   WELCOME MODAL — portada / pantalla de carga al iniciar la experiencia
+   ═══════════════════════════════════════ */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  /* Fondo tipo pantalla de carga: cubre el splat/curtain que carga detrás */
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(171, 136, 105, 0.14), transparent 60%),
+    rgba(12, 11, 10, 0.86);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  animation: fadeIn 0.35s ease;
+}
+
+/* Portada grande: ocupa buena parte de la pantalla en desktop y casi completa
+   en mobile, para que se lea como una pantalla de bienvenida, no un cartelito. */
+.welcome-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: min(92vw, 640px);
+  max-height: 90vh;
+  padding: clamp(36px, 6vw, 64px) clamp(28px, 5vw, 56px);
+  overflow-y: auto;
+  text-align: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-panel);
+  animation: fadeIn 0.4s ease;
+}
+
+/* Spinner mientras se precarga el logo (antes de revelar el contenido). */
+.welcome-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--accent-blue);
+  animation: welcomeSpin 0.7s linear infinite;
+}
+
+@keyframes welcomeSpin {
+  to { transform: rotate(360deg); }
+}
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+
+/* Reveal escalonado: cada elemento entra con un fade-up; el delay se setea
+   inline por elemento (ver WelcomeModal.js). fill-mode both → arranca oculto. */
+.welcome-reveal {
+  opacity: 0;
+  animation: welcomeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes welcomeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-reveal { animation: fadeIn 0.3s ease both; }
+}
+
+.welcome-logo {
+  max-width: min(320px, 72vw);
+  max-height: 150px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.welcome-title {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.welcome-text {
+  max-width: 42ch;
+  font-size: clamp(1rem, 2.4vw, 1.1rem);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.welcome-tips {
+  width: 100%;
+  max-width: 440px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: left;
+}
+
+.welcome-tip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.welcome-tip-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--accent-blue);
+  font-size: 1.25rem;
+}
+
+.welcome-tip-text {
+  font-size: 0.98rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.welcome-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 220px;
+  padding: 15px 34px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--accent-blue);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.welcome-btn:hover {
+  filter: brightness(1.08);
+}
+
+.welcome-btn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .welcome-overlay {
+    padding: 0;
+  }
+
+  /* Casi pantalla completa en mobile */
+  .welcome-modal {
+    width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .welcome-tips {
+    gap: 16px;
+  }
+}
