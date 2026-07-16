@@ -265,6 +265,7 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     snapState === SNAP.COMPACT ? 'stack-expanded stack-compact' : '',
     snapState === SNAP.TALL    ? 'stack-expanded stack-tall' : '',
     isMobile && snapState === SNAP.COLLAPSED ? 'stack-tabs-only' : '',
+    activeTab ? `panel-tab-${activeTab}` : '',
   ].filter(Boolean).join(' ');
 
   return (

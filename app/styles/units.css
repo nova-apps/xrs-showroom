@@ -1261,6 +1261,13 @@
     height: 36vh;
   }
 
+  /* Amenities has no filters, so its sheet sizes to content (still capped by the
+     snap's max-height) instead of the fixed height used for the unidades list —
+     otherwise switching from an expanded unidades view leaves a half-empty sheet. */
+  .left-panel-stack.stack-expanded.panel-tab-amenities {
+    height: auto;
+  }
+
   .left-panel-stack.stack-hidden {
     transform: translateY(100%);
     opacity: 0;

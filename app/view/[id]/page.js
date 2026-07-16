@@ -261,13 +261,8 @@ export default function ViewPage() {
       out.unidades = { title, sub: parts.join(' · ') };
     }
 
-    const amenities = (scene?.amenities?.items || []).filter((a) => !a?.oculto);
-    if (amenities.length) {
-      out.amenities = {
-        title: `${amenities.length} ${amenities.length === 1 ? 'espacio común' : 'espacios comunes'}`,
-        sub: '',
-      };
-    }
+    // Amenities has no peek summary on purpose: tapping the tab shows the grid
+    // directly (no "N espacios comunes" intermediate step).
 
     const lotes = scene?.lotes?.items || [];
     if (lotes.length) {
