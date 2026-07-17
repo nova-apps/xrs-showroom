@@ -19,9 +19,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * @param {boolean} options.viewerReady - Whether the viewer is initialized
  * @param {boolean} [options.isEditor=false] - Editor mode (has timing metrics, modelHdri, keeps colliders visible)
  * @param {boolean} [options.useProgressiveLoading=false] - Use proxy GLB → full GLB swap (view mode)
- * @returns {{ loadMetrics, resetLoadedAsset }}
+ * @param {boolean} [options.introReleased=true] - Gate for the cinematic entrance. When
+ *   false, assets still stream in but the intro→final camera move + FX fade are held
+ *   until this flips true (mobile: released when the welcome modal's "Comenzar" is tapped,
+ *   so the entrance actually plays for the user instead of behind the modal).
+ * @returns {{ loadMetrics, resetLoadedAsset, framed }}
  */
-export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false, useProgressiveLoading = false }) {
+export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false, useProgressiveLoading = false, introReleased = true }) {
   const [loadMetrics, setLoadMetrics] = useState(null);
   // `framed` flips true once the camera is sitting at its configured intro/initial
   // pose, so the page can hold the reveal curtain closed until then (no flash of
@@ -36,6 +40,11 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
   // play only once per viewer mount. Otherwise re-enabling/re-uploading an asset
   // — which pushes a load promise — would replay the whole camera animation.
   const cinematicPlayedRef = useRef(false);
+  // The cinematic runner is built once assets have loaded, but its actual firing
+  // is gated on `introReleased` (see the gate effect below). We stash the closure
+  // here and flip `readyForIntro` so the gate can run it exactly once.
+  const cinematicRunnerRef = useRef(null);
+  const [readyForIntro, setReadyForIntro] = useState(false);
 
   // Track which assets have been loaded to avoid re-loading
   const loadedAssetsRef = useRef({
@@ -247,31 +256,37 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
       // The floor stays hidden until the camera has come to rest (revealFloor),
       // so it never appears to slide while the camera is moving/reframing.
       if (playIntro) {
-        // First load of this mount: run the cinematic entrance once.
+        // First load of this mount: arm the cinematic entrance once. We build the
+        // runner now (assets are in) but don't fire it here — the gate effect runs
+        // it as soon as `introReleased` is true, so on mobile it plays when the
+        // welcome modal is dismissed instead of unseen behind it.
         cinematicPlayedRef.current = true;
-        if (introCam && finalCam) {
-          const durationMs = Math.max(0, (orbit.introDuration ?? 2) * 1000);
-          clearTimeout(introTimerRef.current);
-          clearTimeout(floorRevealTimerRef.current);
-          introTimerRef.current = setTimeout(() => {
-            viewerRef.current?.setInitialCameraPosition(finalCam, { animate: true, durationMs });
-            floorRevealTimerRef.current = setTimeout(
-              () => viewerRef.current?.revealFloor(),
-              durationMs + 100
-            );
-          }, 500);
-        } else if (finalCam) {
-          // No intro animation: fitCamera has already run, so snap and reveal now.
-          viewerRef.current?.setInitialCameraPosition(finalCam, { animate: false });
-          viewerRef.current?.revealFloor();
-        } else {
-          viewerRef.current?.revealFloor();
-        }
-        // Maqueta (GLB) + SOG are loaded by now (awaited above) — fade the intro
-        // FX (blur + low contrast) back to the scene's normal look.
-        if (scene.introFx?.enabled) {
-          viewerRef.current?.fadeOutIntroFx(scene.introFx.duration ?? 1.5);
-        }
+        cinematicRunnerRef.current = () => {
+          if (introCam && finalCam) {
+            const durationMs = Math.max(0, (orbit.introDuration ?? 2) * 1000);
+            clearTimeout(introTimerRef.current);
+            clearTimeout(floorRevealTimerRef.current);
+            introTimerRef.current = setTimeout(() => {
+              viewerRef.current?.setInitialCameraPosition(finalCam, { animate: true, durationMs });
+              floorRevealTimerRef.current = setTimeout(
+                () => viewerRef.current?.revealFloor(),
+                durationMs + 100
+              );
+            }, 500);
+          } else if (finalCam) {
+            // No intro animation: fitCamera has already run, so snap and reveal now.
+            viewerRef.current?.setInitialCameraPosition(finalCam, { animate: false });
+            viewerRef.current?.revealFloor();
+          } else {
+            viewerRef.current?.revealFloor();
+          }
+          // Maqueta (GLB) + SOG are loaded by now (awaited above) — fade the intro
+          // FX (blur + low contrast) back to the scene's normal look.
+          if (scene.introFx?.enabled) {
+            viewerRef.current?.fadeOutIntroFx(scene.introFx.duration ?? 1.5);
+          }
+        };
+        setReadyForIntro(true);
       } else {
         // Either nothing (re)loaded this pass (a plain scene-data edit), or an
         // incremental (re)load after the cinematic already played (e.g. re-
@@ -307,12 +322,26 @@ export function useSceneLoader({ viewerRef, scene, viewerReady, isEditor = false
     };
   }, [viewerReady, scene]);
 
+  // ── Intro gate ──
+  // Fire the armed cinematic entrance once the intro is released. `readyForIntro`
+  // flips true when assets finish loading; `introReleased` is the external gate
+  // (mobile: the welcome "Comenzar" tap). Both true → run the runner exactly once.
+  useEffect(() => {
+    if (!readyForIntro || !introReleased) return;
+    const run = cinematicRunnerRef.current;
+    if (!run) return;
+    cinematicRunnerRef.current = null;
+    run();
+  }, [readyForIntro, introReleased]);
+
   // Re-arm the reveal curtain whenever the viewer tears down (e.g. AR remount),
   // so it masks the next load instead of staying open on the default pose.
   useEffect(() => {
     if (!viewerReady) {
       setFramed(false);
       cinematicPlayedRef.current = false;
+      cinematicRunnerRef.current = null;
+      setReadyForIntro(false);
     }
   }, [viewerReady]);
 

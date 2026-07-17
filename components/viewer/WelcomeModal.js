@@ -21,7 +21,9 @@ export default function WelcomeModal({
   isMobile = false,
   itemNoun = 'una unidad',
   showAr = false,
+  closing = false,
   onStart,
+  onExited,
 }) {
   const [mounted, setMounted] = useState(false);
   // No revelamos los textos hasta que el logo esté cargado (si carga lento, el
@@ -29,6 +31,15 @@ export default function WelcomeModal({
   const [logoReady, setLogoReady] = useState(!logoUrl);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Fade-out: al apretar "Comenzar" (closing → true) el overlay se desvanece y,
+  // terminada la transición, avisamos al padre para desmontarlo. La UI del viewer
+  // hace fade-in en paralelo (ver page.js). Mantener sincronizado con el CSS.
+  useEffect(() => {
+    if (!closing) return;
+    const t = setTimeout(() => onExited?.(), 1200);
+    return () => clearTimeout(t);
+  }, [closing, onExited]);
 
   useEffect(() => {
     if (!logoUrl) { setLogoReady(true); return; }
@@ -69,10 +80,10 @@ export default function WelcomeModal({
   // de la escena (unidad / lote).
   const tips = isMobile
     ? [
-        { icon: 'refresh', text: 'Deslizá con un dedo para girar alrededor del proyecto' },
-        { icon: 'search', text: 'Pellizcá con dos dedos para acercarte o alejarte' },
-        { icon: 'cube', text: `Tocá ${itemNoun} o abrí la lista para ver su detalle` },
-        ...(showAr ? [{ icon: 'phone', text: 'Tocá «Ver en AR» para verlo en tu espacio' }] : []),
+        { icon: 'refresh', text: 'Deslizá para girar' },
+        { icon: 'search', text: 'Pellizcá para acercar o alejar' },
+        { icon: 'cube', text: `Tocá ${itemNoun} para ver su detalle` },
+        ...(showAr ? [{ icon: 'phone', text: 'Tocá «AR» para verlo en tu espacio' }] : []),
       ]
     : [
         { icon: 'refresh', text: 'Arrastrá con el mouse para girar alrededor del proyecto' },
@@ -92,7 +103,7 @@ export default function WelcomeModal({
 
   return createPortal(
     <div
-      className="welcome-overlay"
+      className={`welcome-overlay${closing ? ' welcome-overlay--closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={projectName ? `Bienvenida a ${projectName}` : 'Bienvenida'}
@@ -121,17 +132,17 @@ export default function WelcomeModal({
               </li>
             ))}
           </ul>
-        </div>
 
-        <button
-          type="button"
-          className="welcome-btn welcome-reveal"
-          style={at()}
-          onClick={onStart}
-          autoFocus
-        >
-          Comenzar
-        </button>
+          <button
+            type="button"
+            className="welcome-btn welcome-reveal"
+            style={at()}
+            onClick={onStart}
+            autoFocus
+          >
+            Comenzar
+          </button>
+        </div>
       </div>
       )}
     </div>,

@@ -12,11 +12,11 @@
  * Mobile-only: the parent renders it just for small viewports (desktop keeps
  * the project logo inside the side panel).
  */
-export default function ViewerTopBar({ projectName = '', logoUrl = '', showAr = false, onAr }) {
+export default function ViewerTopBar({ projectName = '', logoUrl = '', showAr = false, onAr, className = '' }) {
   const initial = (projectName || 'X').trim().charAt(0).toUpperCase() || 'X';
 
   return (
-    <div className="viewer-topbar" role="banner">
+    <div className={`viewer-topbar${className ? ` ${className}` : ''}`} role="banner">
       {/* ─── Brand chip (glass pill) ─── */}
       <div className="viewer-topbar-brand">
         {logoUrl ? (

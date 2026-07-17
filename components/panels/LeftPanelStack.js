@@ -23,6 +23,8 @@ const SNAP = { COLLAPSED: 'collapsed', COMPACT: 'compact', TALL: 'tall' };
 
 const LeftPanelStack = forwardRef(function LeftPanelStack(
   { children, title, logoUrl, tabs = [], show = true, onSelectTab, onCollapse,
+    // Extra classes for the root (e.g. an entrance fade applied by the parent).
+    className = '',
     // When a floating top bar owns the branding (mobile), suppress the in-sheet
     // logo so the project name isn't shown twice.
     hideMobileBrand = false,
@@ -266,6 +268,7 @@ const LeftPanelStack = forwardRef(function LeftPanelStack(
     snapState === SNAP.TALL    ? 'stack-expanded stack-tall' : '',
     isMobile && snapState === SNAP.COLLAPSED ? 'stack-tabs-only' : '',
     activeTab ? `panel-tab-${activeTab}` : '',
+    className,
   ].filter(Boolean).join(' ');
 
   return (

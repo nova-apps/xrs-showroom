@@ -45,7 +45,12 @@ export default function ViewPage() {
   const [highlightedLote, setHighlightedLote] = useState(null);
   const [arOpen, setArOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // `welcomeDismissed` → el usuario apretó "Comenzar": libera la intro y hace
+  // fade-in de la UI. `welcomeExited` → terminó el fade-out del modal y se puede
+  // desmontar. Los dos estados permiten que el modal se desvanezca mientras la UI
+  // aparece, en vez de un corte seco.
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const [welcomeExited, setWelcomeExited] = useState(false);
 
   // El botón "Ver en AR" solo se muestra en mobile (la cámara/SLAM viven en el teléfono).
   useEffect(() => {
@@ -70,12 +75,18 @@ export default function ViewPage() {
 
   useDocumentMeta(scene?.name, scene?.panelLogoUrl);
 
+  // On mobile, hold the cinematic entrance until the welcome modal is dismissed
+  // so it plays for the user instead of unseen behind the modal. Desktop is
+  // unchanged: the intro is always released (plays as soon as assets load).
+  const introReleased = !isMobile || welcomeDismissed;
+
   const { resetLoadedAsset, framed } = useSceneLoader({
     viewerRef,
     scene,
     viewerReady,
     isEditor: false,
     useProgressiveLoading: true,
+    introReleased,
   });
 
   // Hold the reveal curtain closed until the camera is framed (no flash of the
@@ -338,7 +349,12 @@ export default function ViewPage() {
       {/* Se desmonta mientras el AR está abierto para liberar su VRAM (ver efecto arriba).
           Al cerrarse el AR se remonta y la escena recarga (la cortina enmascara la recarga). */}
       {!arOpen && (
-        <Viewer3D ref={viewerRef} onReady={handleViewerReady} onColliderClick={handleColliderClick} />
+        <Viewer3D
+          ref={viewerRef}
+          onReady={handleViewerReady}
+          onColliderClick={handleColliderClick}
+          className={welcomeDismissed ? '' : 'canvas-welcome'}
+        />
       )}
 
       {/* Blackout overlay — masks WebGL resize flicker on mobile panel transitions */}
@@ -354,7 +370,7 @@ export default function ViewPage() {
           cubrir la carga del GLB/splat que ocurre detrás) y revela su contenido
           de a poco. La cortina (`revealed`) enmascara lo que reste cargar si el
           usuario toca "Comenzar" antes de tiempo. Oculto durante el AR. */}
-      {scene && !welcomeDismissed && !arOpen && (
+      {scene && !welcomeExited && !arOpen && (
         <WelcomeModal
           projectName={scene.name || ''}
           logoUrl={scene?.panelLogoUrl || ''}
@@ -362,15 +378,26 @@ export default function ViewPage() {
           isMobile={isMobile}
           itemNoun={isTerreno ? 'un lote' : 'una unidad'}
           showAr={showArButton}
+          closing={welcomeDismissed}
           onStart={() => setWelcomeDismissed(true)}
+          onExited={() => setWelcomeExited(true)}
         />
       )}
 
       {/* Left Sidebar — list panel; content swaps by scene.type.
           Se oculta mientras el AR posee la pantalla. */}
-      {scene && !arOpen && (
+      {/* Desktop: relleno del color del panel en la franja reservada para el
+          sidebar. Aparece al arrancar (detrás del sidebar que entra deslizándose)
+          para que esa franja no quede negra mientras el panel todavía no la
+          cubrió. Oculto en mobile (allá el panel es un bottom-sheet). */}
+      {scene && !arOpen && welcomeDismissed && (
+        <div className="sidebar-slot-backdrop" aria-hidden="true" />
+      )}
+
+      {scene && !arOpen && welcomeDismissed && (
         <LeftPanelStack
           ref={panelRef}
+          className="ui-fade-in"
           title={scene.name}
           logoUrl={scene?.panelLogoUrl}
           onSelectTab={handleSelectTab}
@@ -433,8 +460,9 @@ export default function ViewPage() {
 
       {/* Floating top bar — mobile only: brand chip (izq) + toggle tema y RA (der).
           Se oculta mientras el AR posee la pantalla. */}
-      {scene && !arOpen && isMobile && (
+      {scene && !arOpen && isMobile && welcomeDismissed && (
         <ViewerTopBar
+          className="ui-fade-in"
           projectName={scene.name || ''}
           logoUrl={scene?.panelLogoUrl || ''}
           showAr={showArButton}

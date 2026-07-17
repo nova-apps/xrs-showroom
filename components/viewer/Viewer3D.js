@@ -49,7 +49,7 @@ if (typeof window !== 'undefined' && !window.__xrsWorkerTerminateGuard) {
 const DEG2RAD = Math.PI / 180;
 const HALF_PI = Math.PI / 2;
 
-const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onColliderClick }, ref) {
+const Viewer3D = forwardRef(function Viewer3D({ scene: sceneData, onReady, onColliderClick, className = '' }, ref) {
   const containerRef = useRef(null);
   const onColliderClickRef = useRef(onColliderClick);
   onColliderClickRef.current = onColliderClick;
@@ -3317,7 +3317,7 @@ uniform float uContrast;`
     };
   }, [onReady]);
 
-  return <div ref={containerRef} className="viewer-canvas-container" />;
+  return <div ref={containerRef} className={`viewer-canvas-container${className ? ` ${className}` : ''}`} />;
 });
 
 export default Viewer3D;
