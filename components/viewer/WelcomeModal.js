@@ -86,9 +86,9 @@ export default function WelcomeModal({
         ...(showAr ? [{ icon: 'phone', text: 'Tocá «AR» para verlo en tu espacio' }] : []),
       ]
     : [
-        { icon: 'refresh', text: 'Arrastrá con el mouse para girar alrededor del proyecto' },
-        { icon: 'search', text: 'Usá la rueda del mouse para acercarte o alejarte' },
-        { icon: 'cube', text: `Hacé clic en ${itemNoun} o en la lista para ver su detalle` },
+        { icon: 'refresh', text: 'Arrastrá para girar' },
+        { icon: 'search', text: 'Rueda del mouse para acercar o alejar' },
+        { icon: 'cube', text: `Clic en ${itemNoun} para ver su detalle` },
       ];
 
   // Cada elemento entra escalonado: acumulamos el animation-delay y avanzamos

@@ -721,6 +721,31 @@ textarea,
   opacity: 0.5;
 }
 
+/* Textarea de prosa para settings de escena (p. ej. texto de bienvenida). */
+.proyecto-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  outline: none;
+  resize: vertical;
+  min-height: 88px;
+  transition: border-color var(--transition-fast);
+}
+
+.proyecto-textarea:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.proyecto-textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
 .pano-offset-row {
   display: flex;
   align-items: center;

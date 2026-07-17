@@ -15,6 +15,7 @@ import { normalizeDomain, isValidDomain, isReservedHost } from '@/lib/customDoma
  * focused on content (unidades + amenities, or barrios + lotes).
  */
 export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
+  const [welcomeMessage, setWelcomeMessage] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [panelLogoUrl, setPanelLogoUrl] = useState('');
   const [logoUploading, setLogoUploading] = useState(false);
@@ -24,16 +25,23 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
   const [showArButton, setShowArButton] = useState(true);
   const [fichaEnabled, setFichaEnabled] = useState(false);
   const whatsappTimer = useRef(null);
+  const welcomeTimer = useRef(null);
   const logoInputRef = useRef(null);
   const customDomainTimer = useRef(null);
 
-  const [openSection, setOpenSection] = useState('whatsapp');
+  const [openSection, setOpenSection] = useState('bienvenida');
   const toggleSection = useCallback(
     (id) => setOpenSection((prev) => (prev === id ? null : id)),
     []
   );
 
   // ── Sync from scene ──
+  useEffect(() => {
+    if (scene?.welcomeMessage !== undefined) {
+      setWelcomeMessage(scene.welcomeMessage || '');
+    }
+  }, [scene?.welcomeMessage]);
+
   useEffect(() => {
     if (scene?.whatsappNumber !== undefined) {
       setWhatsappNumber(scene.whatsappNumber || '');
@@ -68,6 +76,15 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
   }, [scene?.fichaEnabled]);
 
   // ── Handlers ──
+  const handleWelcomeMessageChange = useCallback((value) => {
+    setWelcomeMessage(value);
+    if (!sceneId) return;
+    if (welcomeTimer.current) clearTimeout(welcomeTimer.current);
+    welcomeTimer.current = setTimeout(() => {
+      updateScene(sceneId, { welcomeMessage: value }).catch(console.error);
+    }, 800);
+  }, [sceneId]);
+
   const handleWhatsappChange = useCallback((value) => {
     setWhatsappNumber(value);
     if (!sceneId) return;
@@ -168,6 +185,31 @@ export default function ProyectoPanel({ scene, sceneId, collapsed, onToggle }) {
       collapsed={collapsed}
       onToggle={onToggle}
     >
+      <SubAccordion
+        title="Bienvenida"
+        icon={<Icon name="doc" />}
+        open={openSection === 'bienvenida'}
+        onToggle={() => toggleSection('bienvenida')}
+      >
+        <div className="whatsapp-config">
+          <label className="whatsapp-config-label" htmlFor="welcome-message">
+            Texto de la experiencia
+          </label>
+          <textarea
+            id="welcome-message"
+            className="proyecto-textarea"
+            rows={4}
+            placeholder="Contale al visitante de qué se trata el proyecto y la experiencia que va a recorrer…"
+            value={welcomeMessage}
+            onChange={(e) => handleWelcomeMessageChange(e.target.value)}
+          />
+          <span className="whatsapp-hint">
+            Aparece en el cartel de bienvenida al iniciar la experiencia. Si lo dejás
+            vacío se usa un texto genérico.
+          </span>
+        </div>
+      </SubAccordion>
+
       <SubAccordion
         title="WhatsApp"
         icon={<Icon name="phone" />}
