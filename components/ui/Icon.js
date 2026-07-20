@@ -83,6 +83,14 @@ const PATHS = {
   cube: <><path d="M12 3 3 8v8l9 5 9-5V8Z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
   // settings — gear
   settings: <><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></>,
+  // gyro — device motion / tilt-to-look (a phone flanked by rotation arcs)
+  gyro: (
+    <>
+      <rect x="9" y="4" width="6" height="16" rx="1.5" />
+      <path d="M6 9a10 10 0 0 0 0 6" />
+      <path d="M18 9a10 10 0 0 1 0 6" />
+    </>
+  ),
   // map pin — calibration / location
   pin: (
     <>

@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import Icon from '../ui/Icon';
 import CloseButton from '../ui/CloseButton';
 import { normalizeTour, hotspotLon, arrivalLon, hotspotLonFromCam, isHotspotCalibrated } from '@/lib/tour';
+import { useDeviceOrientation } from '@/lib/useDeviceOrientation';
 
 /**
  * TourViewer — fullscreen multi-node 360° tour (Matterport-style).
@@ -67,6 +68,9 @@ export default function TourViewer({
   const fovRef = useRef(75);
   const velocityRef = useRef({ lon: 0, lat: 0 });
   const touchDistRef = useRef(0);
+
+  // Gyroscope look — drives lonRef/latRef from the phone's motion sensors.
+  const gyro = useDeviceOrientation({ lonRef, latRef, velocityRef, isDraggingRef });
 
   // Live tour + current node, readable from effect-scoped closures (the
   // editor recalibrates the tour prop while the viewer is open).
@@ -703,6 +707,19 @@ export default function TourViewer({
         <div className={`pano-hint${hintVisible ? '' : ' pano-hint-hidden'}`}>
           Arrastrá para mirar · Tocá las flechas para moverte
         </div>
+      )}
+
+      {gyro.usable && !loading && !error && (
+        <button
+          type="button"
+          className={`pano-gyro-btn${gyro.enabled ? ' is-active' : ''}`}
+          onClick={gyro.toggle}
+          aria-pressed={gyro.enabled}
+          title={gyro.enabled ? 'Desactivar giroscopio' : 'Mover con el celular'}
+          aria-label={gyro.enabled ? 'Desactivar giroscopio' : 'Mover con el celular'}
+        >
+          <Icon name="gyro" />
+        </button>
       )}
 
       {/* Minimap — the tour's floor plan with node pins */}

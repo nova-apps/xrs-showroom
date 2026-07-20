@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import Icon from '../ui/Icon';
 import CloseButton from '../ui/CloseButton';
+import { useDeviceOrientation } from '@/lib/useDeviceOrientation';
 
 /**
  * PanoramaViewer — fullscreen interactive 360° panorama viewer.
@@ -62,6 +63,9 @@ export default function PanoramaViewer({
   const fovRef = useRef(75);
   const velocityRef = useRef({ lon: 0, lat: 0 });
   const touchDistRef = useRef(0);
+
+  // Gyroscope look — drives lonRef/latRef from the phone's motion sensors.
+  const gyro = useDeviceOrientation({ lonRef, latRef, velocityRef, isDraggingRef });
 
   // Anchor for the yaw clamp — captured at mount and never updated, so that
   // changing northOffset live (from the editor) doesn't shift the clamp
@@ -397,6 +401,19 @@ export default function PanoramaViewer({
           title="Guardar la orientación actual para esta imagen"
         >
           {savedFlash ? '✓ Orientación guardada' : '📍 Guardar orientación'}
+        </button>
+      )}
+
+      {gyro.usable && !loading && !error && (
+        <button
+          type="button"
+          className={`pano-gyro-btn${gyro.enabled ? ' is-active' : ''}`}
+          onClick={gyro.toggle}
+          aria-pressed={gyro.enabled}
+          title={gyro.enabled ? 'Desactivar giroscopio' : 'Mover con el celular'}
+          aria-label={gyro.enabled ? 'Desactivar giroscopio' : 'Mover con el celular'}
+        >
+          <Icon name="gyro" />
         </button>
       )}
     </>
