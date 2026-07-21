@@ -2164,13 +2164,13 @@
   border-color: rgba(255, 255, 255, 0.35);
 }
 
-/* Gyroscope toggle — icon-only round button in the top bar, just left of the
-   close/expand control (z-index above the header). Only rendered on touch
-   devices that expose motion sensors (see useDeviceOrientation). */
+/* Gyroscope toggle — icon-only round button pinned to the right edge, directly
+   below the close/expand control (same right margin, z-index above the header).
+   Only rendered on touch devices that expose motion sensors (useDeviceOrientation). */
 .pano-gyro-btn {
   position: absolute;
-  top: 14px;
-  right: 68px;
+  top: 62px;
+  right: 20px;
   z-index: 11;
   width: 40px;
   height: 40px;
@@ -2970,10 +2970,10 @@
     display: none;
   }
 
-  /* Keep the gyro toggle in the top bar, clearing the (smaller) close button. */
+  /* Keep the gyro toggle pinned under the close button on the right edge. */
   .pano-gyro-btn {
-    top: 12px;
-    right: 60px;
+    top: 58px;
+    right: 14px;
   }
 }
 

@@ -83,13 +83,12 @@ const PATHS = {
   cube: <><path d="M12 3 3 8v8l9 5 9-5V8Z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
   // settings — gear
   settings: <><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></>,
-  // gyro — tilt-to-look: a phone tilted in the hand, flanked by rotation arcs
-  // that read as "move the device to look around".
+  // gyro — a gyroscope: a central rotor ringed by two perpendicular gimbals.
   gyro: (
     <>
-      <rect x="8.5" y="4" width="7" height="16" rx="1.75" transform="rotate(22 12 12)" />
-      <path d="M4 8.5a10 10 0 0 0 0 7" />
-      <path d="M20 8.5a10 10 0 0 1 0 7" />
+      <circle cx="12" cy="12" r="2.4" />
+      <ellipse cx="12" cy="12" rx="9.5" ry="4" />
+      <ellipse cx="12" cy="12" rx="4" ry="9.5" />
     </>
   ),
   // map pin — calibration / location
