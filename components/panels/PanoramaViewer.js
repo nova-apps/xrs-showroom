@@ -65,7 +65,15 @@ export default function PanoramaViewer({
   const touchDistRef = useRef(0);
 
   // Gyroscope look — drives lonRef/latRef from the phone's motion sensors.
-  const gyro = useDeviceOrientation({ lonRef, latRef, velocityRef, isDraggingRef });
+  // Auto-on when opened (not in the calibration editor, where it would fight
+  // the operator dragging to set the heading).
+  const gyro = useDeviceOrientation({
+    lonRef,
+    latRef,
+    velocityRef,
+    isDraggingRef,
+    autoStart: !calibrationEnabled,
+  });
 
   // Anchor for the yaw clamp — captured at mount and never updated, so that
   // changing northOffset live (from the editor) doesn't shift the clamp

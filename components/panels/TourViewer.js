@@ -70,7 +70,15 @@ export default function TourViewer({
   const touchDistRef = useRef(0);
 
   // Gyroscope look — drives lonRef/latRef from the phone's motion sensors.
-  const gyro = useDeviceOrientation({ lonRef, latRef, velocityRef, isDraggingRef });
+  // Auto-on when the tour opens (not in the calibration editor, where it would
+  // fight the operator aiming the crosshair).
+  const gyro = useDeviceOrientation({
+    lonRef,
+    latRef,
+    velocityRef,
+    isDraggingRef,
+    autoStart: !calibrationEnabled,
+  });
 
   // Live tour + current node, readable from effect-scoped closures (the
   // editor recalibrates the tour prop while the viewer is open).

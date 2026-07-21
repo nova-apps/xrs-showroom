@@ -2164,16 +2164,16 @@
   border-color: rgba(255, 255, 255, 0.35);
 }
 
-/* Gyroscope toggle — icon-only round button, lower-right of the canvas so it
-   clears the centered hint and calibrate controls. Only rendered on touch
+/* Gyroscope toggle — icon-only round button in the top bar, just left of the
+   close/expand control (z-index above the header). Only rendered on touch
    devices that expose motion sensors (see useDeviceOrientation). */
 .pano-gyro-btn {
   position: absolute;
-  left: 16px;
-  bottom: 16px;
-  z-index: 6;
-  width: 46px;
-  height: 46px;
+  top: 14px;
+  right: 68px;
+  z-index: 11;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2965,16 +2965,15 @@
   }
 
   /* Minimap is too cramped to be useful on phones — hide it and let the
-     floor hotspots + gyro drive navigation. The gyro toggle takes its spot. */
+     floor hotspots + gyro drive navigation. */
   .tour-minimap {
     display: none;
   }
 
-  /* Move the gyro toggle to the lower-right corner (where the minimap sat). */
+  /* Keep the gyro toggle in the top bar, clearing the (smaller) close button. */
   .pano-gyro-btn {
-    left: auto;
-    right: 16px;
-    bottom: 16px;
+    top: 12px;
+    right: 60px;
   }
 }
 
