@@ -1220,6 +1220,14 @@ textarea,
   pointer-events: auto;
 }
 
+/* Hide the staging pill on phones — it sits in the lower-right corner (over the
+   gyro toggle) and gets in the way of testing the viewer on a real device. */
+@media (max-width: 768px) {
+  .staging-banner {
+    display: none;
+  }
+}
+
 .staging-banner-pill-btn {
   display: inline-flex;
   align-items: center;
